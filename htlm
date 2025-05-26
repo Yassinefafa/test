@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Visualisation Capteurs</title>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script>
+      google.charts.load('current', {'packages':['corechart', 'controls']});
+      google.charts.setOnLoadCallback(drawDashboard);
+
+      function drawDashboard() {
+        const query = new google.visualization.Query(
+          'https://docs.google.com/spreadsheets/d/TON_ID_DE_FEUILLE/gviz/tq?sheet=Feuille1'
+        );
+        query.send(function(response) {
+          const data = response.getDataTable();
+
+          const dashboard = new google.visualization.Dashboard(document.getElementById('dashboard'));
+
+          const dateFilter = new google.visualization.ControlWrapper({
+            controlType: 'CategoryFilter',
+            containerId: 'filter_date',
+            options: {
+              filterColumnLabel: 'Date',
+              ui: {
+                label: 'Filtrer par date',
+                allowTyping: false,
+                allowMultiple: false
+              }
+            }
+          });
+
+          const chart = new google.visualization.ChartWrapper({
+            chartType: 'LineChart',
+            containerId: 'chart_div',
+            options: {
+              title: 'Température & Humidité',
+              curveType: 'function',
+              legend: { position: 'bottom' },
+              height: 400
+            },
+            view: { columns: [1, 2, 3] }  // Time, Temperature, Humidity
+          });
+
+          dashboard.bind([dateFilter], [chart]);
+          dashboard.draw(data);
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <h2 style="text-align:center;">📊 Visualisation des Données Capteurs</h2>
+    <div id="dashboard">
+      <div id="filter_date" style="margin-bottom:20px;"></div>
+      <div id="chart_div"></div>
+    </div>
+  </body>
+</html>
