@@ -7,7 +7,7 @@
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f2f2f2; }
     header { background: #2c3e50; color: white; padding: 1em; text-align: center; }
-    nav { display: flex; justify-content: center; background: #34495e; }
+    nav { display: flex; justify-content: center; background: #34495e; flex-wrap: wrap; }
     nav a {
       padding: 1em;
       color: white;
@@ -26,12 +26,19 @@
     #login input { padding: 0.5em; margin: 0.5em; }
     #login button { padding: 0.5em 1em; background: #3498db; color: white; border: none; cursor: pointer; }
     #login button:hover { background: #2980b9; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1em; }
+    th, td { border: 1px solid #ccc; padding: 0.5em; text-align: center; }
+    th { background-color: #ddd; }
+    input[type='password'] {
+      font-family: monospace;
+    }
   </style>
 </head>
 <body>
   <div id="login">
     <h2>Connexion</h2>
-    <input type="password" id="password" placeholder="Entrez le mot de passe">
+    <input type="text" id="username" placeholder="Nom d'utilisateur">
+    <input type="password" id="password" placeholder="Mot de passe">
     <button onclick="login()">Se connecter</button>
   </div>
 
@@ -85,6 +92,12 @@
       <input type="text" id="newUser" placeholder="Nom d'utilisateur">
       <input type="password" id="userPassword" placeholder="Mot de passe">
       <button onclick="addUser()">Ajouter</button>
+      <br><br>
+      <h3>Liste des utilisateurs</h3>
+      <table>
+        <thead><tr><th>Nom d'utilisateur</th><th>Mot de passe</th><th>Action</th></tr></thead>
+        <tbody id="userTable"></tbody>
+      </table>
     </section>
   </div>
 
@@ -93,17 +106,17 @@
     let currentUser = null;
 
     function login() {
+      const username = document.getElementById('username').value;
       const pwd = document.getElementById('password').value;
-      for (let user in users) {
-        if (users[user] === pwd) {
-          currentUser = user;
-          document.getElementById('login').style.display = 'none';
-          document.getElementById('app').style.display = 'block';
-          document.getElementById('logoutBtn').style.display = 'inline-block';
-          return;
-        }
+      if (users[username] && users[username] === pwd) {
+        currentUser = username;
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        document.getElementById('logoutBtn').style.display = 'inline-block';
+        updateUserTable();
+      } else {
+        alert("Nom d'utilisateur ou mot de passe incorrect");
       }
-      alert("Mot de passe incorrect");
     }
 
     function logout() {
@@ -111,6 +124,7 @@
       document.getElementById('login').style.display = 'flex';
       document.getElementById('app').style.display = 'none';
       document.getElementById('password').value = "";
+      document.getElementById('username').value = "";
     }
 
     function showPage(id) {
@@ -123,6 +137,7 @@
       if (currentUser && newPwd) {
         users[currentUser] = newPwd;
         alert("Mot de passe mis à jour pour " + currentUser);
+        updateUserTable();
       } else {
         alert("Erreur : veuillez entrer un nouveau mot de passe.");
       }
@@ -134,8 +149,26 @@
       if (user && pass) {
         users[user] = pass;
         alert("Nouvel utilisateur ajouté : " + user);
+        updateUserTable();
       } else {
         alert("Veuillez saisir un nom d'utilisateur et un mot de passe.");
+      }
+    }
+
+    function updateUserTable() {
+      const table = document.getElementById('userTable');
+      table.innerHTML = '';
+      for (let user in users) {
+        table.innerHTML += `<tr><td>${user}</td><td><input type="password" value="${users[user]}" disabled></td><td><button onclick="editUserPassword('${user}')">Modifier</button></td></tr>`;
+      }
+    }
+
+    function editUserPassword(user) {
+      const newPass = prompt("Entrez le nouveau mot de passe pour " + user);
+      if (newPass) {
+        users[user] = newPass;
+        alert("Mot de passe mis à jour pour " + user);
+        updateUserTable();
       }
     }
   </script>
