@@ -1,0 +1,22 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+  <script>
+    function checkPassword() {
+      const password = document.getElementById("password").value;
+      if (password === "1234") {
+        window.location.href = "dashboard.html";
+      } else {
+        alert("Mot de passe incorrect");
+      }
+    }
+  </script>
+</head>
+<body>
+  <h2>🔐 Connexion</h2>
+  <input type="password" id="password" placeholder="Entrez le mot de passe">
+  <button onclick="checkPassword()">Connexion</button>
+</body>
+</html>

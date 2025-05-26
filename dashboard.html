@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Visualisation Capteurs</title>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script>
+      google.charts.load('current', {'packages':['corechart', 'controls']});
+      google.charts.setOnLoadCallback(drawDashboard);
+
+      function drawDashboard() {
+        const query = new google.visualization.Query(
+          'https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c/gviz/tq?sheet=DATA'
+        );
+        query.send(function(response) {
+          const data = response.getDataTable();
+
+          const dashboard = new google.visualization.Dashboard(document.getElementById('dashboard'));
+
+          const dateFilter = new google.visualization.ControlWrapper({
+            controlType: 'CategoryFilter',
+            containerId: 'filter_date',
+            options: {
+              filterColumnLabel: 'Date',
+              ui: {
+                label: '📅 Filtrer par date',
+                allowTyping: false,
+                allowMultiple: false
+              }
+            }
+          });
+
+          const timeFilter = new google.visualization.ControlWrapper({
+            controlType: 'CategoryFilter',
+            containerId: 'filter_time',
+            options: {
+              filterColumnLabel: 'Time',
+              ui: {
+                label: '⏰ Filtrer par heure',
+                allowTyping: false,
+                allowMultiple: false
+              }
+            }
+          });
+
+          const chartTemp = new google.visualization.ChartWrapper({
+            chartType: 'LineChart',
+            containerId: 'chart_temp',
+            options: {
+              title: '🌡️ Température',
+              curveType: 'function',
+              legend: { position: 'bottom' },
+              height: 300
+            },
+            view: { columns: [1, 2] }
+          });
+
+          const chartHum = new google.visualization.ChartWrapper({
+            chartType: 'LineChart',
+            containerId: 'chart_hum',
+            options: {
+              title: '💧 Humidité',
+              curveType: 'function',
+              legend: { position: 'bottom' },
+              height: 300
+            },
+            view: { columns: [1, 3] }
+          });
+
+          dashboard.bind([dateFilter, timeFilter], [chartTemp, chartHum]);
+          dashboard.draw(data);
+        });
+      }
+    </script>
+    <style>
+      body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f4; margin: 0; padding: 20px; }
+      h2 { color: #333; }
+      #dashboard { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+      .filters { display: flex; justify-content: space-around; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+    </style>
+  </head>
+  <body>
+    <h2>📊 Visualisation des Données Capteurs</h2>
+    <div id="dashboard">
+      <div class="filters">
+        <div id="filter_date"></div>
+        <div id="filter_time"></div>
+      </div>
+      <div id="chart_temp"></div>
+      <div id="chart_hum"></div>
+    </div>
+  </body>
+</html>
