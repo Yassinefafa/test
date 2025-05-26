@@ -5,41 +5,91 @@
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
       google.charts.load('current', {
-        packages: ['corechart'],
+        packages: ['corechart', 'controls']
       });
-      google.charts.setOnLoadCallback(drawChart);
+      google.charts.setOnLoadCallback(drawDashboard);
 
-      function drawChart() {
-        const queryString = encodeURIComponent("SELECT F, G, H, I, J, K LIMIT 100");
+      function drawDashboard() {
+        const queryString = encodeURIComponent("SELECT A, B, F, G, H, I, J, K LIMIT 500");
 
         const dataSourceUrl = `https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c/gviz/tq?sheet=DATA&tq=${queryString}`;
 
         const query = new google.visualization.Query(dataSourceUrl);
-        query.send(handleQueryResponse);
-      }
+        query.send(response => {
+          if (response.isError()) {
+            alert('Erreur : ' + response.getMessage() + ' ' + response.getDetailedMessage());
+            return;
+          }
 
-      function handleQueryResponse(response) {
-        if (response.isError()) {
-          alert('Erreur dans la requête : ' + response.getMessage() + ' ' + response.getDetailedMessage());
-          return;
-        }
+          const data = response.getDataTable();
 
-        const data = response.getDataTable();
-        const options = {
-          title: 'Visualisation des données capteurs',
-          curveType: 'function',
-          legend: { position: 'bottom' },
-          height: 400,
-          width: '100%',
-        };
+          // Fusionner Date et Heure en une seule colonne DateTime
+          for (let i = 0; i < data.getNumberOfRows(); i++) {
+            const dateStr = data.getValue(i, 0); // Colonne A (Date)
+            const timeStr = data.getValue(i, 1); // Colonne B (Heure)
+            const dateParts = dateStr.split('/');
+            const timeParts = timeStr.split(':');
 
-        const chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-        chart.draw(data, options);
+            const date = new Date(
+              parseInt(dateParts[2]), // année
+              parseInt(dateParts[1]) - 1, // mois (0-indexé)
+              parseInt(dateParts[0]), // jour
+              parseInt(timeParts[0]),
+              parseInt(timeParts[1]),
+              parseInt(timeParts[2])
+            );
+
+            data.setValue(i, 0, date); // Remplace la colonne A par DateTime
+          }
+
+          data.removeColumn(1); // Supprime l’ancienne colonne Heure
+
+          const dashboard = new google.visualization.Dashboard(document.getElementById('dashboard_div'));
+
+          const dateFilter = new google.visualization.ControlWrapper({
+            controlType: 'ChartRangeFilter',
+            containerId: 'filter_div',
+            options: {
+              filterColumnIndex: 0,
+              ui: {
+                chartType: 'LineChart',
+                chartOptions: {
+                  height: 80,
+                  chartArea: { width: '90%' }
+                }
+              }
+            }
+          });
+
+          const lineChart = new google.visualization.ChartWrapper({
+            chartType: 'LineChart',
+            containerId: 'chart_div',
+            options: {
+              title: 'Données Accéléromètre & Gyroscope',
+              height: 500,
+              legend: { position: 'bottom' },
+              hAxis: {
+                title: 'Temps',
+                format: 'dd/MM/yyyy HH:mm:ss'
+              },
+              vAxis: {
+                title: 'Valeur'
+              },
+              chartArea: { width: '80%', height: '70%' }
+            }
+          });
+
+          dashboard.bind(dateFilter, lineChart);
+          dashboard.draw(data);
+        });
       }
     </script>
   </head>
   <body>
-    <h2>📈 Visualisation des données capteurs (Accel & Gyro)</h2>
-    <div id="chart_div"></div>
+    <h2>📈 Visualisation Accéléromètre et Gyroscope avec Filtre</h2>
+    <div id="dashboard_div">
+      <div id="chart_div"></div>
+      <div id="filter_div" style="margin-top: 30px;"></div>
+    </div>
   </body>
 </html>
