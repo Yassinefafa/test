@@ -1,93 +1,82 @@
-
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Visualisation Capteurs</title>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script>
-      google.charts.load('current', {'packages':['corechart', 'controls']});
-      google.charts.setOnLoadCallback(drawDashboard);
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Visualisation des Données Capteurs</title>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script type="text/javascript">
+    google.charts.load('current', { packages: ['corechart', 'controls'] });
+    google.charts.setOnLoadCallback(drawDashboard);
 
-      function drawDashboard() {
-        const query = new google.visualization.Query(
-          'https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c/gviz/tq?sheet=DATA'
+    function drawDashboard() {
+      const query = new google.visualization.Query(
+        'https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c/gviz/tq?sheet=DATA'
+      );
+
+      query.send(function (response) {
+        if (response.isError()) {
+          alert('Erreur de chargement : ' + response.getMessage());
+          return;
+        }
+
+        const data = response.getDataTable();
+
+        // Conversion de la colonne Date + Heure en objet Date JS (colonne 0 + 1)
+        for (let i = 0; i < data.getNumberOfRows(); i++) {
+          const dateStr = data.getValue(i, 0); // Date
+          const timeStr = data.getValue(i, 1); // Time
+
+          const dateTime = new Date(dateStr + 'T' + timeStr);
+          data.setValue(i, 0, dateTime); // remplace la colonne 0
+        }
+
+        // Supprimer la colonne 1 (Time) car on l’a fusionnée
+        data.removeColumn(1);
+
+        const dashboard = new google.visualization.Dashboard(
+          document.getElementById('dashboard_div')
         );
-        query.send(function(response) {
-          const data = response.getDataTable();
 
-          const dashboard = new google.visualization.Dashboard(document.getElementById('dashboard'));
-
-          const dateFilter = new google.visualization.ControlWrapper({
-            controlType: 'CategoryFilter',
-            containerId: 'filter_date',
-            options: {
-              filterColumnLabel: 'Date',
-              ui: {
-                label: '📅 Filtrer par date',
-                allowTyping: false,
-                allowMultiple: false
-              }
-            }
-          });
-
-          const timeFilter = new google.visualization.ControlWrapper({
-            controlType: 'CategoryFilter',
-            containerId: 'filter_time',
-            options: {
-              filterColumnLabel: 'Time',
-              ui: {
-                label: '⏰ Filtrer par heure',
-                allowTyping: false,
-                allowMultiple: false
-              }
-            }
-          });
-
-          const chartTemp = new google.visualization.ChartWrapper({
-            chartType: 'LineChart',
-            containerId: 'chart_temp',
-            options: {
-              title: '🌡️ Température',
-              curveType: 'function',
-              legend: { position: 'bottom' },
-              height: 300
+        const dateSlider = new google.visualization.ControlWrapper({
+          controlType: 'ChartRangeFilter',
+          containerId: 'filter_div',
+          options: {
+            filterColumnIndex: 0,
+            ui: {
+              chartType: 'LineChart',
+              chartOptions: {
+                title: 'Période',
+                height: 100,
+              },
             },
-            view: { columns: [1, 2] }
-          });
-
-          const chartHum = new google.visualization.ChartWrapper({
-            chartType: 'LineChart',
-            containerId: 'chart_hum',
-            options: {
-              title: '💧 Humidité',
-              curveType: 'function',
-              legend: { position: 'bottom' },
-              height: 300
-            },
-            view: { columns: [1, 3] }
-          });
-
-          dashboard.bind([dateFilter, timeFilter], [chartTemp, chartHum]);
-          dashboard.draw(data);
+          },
         });
-      }
-    </script>
-    <style>
-      body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f4; margin: 0; padding: 20px; }
-      h2 { color: #333; }
-      #dashboard { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-      .filters { display: flex; justify-content: space-around; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-    </style>
-  </head>
-  <body>
-    <h2>📊 Visualisation des Données Capteurs</h2>
-    <div id="dashboard">
-      <div class="filters">
-        <div id="filter_date"></div>
-        <div id="filter_time"></div>
-      </div>
-      <div id="chart_temp"></div>
-      <div id="chart_hum"></div>
-    </div>
-  </body>
+
+        const chart = new google.visualization.ChartWrapper({
+          chartType: 'LineChart',
+          containerId: 'chart_div',
+          options: {
+            title: 'Température et Humidité',
+            curveType: 'function',
+            legend: { position: 'bottom' },
+            height: 400,
+          },
+          view: {
+            columns: [0, 1, 2], // DateTime, Température, Humidité
+          },
+        });
+
+        dashboard.bind(dateSlider, chart);
+        dashboard.draw(data);
+      });
+    }
+  </script>
+</head>
+<body style="font-family: Arial; margin: 40px; background: #f9f9f9;">
+  <h2>🌉 Visualisation des Données Capteurs</h2>
+  <div id="dashboard_div">
+    <div id="filter_div"></div>
+    <div id="chart_div"></div>
+  </div>
+</body>
 </html>
