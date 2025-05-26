@@ -1,131 +1,142 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-  <title>Dashboard ESP8266</title>
-  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interface de Surveillance IoT</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f2f2f2; }
+    header { background: #2c3e50; color: white; padding: 1em; text-align: center; }
+    nav { display: flex; justify-content: center; background: #34495e; }
+    nav a {
+      padding: 1em;
+      color: white;
+      text-decoration: none;
+      transition: background 0.3s;
     }
-    .hidden {
-      display: none;
+    nav a:hover {
+      background: #1abc9c;
     }
-    nav {
-      margin-bottom: 20px;
-    }
-    button {
-      margin: 0 10px;
-      padding: 10px 20px;
-    }
-    #login-box {
-      max-width: 300px;
-      margin: auto;
-      padding: 20px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
+    section { padding: 2em; display: none; }
+    section.active { display: block; }
+    iframe { width: 100%; height: 500px; border: none; }
+    #logoutBtn { display: none; margin: 1em; background: #e74c3c; color: white; border: none; padding: 0.5em 1em; cursor: pointer; }
+    #logoutBtn:hover { background: #c0392b; }
+    #login { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+    #login input { padding: 0.5em; margin: 0.5em; }
+    #login button { padding: 0.5em 1em; background: #3498db; color: white; border: none; cursor: pointer; }
+    #login button:hover { background: #2980b9; }
   </style>
 </head>
 <body>
-  <div id="login-box">
+  <div id="login">
     <h2>Connexion</h2>
-    <input type="password" id="password" placeholder="Mot de passe"><br><br>
+    <input type="password" id="password" placeholder="Entrez le mot de passe">
     <button onclick="login()">Se connecter</button>
-    <p id="error" style="color: red;"></p>
   </div>
 
-  <div id="app" class="hidden">
+  <div id="app" style="display:none">
+    <header>
+      <h1>Tableau de bord - Monitoring IoT</h1>
+      <button id="logoutBtn" onclick="logout()">Déconnexion</button>
+    </header>
+
     <nav>
-      <button onclick="showPage('home')">🏠 Accueil</button>
-      <button onclick="showPage('graph')">📈 Graphique</button>
-      <button onclick="logout()">🔒 Déconnexion</button>
+      <a href="#" onclick="showPage('home')">Accueil</a>
+      <a href="#" onclick="showPage('temperature')">Température</a>
+      <a href="#" onclick="showPage('humidite')">Humidité</a>
+      <a href="#" onclick="showPage('vibration')">Vibration</a>
+      <a href="#" onclick="showPage('accelero')">Accéléromètre/Gyroscope</a>
+      <a href="#" onclick="showPage('admin')">Gestion Utilisateurs</a>
     </nav>
 
-    <div id="home" class="page">
-      <h2>Bienvenue sur le tableau de bord</h2>
-      <p>Utilisez les boutons ci-dessus pour naviguer.</p>
-    </div>
+    <section id="home" class="active">
+      <h2>Bienvenue</h2>
+      <p>Sélectionnez une section dans le menu pour visualiser les données en temps réel.</p>
+    </section>
 
-    <div id="graph" class="page hidden">
-      <div id="dashboard_div">
-        <div id="filter_div"></div>
-        <div id="chart_div" style="width: 100%; height: 500px;"></div>
-      </div>
-    </div>
+    <section id="temperature">
+      <h2>Graphique - Température</h2>
+      <iframe src="https://datastudio.google.com/embed/reporting/YOUR_TEMP_REPORT_ID/page/1" allowfullscreen></iframe>
+    </section>
+
+    <section id="humidite">
+      <h2>Graphique - Humidité</h2>
+      <iframe src="https://datastudio.google.com/embed/reporting/YOUR_HUMIDITY_REPORT_ID/page/1" allowfullscreen></iframe>
+    </section>
+
+    <section id="vibration">
+      <h2>Graphique - Vibration</h2>
+      <iframe src="https://datastudio.google.com/embed/reporting/YOUR_VIBRATION_REPORT_ID/page/1" allowfullscreen></iframe>
+    </section>
+
+    <section id="accelero">
+      <h2>Graphique - Accéléromètre / Gyroscope</h2>
+      <iframe src="https://datastudio.google.com/embed/reporting/YOUR_ACCELERO_REPORT_ID/page/1" allowfullscreen></iframe>
+    </section>
+
+    <section id="admin">
+      <h2>Gestion des utilisateurs</h2>
+      <label>Changer le mot de passe :</label>
+      <input type="password" id="newPassword" placeholder="Nouveau mot de passe">
+      <button onclick="changePassword()">Modifier</button>
+      <br><br>
+      <label>Ajouter un utilisateur :</label>
+      <input type="text" id="newUser" placeholder="Nom d'utilisateur">
+      <input type="password" id="userPassword" placeholder="Mot de passe">
+      <button onclick="addUser()">Ajouter</button>
+    </section>
   </div>
 
   <script>
-    const CORRECT_PASSWORD = "admin123";
+    let users = { "admin": "iot2025" };
+    let currentUser = null;
 
     function login() {
-      const input = document.getElementById("password").value;
-      if (input === CORRECT_PASSWORD) {
-        document.getElementById("login-box").classList.add("hidden");
-        document.getElementById("app").classList.remove("hidden");
-        showPage('home');
-      } else {
-        document.getElementById("error").innerText = "Mot de passe incorrect.";
+      const pwd = document.getElementById('password').value;
+      for (let user in users) {
+        if (users[user] === pwd) {
+          currentUser = user;
+          document.getElementById('login').style.display = 'none';
+          document.getElementById('app').style.display = 'block';
+          document.getElementById('logoutBtn').style.display = 'inline-block';
+          return;
+        }
       }
+      alert("Mot de passe incorrect");
     }
 
     function logout() {
-      document.getElementById("app").classList.add("hidden");
-      document.getElementById("login-box").classList.remove("hidden");
-      document.getElementById("password").value = "";
-      document.getElementById("error").innerText = "";
+      currentUser = null;
+      document.getElementById('login').style.display = 'flex';
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('password').value = "";
     }
 
-    function showPage(pageId) {
-      document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-      document.getElementById(pageId).classList.remove('hidden');
+    function showPage(id) {
+      document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
     }
 
-    google.charts.load('current', {'packages':['corechart', 'controls']});
-    google.charts.setOnLoadCallback(drawDashboard);
+    function changePassword() {
+      const newPwd = document.getElementById('newPassword').value;
+      if (currentUser && newPwd) {
+        users[currentUser] = newPwd;
+        alert("Mot de passe mis à jour pour " + currentUser);
+      } else {
+        alert("Erreur : veuillez entrer un nouveau mot de passe.");
+      }
+    }
 
-    function drawDashboard() {
-      const url = 'https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c/gviz/tq?sheet=DACH&range=C7:H17';
-      fetch(url)
-        .then(res => res.text())
-        .then(rep => {
-          const data = new google.visualization.DataTable(eval(rep.match(/google\.visualization\.Query\.setResponse\((.*)\);/)[1]));
-
-          const dashboard = new google.visualization.Dashboard(document.getElementById('dashboard_div'));
-          const dateFilter = new google.visualization.ControlWrapper({
-            controlType: 'ChartRangeFilter',
-            containerId: 'filter_div',
-            options: {
-              filterColumnLabel: 'Date',
-              ui: {
-                chartType: 'LineChart',
-                chartOptions: {
-                  height: 50,
-                  width: '100%',
-                  chartArea: {width: '90%'},
-                  hAxis: {baselineColor: 'none'}
-                }
-              }
-            }
-          });
-
-          const lineChart = new google.visualization.ChartWrapper({
-            chartType: 'LineChart',
-            containerId: 'chart_div',
-            options: {
-              width: '100%',
-              height: 500,
-              chartArea: {left: 50, right: 30, bottom: 50, top: 50},
-              hAxis: {title: 'Date'},
-              vAxis: {title: 'Valeurs'},
-              legend: {position: 'bottom'}
-            }
-          });
-
-          dashboard.bind(dateFilter, lineChart);
-          dashboard.draw(data);
-        });
+    function addUser() {
+      const user = document.getElementById('newUser').value;
+      const pass = document.getElementById('userPassword').value;
+      if (user && pass) {
+        users[user] = pass;
+        alert("Nouvel utilisateur ajouté : " + user);
+      } else {
+        alert("Veuillez saisir un nom d'utilisateur et un mot de passe.");
+      }
     }
   </script>
 </body>
