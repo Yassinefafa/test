@@ -1,38 +1,36 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="UTF-8">
-    <title>Graphique Accéléromètre et Gyroscope</title>
+    <title>Graphique Données Capteurs</title>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
-      google.charts.load('current', {'packages':['corechart']});
+      google.charts.load('current', {
+        packages: ['corechart'],
+      });
       google.charts.setOnLoadCallback(drawChart);
 
       function drawChart() {
-        // Données simulées, à remplacer par les données lues depuis Google Sheets via Apps Script ou API
-        const data = google.visualization.arrayToDataTable([
-          ['Index', 'Accel_X', 'Accel_Y', 'Accel_Z', 'Gyro_X', 'Gyro_Y', 'Gyro_Z'],
-          [0, 16088, 160, 3256, -310, 119, 75],
-          [1, 16040, 64, 3380, -329, 79, 110],
-          [2, 16008, 120, 3212, -335, 108, 81],
-          [3, 16112, 104, 3252, -358, -56, 104],
-          [4, 16208, 168, 3184, -345, 105, 87],
-          [5, 16140, 156, 3108, -313, 101, 82],
-          [6, 16180, 192, 3136, -342, 120, 85],
-          [7, 16132, 44, 3296, -340, 100, 91]
-        ]);
+        const queryString = encodeURIComponent("SELECT F, G, H, I, J, K LIMIT 100");
 
+        const dataSourceUrl = `https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c/gviz/tq?sheet=DATA&tq=${queryString}`;
+
+        const query = new google.visualization.Query(dataSourceUrl);
+        query.send(handleQueryResponse);
+      }
+
+      function handleQueryResponse(response) {
+        if (response.isError()) {
+          alert('Erreur dans la requête : ' + response.getMessage() + ' ' + response.getDetailedMessage());
+          return;
+        }
+
+        const data = response.getDataTable();
         const options = {
-          title: 'Accéléromètre et Gyroscope',
+          title: 'Visualisation des données capteurs',
           curveType: 'function',
           legend: { position: 'bottom' },
-          height: 500,
-          hAxis: {
-            title: 'Mesures (index ou temps)',
-          },
-          vAxis: {
-            title: 'Valeur brute'
-          }
+          height: 400,
+          width: '100%',
         };
 
         const chart = new google.visualization.LineChart(document.getElementById('chart_div'));
@@ -40,8 +38,8 @@
       }
     </script>
   </head>
-  <body style="font-family: Arial; background: #f8f8f8; padding: 20px;">
-    <h2>📈 Visualisation Accéléromètre et Gyroscope</h2>
+  <body>
+    <h2>📈 Visualisation des données capteurs (Accel & Gyro)</h2>
     <div id="chart_div"></div>
   </body>
 </html>
