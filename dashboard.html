@@ -1,9 +1,77 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Graphique Données Capteurs</title>
+    <title>Tableau de Bord Capteurs</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+      }
+      header {
+        background-color: #333;
+        color: white;
+        padding: 1rem;
+        text-align: center;
+      }
+      nav {
+        background-color: #444;
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        padding: 1rem;
+      }
+      nav a {
+        color: white;
+        text-decoration: none;
+        font-weight: bold;
+      }
+      nav a:hover {
+        text-decoration: underline;
+      }
+      section {
+        padding: 2rem;
+      }
+      .hidden {
+        display: none;
+      }
+      #login-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+      }
+      #login-box {
+        background: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+    </style>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script type="text/javascript">
+    <script>
+      const PASSWORD = "admin123"; // 🔒 mot de passe à modifier
+
+      function login() {
+        const input = document.getElementById('password').value;
+        if (input === PASSWORD) {
+          document.getElementById('login-section').style.display = 'none';
+          document.getElementById('main-content').style.display = 'block';
+        } else {
+          alert('Mot de passe incorrect');
+        }
+      }
+
+      function showSection(id) {
+        document.querySelectorAll('#main-content section').forEach(section => {
+          section.classList.add('hidden');
+        });
+        document.getElementById(id).classList.remove('hidden');
+      }
+
+      // Partie graphique Google Charts
       google.charts.load('current', {
         packages: ['corechart', 'controls']
       });
@@ -11,7 +79,6 @@
 
       function drawDashboard() {
         const queryString = encodeURIComponent("SELECT A, B, F, G, H, I, J, K LIMIT 500");
-
         const dataSourceUrl = `https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c/gviz/tq?sheet=DATA&tq=${queryString}`;
 
         const query = new google.visualization.Query(dataSourceUrl);
@@ -23,26 +90,23 @@
 
           const data = response.getDataTable();
 
-          // Fusionner Date et Heure en une seule colonne DateTime
           for (let i = 0; i < data.getNumberOfRows(); i++) {
-            const dateStr = data.getValue(i, 0); // Colonne A (Date)
-            const timeStr = data.getValue(i, 1); // Colonne B (Heure)
+            const dateStr = data.getValue(i, 0);
+            const timeStr = data.getValue(i, 1);
             const dateParts = dateStr.split('/');
             const timeParts = timeStr.split(':');
-
             const date = new Date(
-              parseInt(dateParts[2]), // année
-              parseInt(dateParts[1]) - 1, // mois (0-indexé)
-              parseInt(dateParts[0]), // jour
+              parseInt(dateParts[2]),
+              parseInt(dateParts[1]) - 1,
+              parseInt(dateParts[0]),
               parseInt(timeParts[0]),
               parseInt(timeParts[1]),
               parseInt(timeParts[2])
             );
-
-            data.setValue(i, 0, date); // Remplace la colonne A par DateTime
+            data.setValue(i, 0, date);
           }
 
-          data.removeColumn(1); // Supprime l’ancienne colonne Heure
+          data.removeColumn(1);
 
           const dashboard = new google.visualization.Dashboard(document.getElementById('dashboard_div'));
 
@@ -86,10 +150,40 @@
     </script>
   </head>
   <body>
-    <h2>📈 Visualisation Accéléromètre et Gyroscope avec Filtre</h2>
-    <div id="dashboard_div">
-      <div id="chart_div"></div>
-      <div id="filter_div" style="margin-top: 30px;"></div>
+    <div id="login-section">
+      <div id="login-box">
+        <h2>🔐 Connexion</h2>
+        <input type="password" id="password" placeholder="Entrez le mot de passe">
+        <button onclick="login()">Connexion</button>
+      </div>
+    </div>
+
+    <div id="main-content" style="display:none;">
+      <header>
+        <h1>🧠 Tableau de Bord - Capteurs</h1>
+      </header>
+
+      <nav>
+        <a href="#" onclick="showSection('home')">🏠 Accueil</a>
+        <a href="#" onclick="showSection('graph')">📊 Graphique</a>
+      </nav>
+
+      <section id="home">
+        <h2>Bienvenue</h2>
+        <p>Ce site permet de visualiser en temps réel les données des capteurs (température, humidité, vibration, accéléromètre, gyroscope) collectées par l'ESP8266 et enregistrées dans Google Sheets.</p>
+        <ul>
+          <li>Accès protégé par mot de passe</li>
+          <li>Filtrage par date et heure</li>
+          <li>Visualisation graphique</li>
+        </ul>
+      </section>
+
+      <section id="graph" class="hidden">
+        <div id="dashboard_div">
+          <div id="chart_div"></div>
+          <div id="filter_div" style="margin-top: 30px;"></div>
+        </div>
+      </section>
     </div>
   </body>
 </html>
