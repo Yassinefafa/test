@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interface de Surveillance IoT</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.png" />
+  <meta name="theme-color" content="#2c3e50" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>Tableau de bord - Monitoring IoT</h1>
+    </header>
+    <nav>
+      <a href="#">Accueil</a>
+      <a href="#">Température</a>
+      <a href="#">Humidité</a>
+      <a href="#">Vibration</a>
+      <a href="#">Accéléromètre/Gyroscope</a>
+    </nav>
+    <main>
+      <section>
+        <h2>Bienvenue</h2>
+        <p>Sélectionnez une section dans le menu pour visualiser les données en temps réel.</p>
+      </section>
+    </main>
+  </div>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(() => console.log("Service Worker enregistré"))
+        .catch(err => console.error("Erreur d'enregistrement du Service Worker:", err));
+    }
+  </script>
+</body>
+</html>
