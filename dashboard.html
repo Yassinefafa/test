@@ -64,7 +64,7 @@
 
     <section id="temperature">
       <h2>Graphique - Température</h2>
-      <iframe src="https://datastudio.google.com/embed/reporting/YOUR_TEMP_REPORT_ID/page/1" allowfullscreen></iframe>
+      <iframe src="https://datastudio.google.com/embed/reporting/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c/page/765262925" allowfullscreen></iframe>
     </section>
 
     <section id="humidite">
@@ -102,8 +102,12 @@
   </div>
 
   <script>
-    let users = { "admin": "iot2025" };
+    let users = JSON.parse(localStorage.getItem('users')) || { "admin": "iot2025" };
     let currentUser = null;
+
+    function saveUsers() {
+      localStorage.setItem('users', JSON.stringify(users));
+    }
 
     function login() {
       const username = document.getElementById('username').value;
@@ -136,6 +140,7 @@
       const newPwd = document.getElementById('newPassword').value;
       if (currentUser && newPwd) {
         users[currentUser] = newPwd;
+        saveUsers();
         alert("Mot de passe mis à jour pour " + currentUser);
         updateUserTable();
       } else {
@@ -148,6 +153,7 @@
       const pass = document.getElementById('userPassword').value;
       if (user && pass) {
         users[user] = pass;
+        saveUsers();
         alert("Nouvel utilisateur ajouté : " + user);
         updateUserTable();
       } else {
@@ -167,6 +173,7 @@
       const newPass = prompt("Entrez le nouveau mot de passe pour " + user);
       if (newPass) {
         users[user] = newPass;
+        saveUsers();
         alert("Mot de passe mis à jour pour " + user);
         updateUserTable();
       }
