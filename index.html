@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>IoT Monitoring Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
@@ -37,21 +37,20 @@
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
       width: 350px;
       text-align: center;
-      transition: transform 0.3s ease;
     }
     .login-box h2 {
       margin-bottom: 24px;
       font-weight: 600;
       color: #2c3e50;
     }
-    input[type="text"], input[type="password"] {
+    input[type="text"], input[type="password"], input[type="email"] {
       width: 100%;
       padding: 12px;
       margin-top: 12px;
       border: 1px solid #ccc;
       border-radius: 8px;
       font-size: 16px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     }
     button {
       background-color: #2980b9;
@@ -79,9 +78,7 @@
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      padding-top: 20px;
-      padding-left: 10px;
-      padding-right: 10px;
+      padding: 20px 10px;
       box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
     }
     aside a {
@@ -144,6 +141,18 @@
       border: 1px solid #ccc;
       font-size: 14px;
     }
+    .settings ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 10px;
+    }
+    .settings ul li {
+      background: #fff;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
   </style>
 </head>
 <body>
@@ -165,7 +174,9 @@
       <a href="#" onclick="showPage('accelero')">🌀<span> Accéléro</span></a>
       <a href="#" onclick="showPage('dashboard')">📊<span> Tableau</span></a>
       <a href="#" onclick="showPage('settings')">⚙️<span> Paramètres</span></a>
+      <a href="#" onclick="logout()">🚪<span> Déconnexion</span></a>
     </aside>
+
     <main>
       <section id="home" class="active">
         <h2>Bienvenue</h2>
@@ -201,19 +212,31 @@
       </section>
 
       <section id="settings" class="settings">
-        <h2>Paramètres</h2>
+        <h2>Paramètres du Compte</h2>
+
+        <h3>Informations du compte</h3>
+        <input type="text" id="accountName" value="admin" placeholder="Nom d'utilisateur">
+        <input type="email" id="accountEmail" value="admin@example.com" placeholder="Adresse e-mail">
+        <button onclick="saveAccountSettings()">Enregistrer</button>
+
         <h3>Changer le mot de passe</h3>
-        <input type="password" placeholder="Nouveau mot de passe">
-        <button>Modifier</button>
+        <input type="password" id="newPassword" placeholder="Nouveau mot de passe">
+        <button onclick="changePassword()">Modifier</button>
+
         <h3>Ajouter un utilisateur</h3>
-        <input type="text" placeholder="Nom d'utilisateur">
-        <input type="password" placeholder="Mot de passe">
-        <button>Ajouter</button>
+        <input type="text" id="newUsername" placeholder="Nom d'utilisateur">
+        <input type="password" id="newUserPassword" placeholder="Mot de passe">
+        <button onclick="addUser()">Ajouter</button>
+
+        <h3>Utilisateurs existants</h3>
+        <ul id="userList"></ul>
       </section>
     </main>
   </div>
 
   <script>
+    let users = [{ username: "admin", email: "admin@example.com" }];
+
     function login() {
       const username = document.getElementById('loginUser').value;
       const password = document.getElementById('loginPass').value;
@@ -225,14 +248,54 @@
       }
     }
 
+    function logout() {
+      document.getElementById('mainContent').classList.remove('active');
+      document.getElementById('loginPage').classList.add('active');
+    }
+
     function showPage(pageId) {
-      const sections = document.querySelectorAll('section');
-      sections.forEach(section => {
+      document.querySelectorAll('section').forEach(section => {
         section.classList.remove('active');
       });
-      const activePage = document.getElementById(pageId);
-      activePage.classList.add('active');
+      document.getElementById(pageId).classList.add('active');
     }
+
+    function saveAccountSettings() {
+      const name = document.getElementById('accountName').value;
+      const email = document.getElementById('accountEmail').value;
+      users[0].username = name;
+      users[0].email = email;
+      alert("Compte mis à jour !");
+      updateUserList();
+    }
+
+    function changePassword() {
+      const newPass = document.getElementById('newPassword').value;
+      if (newPass.length < 4) return alert("Mot de passe trop court");
+      alert("Mot de passe modifié !");
+    }
+
+    function addUser() {
+      const name = document.getElementById('newUsername').value;
+      const pass = document.getElementById('newUserPassword').value;
+      if (name && pass) {
+        users.push({ username: name });
+        updateUserList();
+        alert("Utilisateur ajouté !");
+      }
+    }
+
+    function updateUserList() {
+      const list = document.getElementById("userList");
+      list.innerHTML = "";
+      users.forEach(user => {
+        const li = document.createElement("li");
+        li.textContent = user.username;
+        list.appendChild(li);
+      });
+    }
+
+    updateUserList();
   </script>
 </body>
 </html>
