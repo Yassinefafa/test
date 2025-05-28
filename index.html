@@ -42,7 +42,7 @@
       margin-bottom: 24px;
       font-weight: 600;
     }
-    input[type="password"] {
+    input[type="text"], input[type="password"] {
       width: 100%;
       padding: 12px;
       margin-top: 12px;
@@ -138,6 +138,7 @@
   <div id="loginPage" class="active">
     <div class="login-box">
       <h2>Connexion Sécurisée</h2>
+      <input type="text" id="loginUser" placeholder="Nom d'utilisateur">
       <input type="password" id="loginPass" placeholder="Entrez le mot de passe">
       <button onclick="login()">Connexion</button>
     </div>
@@ -152,7 +153,6 @@
       <a href="#" onclick="showPage('accelero')">🌀<span> Accéléro</span></a>
       <a href="#" onclick="showPage('dashboard')">📊<span> Tableau</span></a>
       <a href="#" onclick="showPage('settings')">⚙️<span> Paramètres</span></a>
-      <a href="#" onclick="logout()">🚪<span> Déconnexion</span></a>
     </aside>
     <main>
       <section id="home" class="active">
@@ -185,7 +185,7 @@
         <div class="filters">
           <input type="text" placeholder="Filtrer par mot-clé, date ou capteur">
         </div>
-        <iframe src="https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c" ></iframe>
+        <iframe src="https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c"></iframe>
       </section>
 
       <section id="settings" class="settings">
@@ -203,19 +203,14 @@
 
   <script>
     function login() {
+      const user = document.getElementById('loginUser').value;
       const pass = document.getElementById('loginPass').value;
-      if (pass === 'admin') {
+      if (user === 'admin' && pass === 'admin') {
         document.getElementById('loginPage').classList.remove('active');
         document.getElementById('mainContent').classList.add('active');
       } else {
-        alert('Mot de passe incorrect');
+        alert('Nom d\'utilisateur ou mot de passe incorrect');
       }
-    }
-
-    function logout() {
-      document.getElementById('mainContent').classList.remove('active');
-      document.getElementById('loginPage').classList.add('active');
-      document.getElementById('loginPass').value = '';
     }
 
     function showPage(id) {
