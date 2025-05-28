@@ -13,11 +13,11 @@
     }
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #f4f6f9;
+      background-color: #f0f2f5;
+      color: #34495e;
       display: flex;
       height: 100vh;
       overflow: hidden;
-      color: #2c3e50;
     }
     #loginPage, #mainContent {
       width: 100%;
@@ -35,65 +35,72 @@
       padding: 40px;
       border-radius: 16px;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-      width: 320px;
+      width: 350px;
       text-align: center;
+      transition: transform 0.3s ease;
     }
     .login-box h2 {
       margin-bottom: 24px;
       font-weight: 600;
+      color: #2c3e50;
     }
     input[type="text"], input[type="password"] {
       width: 100%;
       padding: 12px;
       margin-top: 12px;
       border: 1px solid #ccc;
-      border-radius: 10px;
+      border-radius: 8px;
       font-size: 16px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     button {
-      background-color: #3498db;
+      background-color: #2980b9;
       color: white;
       padding: 12px;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       cursor: pointer;
       width: 100%;
       font-size: 16px;
       margin-top: 20px;
       font-weight: 600;
+      transition: background-color 0.3s ease;
     }
     button:hover {
-      background-color: #2980b9;
+      background-color: #3498db;
     }
     aside {
-      background: #2c3e50;
-      width: 70px;
-      transition: width 0.3s;
+      background: #34495e;
+      width: 80px;
+      transition: width 0.3s ease;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding-top: 20px;
+      position: fixed;
+      height: 100%;
     }
     aside:hover {
-      width: 220px;
+      width: 250px;
     }
     aside a {
       color: white;
-      padding: 12px;
+      padding: 15px;
       text-decoration: none;
       width: 100%;
       display: flex;
       align-items: center;
       gap: 10px;
-      transition: background 0.3s;
+      transition: background 0.3s ease;
       font-size: 14px;
     }
     aside a:hover {
       background: #1abc9c;
     }
     main {
+      margin-left: 80px;
+      padding: 30px;
       flex: 1;
-      padding: 24px;
       overflow-y: auto;
     }
     section {
@@ -103,14 +110,16 @@
       display: block;
     }
     h2 {
+      font-size: 24px;
       margin-bottom: 16px;
       font-weight: 600;
+      color: #2c3e50;
     }
     iframe {
       width: 100%;
       height: calc(100vh - 120px);
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       background: white;
     }
     .filters {
@@ -119,7 +128,7 @@
     .filters input {
       padding: 10px;
       width: 100%;
-      max-width: 400px;
+      max-width: 500px;
       border-radius: 8px;
       border: 1px solid #ccc;
       font-size: 14px;
@@ -138,8 +147,8 @@
   <div id="loginPage" class="active">
     <div class="login-box">
       <h2>Connexion Sécurisée</h2>
-      <input type="text" id="loginUser" placeholder="Nom d'utilisateur">
-      <input type="password" id="loginPass" placeholder="Entrez le mot de passe">
+      <input type="text" id="loginUser" placeholder="Nom d'utilisateur" />
+      <input type="password" id="loginPass" placeholder="Entrez le mot de passe" />
       <button onclick="login()">Connexion</button>
     </div>
   </div>
