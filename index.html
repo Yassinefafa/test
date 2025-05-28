@@ -1,74 +1,58 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>IoT Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
     body {
       font-family: 'Inter', sans-serif;
     }
   </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-  <!-- Login Page -->
-  <div id="loginPage" class="flex items-center justify-center min-h-screen">
-    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-      <h2 class="text-2xl font-semibold text-center text-gray-800 mb-6">Connexion Sécurisée</h2>
-      <input id="loginUser" type="text" placeholder="Nom d'utilisateur" class="w-full mb-4 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400">
-      <input id="loginPass" type="password" placeholder="Mot de passe" class="w-full mb-6 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400">
-      <button onclick="login()" class="w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700">Connexion</button>
-    </div>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <!-- Auth Container -->
+  <div id="authContainer" class="w-full max-w-md p-6 bg-white rounded-xl shadow-xl">
+    <h2 class="text-2xl font-semibold text-gray-800 mb-4 text-center">Connexion</h2>
+    <input type="text" id="username" placeholder="Nom d'utilisateur" class="mb-3 w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+    <input type="password" id="password" placeholder="Mot de passe" class="mb-4 w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+    <button onclick="login()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Se connecter</button>
+    <p id="loginError" class="text-red-600 text-center mt-2 hidden">Identifiants incorrects</p>
   </div>
 
-  <!-- Main Content -->
-  <div id="mainContent" class="hidden">
-    <div class="flex h-screen">
+  <!-- Main App (Hidden until login) -->
+  <div id="mainApp" class="hidden w-full h-screen">
+    <div class="flex h-full">
       <!-- Sidebar -->
-      <aside class="bg-gray-800 text-white w-64 space-y-4 py-6 px-4 flex flex-col justify-between">
+      <aside class="w-64 bg-gray-800 text-white flex flex-col px-4 py-6 space-y-4">
+        <div class="text-xl font-bold mb-4">IoT Dashboard</div>
         <nav class="space-y-2">
-          <a href="#" onclick="showPage('home')" class="block px-4 py-2 rounded hover:bg-blue-600">🏠 Accueil</a>
-          <a href="#" onclick="showPage('dashboard')" class="block px-4 py-2 rounded hover:bg-blue-600">📊 Dashboard</a>
-          <a href="#" onclick="showPage('settings')" class="block px-4 py-2 rounded hover:bg-blue-600">⚙️ Paramètres</a>
+          <button onclick="showSection('dashboard')" class="w-full text-left px-3 py-2 hover:bg-gray-700 rounded-lg">📊 Dashboard</button>
+          <button onclick="showSection('settings')" class="w-full text-left px-3 py-2 hover:bg-gray-700 rounded-lg">⚙️ Paramètres</button>
         </nav>
-        <button onclick="logout()" class="w-full bg-red-600 py-2 rounded-md text-white font-bold hover:bg-red-700">🚪 Déconnexion</button>
+        <button onclick="logout()" class="mt-auto bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg text-white">Déconnexion</button>
       </aside>
 
-      <!-- Main Section -->
-      <main class="flex-1 overflow-y-auto p-8">
-        <section id="home" class="">
-          <h2 class="text-2xl font-bold mb-4">Bienvenue</h2>
-          <p>Sélectionnez une section pour afficher les données.</p>
-        </section>
-
-        <section id="dashboard" class="hidden">
-          <h2 class="text-2xl font-bold mb-4">Tableau de bord</h2>
-          <iframe src="https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c" class="w-full h-[600px] border rounded"></iframe>
+      <!-- Content Area -->
+      <main class="flex-1 p-6 overflow-y-auto">
+        <section id="dashboard" class="">
+          <h2 class="text-2xl font-semibold mb-4">Tableau de bord</h2>
+          <p>Données ici...</p>
         </section>
 
         <section id="settings" class="hidden">
-          <h2 class="text-2xl font-bold mb-6">Paramètres du compte</h2>
-
-          <div class="mb-6">
-            <h3 class="text-lg font-semibold mb-2">Changer le mot de passe</h3>
-            <input type="password" placeholder="Nouveau mot de passe" class="w-full mb-2 px-4 py-2 border rounded">
-            <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Modifier</button>
+          <h2 class="text-2xl font-semibold mb-4">Paramètres du compte</h2>
+          <div class="mb-4">
+            <label class="block text-sm font-medium">Nom d'utilisateur</label>
+            <input type="text" class="mt-1 w-full px-3 py-2 border rounded-lg" placeholder="admin" />
           </div>
-
-          <div class="mb-6">
-            <h3 class="text-lg font-semibold mb-2">Mettre à jour le nom d'utilisateur</h3>
-            <input type="text" placeholder="Nouveau nom d'utilisateur" class="w-full mb-2 px-4 py-2 border rounded">
-            <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Mettre à jour</button>
+          <div class="mb-4">
+            <label class="block text-sm font-medium">Mot de passe</label>
+            <input type="password" class="mt-1 w-full px-3 py-2 border rounded-lg" />
           </div>
-
-          <div>
-            <h3 class="text-lg font-semibold mb-2">Gestion des utilisateurs</h3>
-            <input type="text" placeholder="Nom d'utilisateur" class="w-full mb-2 px-4 py-2 border rounded">
-            <input type="password" placeholder="Mot de passe" class="w-full mb-2 px-4 py-2 border rounded">
-            <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Ajouter</button>
-          </div>
+          <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">Enregistrer les modifications</button>
         </section>
       </main>
     </div>
@@ -76,24 +60,24 @@
 
   <script>
     function login() {
-      const username = document.getElementById('loginUser').value;
-      const password = document.getElementById('loginPass').value;
-      if (username === 'admin' && password === 'password') {
-        document.getElementById('loginPage').classList.add('hidden');
-        document.getElementById('mainContent').classList.remove('hidden');
+      const user = document.getElementById('username').value;
+      const pass = document.getElementById('password').value;
+      if (user === 'admin' && pass === 'password') {
+        document.getElementById('authContainer').classList.add('hidden');
+        document.getElementById('mainApp').classList.remove('hidden');
+        showSection('dashboard');
       } else {
-        alert('Identifiants incorrects');
+        document.getElementById('loginError').classList.remove('hidden');
       }
     }
 
     function logout() {
-      document.getElementById('mainContent').classList.add('hidden');
-      document.getElementById('loginPage').classList.remove('hidden');
+      document.getElementById('authContainer').classList.remove('hidden');
+      document.getElementById('mainApp').classList.add('hidden');
     }
 
-    function showPage(id) {
-      const sections = document.querySelectorAll('main > section');
-      sections.forEach(section => section.classList.add('hidden'));
+    function showSection(id) {
+      document.querySelectorAll('main section').forEach(section => section.classList.add('hidden'));
       document.getElementById(id).classList.remove('hidden');
     }
   </script>
