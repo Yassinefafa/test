@@ -3,19 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Interface de Surveillance IoT</title>
+  <title>IoT Monitoring Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #fafafa;
-      color: #262626;
-      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #f4f6f9;
       display: flex;
       height: 100vh;
       overflow: hidden;
+      color: #2c3e50;
     }
     #loginPage, #mainContent {
       width: 100%;
@@ -23,126 +25,153 @@
       display: none;
       align-items: center;
       justify-content: center;
+      background: #ecf0f1;
     }
     #loginPage.active, #mainContent.active {
       display: flex;
     }
     .login-box {
       background: #fff;
-      padding: 24px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      width: 300px;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      width: 320px;
+      text-align: center;
     }
     .login-box h2 {
-      text-align: center;
+      margin-bottom: 24px;
+      font-weight: 600;
     }
     input[type="password"] {
       width: 100%;
       padding: 12px;
       margin-top: 12px;
       border: 1px solid #ccc;
-      border-radius: 8px;
+      border-radius: 10px;
+      font-size: 16px;
     }
     button {
-      background-color: #3897f0;
+      background-color: #3498db;
       color: white;
       padding: 12px;
       border: none;
-      border-radius: 12px;
+      border-radius: 10px;
       cursor: pointer;
       width: 100%;
-      font-weight: bold;
-      margin-top: 16px;
-      transition: background-color 0.3s ease;
+      font-size: 16px;
+      margin-top: 20px;
+      font-weight: 600;
     }
     button:hover {
-      background-color: #2c82d8;
+      background-color: #2980b9;
     }
     aside {
       background: #2c3e50;
-      width: 60px;
+      width: 70px;
+      transition: width 0.3s;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding-top: 10px;
-      transition: width 0.3s;
+      padding-top: 20px;
     }
     aside:hover {
-      width: 180px;
+      width: 220px;
     }
     aside a {
       color: white;
-      padding: 10px;
+      padding: 12px;
       text-decoration: none;
-      text-align: left;
       width: 100%;
       display: flex;
       align-items: center;
       gap: 10px;
-      white-space: nowrap;
+      transition: background 0.3s;
+      font-size: 14px;
     }
     aside a:hover {
       background: #1abc9c;
     }
     main {
       flex: 1;
-      padding: 20px;
+      padding: 24px;
       overflow-y: auto;
+    }
+    section {
+      display: none;
+    }
+    section.active {
+      display: block;
+    }
+    h2 {
+      margin-bottom: 16px;
+      font-weight: 600;
     }
     iframe {
       width: 100%;
-      height: calc(100vh - 60px);
+      height: calc(100vh - 120px);
       border: none;
+      border-radius: 10px;
+      background: white;
     }
     .filters {
       margin-bottom: 20px;
     }
     .filters input {
-      padding: 8px;
-      width: 300px;
-      border-radius: 6px;
+      padding: 10px;
+      width: 100%;
+      max-width: 400px;
+      border-radius: 8px;
       border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    .settings input {
+      padding: 10px;
+      width: 100%;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
   <div id="loginPage" class="active">
     <div class="login-box">
-      <h2>Connexion</h2>
-      <input type="password" id="loginPass" placeholder="Mot de passe">
-      <button onclick="login()">Se connecter</button>
+      <h2>Connexion Sécurisée</h2>
+      <input type="password" id="loginPass" placeholder="Entrez le mot de passe">
+      <button onclick="login()">Connexion</button>
     </div>
   </div>
 
   <div id="mainContent">
     <aside>
-      <a href="#" onclick="showPage('home')">🏠 Accueil</a>
-      <a href="#" onclick="showPage('humidity')">💧 Humidité</a>
-      <a href="#" onclick="showPage('heatIndex')">🌡️ Indice</a>
-      <a href="#" onclick="showPage('vibration')">📳 Vibration</a>
-      <a href="#" onclick="showPage('accelero')">🌀 Accéléro</a>
-      <a href="#" onclick="showPage('dashboard')">📊 Graphiques</a>
-      <a href="#" onclick="showPage('settings')">⚙️ Paramètres</a>
+      <a href="#" onclick="showPage('home')">🏠<span> Accueil</span></a>
+      <a href="#" onclick="showPage('humidity')">💧<span> Humidité</span></a>
+      <a href="#" onclick="showPage('heatIndex')">🌡️<span> Indice</span></a>
+      <a href="#" onclick="showPage('vibration')">📳<span> Vibration</span></a>
+      <a href="#" onclick="showPage('accelero')">🌀<span> Accéléro</span></a>
+      <a href="#" onclick="showPage('dashboard')">📊<span> Tableau</span></a>
+      <a href="#" onclick="showPage('settings')">⚙️<span> Paramètres</span></a>
+      <a href="#" onclick="logout()">🚪<span> Déconnexion</span></a>
     </aside>
     <main>
       <section id="home" class="active">
         <h2>Bienvenue</h2>
-        <p>Sélectionnez une section pour afficher les données.</p>
+        <p>Sélectionnez une section pour afficher les données de surveillance.</p>
       </section>
 
       <section id="humidity">
-        <h2>Humidité</h2>
+        <h2>Données d'Humidité</h2>
         <iframe src="https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c/edit?gid=1987165361"></iframe>
       </section>
 
       <section id="heatIndex">
-        <h2>Indice de chaleur</h2>
+        <h2>Indice de Chaleur</h2>
         <iframe src="https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c/edit?gid=566101440"></iframe>
       </section>
 
       <section id="vibration">
-        <h2>Vibration</h2>
+        <h2>Vibrations</h2>
         <iframe src="https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c/edit?gid=1555196993"></iframe>
       </section>
 
@@ -152,14 +181,14 @@
       </section>
 
       <section id="dashboard">
-        <h2>Tableau de bord</h2>
+        <h2>Tableau de Bord Unifié</h2>
         <div class="filters">
-          <input type="text" placeholder="Filtrer par date ou valeur">
+          <input type="text" placeholder="Filtrer par mot-clé, date ou capteur">
         </div>
         <iframe src="https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c" ></iframe>
       </section>
 
-      <section id="settings">
+      <section id="settings" class="settings">
         <h2>Paramètres</h2>
         <h3>Changer le mot de passe</h3>
         <input type="password" placeholder="Nouveau mot de passe">
@@ -181,6 +210,12 @@
       } else {
         alert('Mot de passe incorrect');
       }
+    }
+
+    function logout() {
+      document.getElementById('mainContent').classList.remove('active');
+      document.getElementById('loginPage').classList.add('active');
+      document.getElementById('loginPass').value = '';
     }
 
     function showPage(id) {
