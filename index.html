@@ -1,301 +1,101 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>IoT Monitoring Dashboard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IoT Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #f0f2f5;
-      color: #34495e;
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
-    #loginPage, #mainContent {
-      width: 100%;
-      height: 100%;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      background: #ecf0f1;
-    }
-    #loginPage.active, #mainContent.active {
-      display: flex;
-    }
-    .login-box {
-      background: #fff;
-      padding: 40px;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-      width: 350px;
-      text-align: center;
-    }
-    .login-box h2 {
-      margin-bottom: 24px;
-      font-weight: 600;
-      color: #2c3e50;
-    }
-    input[type="text"], input[type="password"], input[type="email"] {
-      width: 100%;
-      padding: 12px;
-      margin-top: 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    }
-    button {
-      background-color: #2980b9;
-      color: white;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      width: 100%;
-      font-size: 16px;
-      margin-top: 20px;
-      font-weight: 600;
-      transition: background-color 0.3s ease;
-    }
-    button:hover {
-      background-color: #3498db;
-    }
-    aside {
-      background: #34495e;
-      width: 250px;
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      padding: 20px 10px;
-      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-    }
-    aside a {
-      color: white;
-      padding: 15px;
-      text-decoration: none;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      transition: background 0.3s ease;
-      font-size: 14px;
-      border-radius: 8px;
-      margin-bottom: 10px;
-    }
-    aside a:hover {
-      background: #1abc9c;
-    }
-    main {
-      margin-left: 250px;
-      padding: 30px;
-      flex: 1;
-      overflow-y: auto;
-    }
-    section {
-      display: none;
-    }
-    section.active {
-      display: block;
-    }
-    h2 {
-      font-size: 24px;
-      margin-bottom: 16px;
-      font-weight: 600;
-      color: #2c3e50;
-    }
-    iframe {
-      width: 100%;
-      height: calc(100vh - 120px);
-      border: none;
-      border-radius: 8px;
-      background: white;
-    }
-    .filters {
-      margin-bottom: 20px;
-    }
-    .filters input {
-      padding: 10px;
-      width: 100%;
-      max-width: 500px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
-    .settings input {
-      padding: 10px;
-      width: 100%;
-      margin: 10px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
-    .settings ul {
-      list-style: none;
-      padding: 0;
-      margin-top: 10px;
-    }
-    .settings ul li {
-      background: #fff;
-      padding: 10px;
-      margin: 5px 0;
-      border-radius: 6px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
   </style>
 </head>
-<body>
-  <div id="loginPage" class="active">
-    <div class="login-box">
-      <h2>Connexion Sécurisée</h2>
-      <input type="text" id="loginUser" placeholder="Nom d'utilisateur" />
-      <input type="password" id="loginPass" placeholder="Entrez le mot de passe" />
-      <button onclick="login()">Connexion</button>
+<body class="bg-gray-100 min-h-screen">
+  <!-- Login Page -->
+  <div id="loginPage" class="flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+      <h2 class="text-2xl font-semibold text-center text-gray-800 mb-6">Connexion Sécurisée</h2>
+      <input id="loginUser" type="text" placeholder="Nom d'utilisateur" class="w-full mb-4 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400">
+      <input id="loginPass" type="password" placeholder="Mot de passe" class="w-full mb-6 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400">
+      <button onclick="login()" class="w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700">Connexion</button>
     </div>
   </div>
 
-  <div id="mainContent">
-    <aside>
-      <a href="#" onclick="showPage('home')">🏠<span> Accueil</span></a>
-      <a href="#" onclick="showPage('humidity')">💧<span> Humidité</span></a>
-      <a href="#" onclick="showPage('heatIndex')">🌡️<span> Indice</span></a>
-      <a href="#" onclick="showPage('vibration')">📳<span> Vibration</span></a>
-      <a href="#" onclick="showPage('accelero')">🌀<span> Accéléro</span></a>
-      <a href="#" onclick="showPage('dashboard')">📊<span> Tableau</span></a>
-      <a href="#" onclick="showPage('settings')">⚙️<span> Paramètres</span></a>
-      <a href="#" onclick="logout()">🚪<span> Déconnexion</span></a>
-    </aside>
+  <!-- Main Content -->
+  <div id="mainContent" class="hidden">
+    <div class="flex h-screen">
+      <!-- Sidebar -->
+      <aside class="bg-gray-800 text-white w-64 space-y-4 py-6 px-4 flex flex-col justify-between">
+        <nav class="space-y-2">
+          <a href="#" onclick="showPage('home')" class="block px-4 py-2 rounded hover:bg-blue-600">🏠 Accueil</a>
+          <a href="#" onclick="showPage('dashboard')" class="block px-4 py-2 rounded hover:bg-blue-600">📊 Dashboard</a>
+          <a href="#" onclick="showPage('settings')" class="block px-4 py-2 rounded hover:bg-blue-600">⚙️ Paramètres</a>
+        </nav>
+        <button onclick="logout()" class="w-full bg-red-600 py-2 rounded-md text-white font-bold hover:bg-red-700">🚪 Déconnexion</button>
+      </aside>
 
-    <main>
-      <section id="home" class="active">
-        <h2>Bienvenue</h2>
-        <p>Sélectionnez une section pour afficher les données de surveillance.</p>
-      </section>
+      <!-- Main Section -->
+      <main class="flex-1 overflow-y-auto p-8">
+        <section id="home" class="">
+          <h2 class="text-2xl font-bold mb-4">Bienvenue</h2>
+          <p>Sélectionnez une section pour afficher les données.</p>
+        </section>
 
-      <section id="humidity">
-        <h2>Données d'Humidité</h2>
-        <iframe src="https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c/edit?gid=1987165361"></iframe>
-      </section>
+        <section id="dashboard" class="hidden">
+          <h2 class="text-2xl font-bold mb-4">Tableau de bord</h2>
+          <iframe src="https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c" class="w-full h-[600px] border rounded"></iframe>
+        </section>
 
-      <section id="heatIndex">
-        <h2>Indice de Chaleur</h2>
-        <iframe src="https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c/edit?gid=566101440"></iframe>
-      </section>
+        <section id="settings" class="hidden">
+          <h2 class="text-2xl font-bold mb-6">Paramètres du compte</h2>
 
-      <section id="vibration">
-        <h2>Vibrations</h2>
-        <iframe src="https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c/edit?gid=1555196993"></iframe>
-      </section>
+          <div class="mb-6">
+            <h3 class="text-lg font-semibold mb-2">Changer le mot de passe</h3>
+            <input type="password" placeholder="Nouveau mot de passe" class="w-full mb-2 px-4 py-2 border rounded">
+            <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Modifier</button>
+          </div>
 
-      <section id="accelero">
-        <h2>Accéléromètre / Gyroscope</h2>
-        <iframe src="https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c/edit?gid=1034473890"></iframe>
-      </section>
+          <div class="mb-6">
+            <h3 class="text-lg font-semibold mb-2">Mettre à jour le nom d'utilisateur</h3>
+            <input type="text" placeholder="Nouveau nom d'utilisateur" class="w-full mb-2 px-4 py-2 border rounded">
+            <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Mettre à jour</button>
+          </div>
 
-      <section id="dashboard">
-        <h2>Tableau de Bord Unifié</h2>
-        <div class="filters">
-          <input type="text" placeholder="Filtrer par mot-clé, date ou capteur">
-        </div>
-        <iframe src="https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c"></iframe>
-      </section>
-
-      <section id="settings" class="settings">
-        <h2>Paramètres du Compte</h2>
-
-        <h3>Informations du compte</h3>
-        <input type="text" id="accountName" value="admin" placeholder="Nom d'utilisateur">
-        <input type="email" id="accountEmail" value="admin@example.com" placeholder="Adresse e-mail">
-        <button onclick="saveAccountSettings()">Enregistrer</button>
-
-        <h3>Changer le mot de passe</h3>
-        <input type="password" id="newPassword" placeholder="Nouveau mot de passe">
-        <button onclick="changePassword()">Modifier</button>
-
-        <h3>Ajouter un utilisateur</h3>
-        <input type="text" id="newUsername" placeholder="Nom d'utilisateur">
-        <input type="password" id="newUserPassword" placeholder="Mot de passe">
-        <button onclick="addUser()">Ajouter</button>
-
-        <h3>Utilisateurs existants</h3>
-        <ul id="userList"></ul>
-      </section>
-    </main>
+          <div>
+            <h3 class="text-lg font-semibold mb-2">Gestion des utilisateurs</h3>
+            <input type="text" placeholder="Nom d'utilisateur" class="w-full mb-2 px-4 py-2 border rounded">
+            <input type="password" placeholder="Mot de passe" class="w-full mb-2 px-4 py-2 border rounded">
+            <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Ajouter</button>
+          </div>
+        </section>
+      </main>
+    </div>
   </div>
 
   <script>
-    let users = [{ username: "admin", email: "admin@example.com" }];
-
     function login() {
       const username = document.getElementById('loginUser').value;
       const password = document.getElementById('loginPass').value;
       if (username === 'admin' && password === 'password') {
-        document.getElementById('loginPage').classList.remove('active');
-        document.getElementById('mainContent').classList.add('active');
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
       } else {
         alert('Identifiants incorrects');
       }
     }
 
     function logout() {
-      document.getElementById('mainContent').classList.remove('active');
-      document.getElementById('loginPage').classList.add('active');
+      document.getElementById('mainContent').classList.add('hidden');
+      document.getElementById('loginPage').classList.remove('hidden');
     }
 
-    function showPage(pageId) {
-      document.querySelectorAll('section').forEach(section => {
-        section.classList.remove('active');
-      });
-      document.getElementById(pageId).classList.add('active');
+    function showPage(id) {
+      const sections = document.querySelectorAll('main > section');
+      sections.forEach(section => section.classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
     }
-
-    function saveAccountSettings() {
-      const name = document.getElementById('accountName').value;
-      const email = document.getElementById('accountEmail').value;
-      users[0].username = name;
-      users[0].email = email;
-      alert("Compte mis à jour !");
-      updateUserList();
-    }
-
-    function changePassword() {
-      const newPass = document.getElementById('newPassword').value;
-      if (newPass.length < 4) return alert("Mot de passe trop court");
-      alert("Mot de passe modifié !");
-    }
-
-    function addUser() {
-      const name = document.getElementById('newUsername').value;
-      const pass = document.getElementById('newUserPassword').value;
-      if (name && pass) {
-        users.push({ username: name });
-        updateUserList();
-        alert("Utilisateur ajouté !");
-      }
-    }
-
-    function updateUserList() {
-      const list = document.getElementById("userList");
-      list.innerHTML = "";
-      users.forEach(user => {
-        const li = document.createElement("li");
-        li.textContent = user.username;
-        list.appendChild(li);
-      });
-    }
-
-    updateUserList();
   </script>
 </body>
 </html>
