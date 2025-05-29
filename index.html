@@ -1,78 +1,89 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>IoT Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    };
+  </script>
   <style>
     body {
       font-family: 'Inter', sans-serif;
     }
   </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 min-h-screen dark:bg-gray-900 dark:text-white">
   <!-- Login Page -->
   <div id="loginPage" class="flex items-center justify-center min-h-screen">
-    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-      <h2 class="text-2xl font-semibold text-center text-gray-800 mb-6">Connexion Sécurisée</h2>
-      <input id="loginUser" type="text" placeholder="Nom d'utilisateur" class="w-full mb-4 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400">
-      <input id="loginPass" type="password" placeholder="Mot de passe" class="w-full mb-6 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400">
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg w-full max-w-md">
+      <h2 class="text-2xl font-semibold text-center text-gray-800 dark:text-white mb-6">Connexion Sécurisée</h2>
+      <input id="loginUser" type="text" placeholder="Nom d'utilisateur" class="w-full mb-4 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-300">
+      <input id="loginPass" type="password" placeholder="Mot de passe" class="w-full mb-6 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-300">
       <button onclick="login()" class="w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700">Connexion</button>
     </div>
   </div>
 
   <!-- Main Content -->
-  <div id="mainContent" class="hidden">
-    <div class="flex h-screen">
-      <!-- Sidebar -->
-      <aside class="bg-gray-800 text-white w-64 space-y-4 py-6 px-4 flex flex-col justify-between">
-        <nav class="space-y-2">
-          <a href="#" onclick="showPage('home')" class="block px-4 py-2 rounded hover:bg-blue-600">🏠 Accueil</a>
-          <a href="#" onclick="showPage('dashboard')" class="block px-4 py-2 rounded hover:bg-blue-600">📊 Dashboard</a>
-          <a href="#" onclick="showPage('settings')" class="block px-4 py-2 rounded hover:bg-blue-600">⚙️ Paramètres</a>
+  <div id="mainContent" class="hidden md:flex">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="bg-gray-800 text-white w-64 space-y-4 py-6 px-4 flex-col justify-between hidden md:flex fixed md:relative z-50 h-full md:h-auto">
+      <div>
+        <div class="mb-6 text-center">
+          <p class="font-bold text-xl">🔧 IoT Monitor</p>
+          <p class="text-sm text-gray-400">👤 admin</p>
+        </div>
+        <nav class="space-y-2" id="navLinks">
+          <a href="#" onclick="showPage('home')" class="flex items-center gap-2 px-4 py-2 rounded hover:bg-blue-600">🏠 Accueil</a>
+          <a href="#" onclick="showPage('dashboard')" class="flex items-center gap-2 px-4 py-2 rounded hover:bg-blue-600">📊 Dashboard</a>
+          <a href="#" onclick="showPage('settings')" class="flex items-center gap-2 px-4 py-2 rounded hover:bg-blue-600">⚙️ Paramètres</a>
         </nav>
+      </div>
+      <div class="space-y-2">
+        <button onclick="toggleDarkMode()" class="text-sm w-full text-left text-gray-300 hover:text-white">🌙 Mode Sombre</button>
         <button onclick="logout()" class="w-full bg-red-600 py-2 rounded-md text-white font-bold hover:bg-red-700">🚪 Déconnexion</button>
-      </aside>
+      </div>
+    </aside>
 
-      <!-- Main Section -->
-      <main class="flex-1 overflow-y-auto p-8">
-        <section id="home" class="">
-          <h2 class="text-2xl font-bold mb-4">Bienvenue</h2>
-          <p>Sélectionnez une section pour afficher les données.</p>
-        </section>
+    <!-- Main Section -->
+    <main class="flex-1 overflow-y-auto p-8 md:ml-64">
+      <!-- Menu toggle button (mobile only) -->
+      <button onclick="toggleSidebar()" class="md:hidden mb-4 bg-gray-800 text-white px-4 py-2 rounded">☰ Menu</button>
 
-        <section id="dashboard" class="hidden">
-          <h2 class="text-2xl font-bold mb-4">Tableau de bord</h2>
-          <iframe src="https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c" class="w-full h-[600px] border rounded"></iframe>
+      <section id="home">
+        <h2 class="text-2xl font-bold mb-4">Bienvenue</h2>
+        <p>Sélectionnez une section pour afficher les données.</p>
+      </section>
 
-        </section>
+      <section id="dashboard" class="hidden">
+        <h2 class="text-2xl font-bold mb-4">Tableau de bord</h2>
+        <iframe src="https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c" class="w-full h-[600px] border rounded"></iframe>
+      </section>
 
-        <section id="settings" class="hidden">
-          <h2 class="text-2xl font-bold mb-6">Paramètres du compte</h2>
-
-          <div class="mb-6">
-            <h3 class="text-lg font-semibold mb-2">Changer le mot de passe</h3>
-            <input type="password" placeholder="Nouveau mot de passe" class="w-full mb-2 px-4 py-2 border rounded">
-            <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Modifier</button>
-          </div>
-
-          <div class="mb-6">
-            <h3 class="text-lg font-semibold mb-2">Mettre à jour le nom d'utilisateur</h3>
-            <input type="text" placeholder="Nouveau nom d'utilisateur" class="w-full mb-2 px-4 py-2 border rounded">
-            <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Mettre à jour</button>
-          </div>
-
-          <div>
-            <h3 class="text-lg font-semibold mb-2">Gestion des utilisateurs</h3>
-            <input type="text" placeholder="Nom d'utilisateur" class="w-full mb-2 px-4 py-2 border rounded">
-            <input type="password" placeholder="Mot de passe" class="w-full mb-2 px-4 py-2 border rounded">
-            <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Ajouter</button>
-          </div>
-        </section>
-      </main>
-    </div>
+      <section id="settings" class="hidden">
+        <h2 class="text-2xl font-bold mb-6">Paramètres du compte</h2>
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold mb-2">Changer le mot de passe</h3>
+          <input type="password" placeholder="Nouveau mot de passe" class="w-full mb-2 px-4 py-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+          <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Modifier</button>
+        </div>
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold mb-2">Mettre à jour le nom d'utilisateur</h3>
+          <input type="text" placeholder="Nouveau nom d'utilisateur" class="w-full mb-2 px-4 py-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+          <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Mettre à jour</button>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-2">Gestion des utilisateurs</h3>
+          <input type="text" placeholder="Nom d'utilisateur" class="w-full mb-2 px-4 py-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+          <input type="password" placeholder="Mot de passe" class="w-full mb-2 px-4 py-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+          <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Ajouter</button>
+        </div>
+      </section>
+    </main>
   </div>
 
   <script>
@@ -82,6 +93,7 @@
       if (username === 'admin' && password === 'password') {
         document.getElementById('loginPage').classList.add('hidden');
         document.getElementById('mainContent').classList.remove('hidden');
+        showPage('home');
       } else {
         alert('Identifiants incorrects');
       }
@@ -96,6 +108,28 @@
       const sections = document.querySelectorAll('main > section');
       sections.forEach(section => section.classList.add('hidden'));
       document.getElementById(id).classList.remove('hidden');
+
+      const links = document.querySelectorAll('#navLinks a');
+      links.forEach(link => link.classList.remove('bg-blue-700', 'font-bold'));
+
+      const activeLink = Array.from(links).find(link => link.getAttribute('onclick').includes(id));
+      if (activeLink) {
+        activeLink.classList.add('bg-blue-700', 'font-bold');
+      }
+
+      // Auto-close sidebar on mobile
+      if (window.innerWidth < 768) {
+        document.getElementById('sidebar').classList.add('hidden');
+      }
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('hidden');
+    }
+
+    function toggleDarkMode() {
+      document.documentElement.classList.toggle('dark');
     }
   </script>
 </body>
