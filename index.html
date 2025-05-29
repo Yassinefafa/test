@@ -104,7 +104,9 @@
 
   <script>
     let originalData = [];
+    let charts = {};  // لحفظ الرسوم البيانية
 
+    // دالة لجلب البيانات
     async function fetchData() {
       const response = await fetch("https://script.google.com/macros/s/AKfycby8FB58JbAnePfafVoZNfCGu6m9ie3_01u0SMVH310YYUZUWutx8Nla3noNW3HT0gCK/exec");
       const rawData = await response.json();
@@ -134,9 +136,10 @@
       });
 
       originalData = cleanedData;
-      updateCharts(cleanedData);
+      updateCharts(cleanedData);  // تحديث الرسوم البيانية بالبيانات المبدئية
     }
 
+    // دالة لتحديث الرسوم البيانية
     function updateCharts(data) {
       const labels = data.map(item => item.timestamp);
       const humidite = data.map(item => item.humidite);
@@ -144,35 +147,99 @@
       const vibration = data.map(item => item.vibration);
       const accelero = data.map(item => item.accelero);
 
-      const createChart = (id, label, dataset, color) => {
-        new Chart(document.getElementById(id), {
-          type: 'line',
-          data: {
-            labels: labels,
-            datasets: [{
-              label: label,
-              data: dataset,
-              borderColor: color,
-              backgroundColor: color + '33',
-              fill: true,
-              tension: 0.4
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: { display: true },
-            }
-          }
-        });
-      };
+      // إذا كانت الرسوم البيانية موجودة، نقوم بتحديثها
+      if (charts['humiditeChart']) charts['humiditeChart'].destroy();
+      if (charts['temperatureChart']) charts['temperatureChart'].destroy();
+      if (charts['vibrationChart']) charts['vibrationChart'].destroy();
+      if (charts['acceleroChart']) charts['acceleroChart'].destroy();
 
-      createChart('humiditeChart', 'Humidité (%)', humidite, '#3b82f6');
-      createChart('temperatureChart', 'Température (°C)', temperature, '#ef4444');
-      createChart('vibrationChart', 'Vibration', vibration, '#f59e0b');
-      createChart('acceleroChart', 'Accelero', accelero, '#10b981');
+      // إنشاء الرسوم البيانية الجديدة
+      charts['humiditeChart'] = new Chart(document.getElementById('humiditeChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Humidité (%)',
+            data: humidite,
+            borderColor: '#3b82f6',
+            backgroundColor: '#3b82f633',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true },
+          }
+        }
+      });
+
+      charts['temperatureChart'] = new Chart(document.getElementById('temperatureChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Température (°C)',
+            data: temperature,
+            borderColor: '#ef4444',
+            backgroundColor: '#ef444433',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true },
+          }
+        }
+      });
+
+      charts['vibrationChart'] = new Chart(document.getElementById('vibrationChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Vibration',
+            data: vibration,
+            borderColor: '#f59e0b',
+            backgroundColor: '#f59e0b33',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true },
+          }
+        }
+      });
+
+      charts['acceleroChart'] = new Chart(document.getElementById('acceleroChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Accelero',
+            data: accelero,
+            borderColor: '#10b981',
+            backgroundColor: '#10b98133',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true },
+          }
+        }
+      });
     }
 
+    // دالة لتصفية البيانات
     function filterData() {
       const start = new Date(document.getElementById('startTime').value);
       const end = new Date(document.getElementById('endTime').value);
@@ -182,9 +249,10 @@
         return timestamp >= start && timestamp <= end;
       });
 
-      updateCharts(filtered);
+      updateCharts(filtered);  // تحديث الرسوم البيانية بالبيانات المفلترة
     }
 
+    // دالة لتسجيل الدخول
     function login() {
       const username = document.getElementById('loginUser').value;
       const password = document.getElementById('loginPass').value;
@@ -197,11 +265,13 @@
       }
     }
 
+    // دالة لتسجيل الخروج
     function logout() {
       document.getElementById('mainContent').classList.add('hidden');
       document.getElementById('loginPage').classList.remove('hidden');
     }
 
+    // دالة لعرض الصفحات
     function showPage(id) {
       const sections = document.querySelectorAll('main > section');
       sections.forEach(section => section.classList.add('hidden'));
