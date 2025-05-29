@@ -104,39 +104,54 @@
 
   <script>
     let originalData = [];
-    let charts = {};
 
     async function fetchData() {
       const response = await fetch("https://script.google.com/macros/s/AKfycby8FB58JbAnePfafVoZNfCGu6m9ie3_01u0SMVH310YYUZUWutx8Nla3noNW3HT0gCK/exec");
-      const data = await response.json();
-      originalData = data;
-      updateCharts(data);
+      const rawData = await response.json();
+
+      // تنظيف وتحويل البيانات
+      const cleanedData = rawData.map(item => {
+        const date = new Date(item.Date);
+        const time = new Date(item.Heure);
+        
+        const timestamp = new Date(
+          date.getFullYear(), date.getMonth(), date.getDate(),
+          time.getHours(), time.getMinutes(), time.getSeconds()
+        );
+
+        return {
+          timestamp: timestamp.toISOString(),
+          humidite: parseFloat(item["Humidité "] || 0),
+          temperature: parseFloat(item["Température"] || 0),
+          vibration: parseFloat(item["Vibration "] || 0),
+          // حساب متوسط التسارع من القيم Accel_X, Accel_Y, Accel_Z
+          accelero: Math.sqrt(
+            Math.pow(item["Accel_X "] || 0, 2) +
+            Math.pow(item["Accel_Y"] || 0, 2) +
+            Math.pow(item["Accel_Z "] || 0, 2)
+          )
+        };
+      });
+
+      originalData = cleanedData;
+      updateCharts(cleanedData);
     }
 
     function updateCharts(data) {
       const labels = data.map(item => item.timestamp);
-      const humidite = data.map(item => parseFloat(item.humidite));
-      const temperature = data.map(item => parseFloat(item.temperature));
-      const vibration = data.map(item => parseFloat(item.vibration));
-      const accelero = data.map(item => parseFloat(item.accelero));
+      const humidite = data.map(item => item.humidite);
+      const temperature = data.map(item => item.temperature);
+      const vibration = data.map(item => item.vibration);
+      const accelero = data.map(item => item.accelero);
 
-      const datasets = [
-        { id: 'humiditeChart', label: 'Humidité (%)', data: humidite, color: '#3b82f6' },
-        { id: 'temperatureChart', label: 'Température (°C)', data: temperature, color: '#ef4444' },
-        { id: 'vibrationChart', label: 'Vibration', data: vibration, color: '#f59e0b' },
-        { id: 'acceleroChart', label: 'Accelero', data: accelero, color: '#10b981' },
-      ];
-
-      datasets.forEach(({ id, label, data, color }) => {
-        const ctx = document.getElementById(id).getContext('2d');
-        if (charts[id]) charts[id].destroy();
-        charts[id] = new Chart(ctx, {
+      const createChart = (id, label, dataset, color) => {
+        new Chart(document.getElementById(id), {
           type: 'line',
           data: {
             labels: labels,
             datasets: [{
-              label,
-              data,
+              label: label,
+              data: dataset,
               borderColor: color,
               backgroundColor: color + '33',
               fill: true,
@@ -150,7 +165,12 @@
             }
           }
         });
-      });
+      };
+
+      createChart('humiditeChart', 'Humidité (%)', humidite, '#3b82f6');
+      createChart('temperatureChart', 'Température (°C)', temperature, '#ef4444');
+      createChart('vibrationChart', 'Vibration', vibration, '#f59e0b');
+      createChart('acceleroChart', 'Accelero', accelero, '#10b981');
     }
 
     function filterData() {
