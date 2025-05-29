@@ -31,7 +31,7 @@
   <!-- Main Content -->
   <div id="mainContent" class="hidden md:flex">
     <!-- Sidebar -->
-    <aside id="sidebar" class="bg-gray-800 text-white w-64 space-y-4 py-6 px-4 flex-col justify-between md:flex hidden fixed md:relative z-50 h-full md:h-auto">
+    <aside id="sidebar" class="bg-gray-800 text-white w-64 space-y-4 py-6 px-4 flex-col justify-between hidden md:flex fixed md:relative z-50 h-full md:h-auto">
       <div>
         <div class="mb-6 text-center">
           <p class="font-bold text-xl">🔧 IoT Monitor</p>
@@ -100,7 +100,7 @@
 
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('hidden');  // Toggle the sidebar visibility
+      sidebar.classList.toggle('hidden');
     }
 
     function showPage(page) {
@@ -109,12 +109,6 @@
         section.classList.add('hidden');
       });
       document.getElementById(page).classList.remove('hidden');
-
-      // Hide sidebar if on mobile
-      if (window.innerWidth <= 768) {
-        const sidebar = document.getElementById('sidebar');
-        sidebar.classList.add('hidden');
-      }
     }
 
     function toggleDarkMode() {
