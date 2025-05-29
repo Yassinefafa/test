@@ -14,6 +14,7 @@
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
+
   <!-- Login Page -->
   <div id="loginPage" class="flex items-center justify-center min-h-screen">
     <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
@@ -28,7 +29,12 @@
   <div id="mainContent" class="hidden">
     <div class="flex h-screen">
       <!-- Sidebar -->
-      <aside class="bg-gray-800 text-white w-64 space-y-4 py-6 px-4 flex flex-col justify-between">
+      <aside id="sidebar" class="bg-gray-800 text-white w-64 space-y-4 py-6 px-4 flex flex-col justify-between transform transition-all duration-300 ease-in-out md:transform-none md:w-64 md:flex-col fixed inset-0 z-10 bg-gray-800 md:static md:flex md:h-auto">
+        <button id="sidebarToggle" class="text-white md:hidden absolute top-4 left-4">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-8 w-8">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
         <nav class="space-y-2">
           <a href="#" onclick="showPage('home')" class="block px-4 py-2 rounded hover:bg-blue-600">🏠 Accueil</a>
           <a href="#" onclick="showPage('dashboard')" class="block px-4 py-2 rounded hover:bg-blue-600">📊 Dashboard</a>
@@ -39,7 +45,7 @@
       </aside>
 
       <!-- Main Section -->
-      <main class="flex-1 overflow-y-auto p-8">
+      <main class="flex-1 overflow-y-auto p-8 ml-64 md:ml-0">
         <section id="home" class="">
           <h2 class="text-2xl font-bold mb-4">Bienvenue</h2>
           <p>Sélectionnez une section pour afficher les données.</p>
@@ -52,7 +58,6 @@
 
         <section id="settings" class="hidden">
           <h2 class="text-2xl font-bold mb-6">Paramètres du compte</h2>
-
           <div class="mb-6">
             <h3 class="text-lg font-semibold mb-2">Changer le mot de passe</h3>
             <input type="password" placeholder="Nouveau mot de passe" class="w-full mb-2 px-4 py-2 border rounded">
@@ -91,11 +96,19 @@
           </div>
 
           <!-- Les Graphiques -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <canvas id="humiditeChart"></canvas>
-            <canvas id="temperatureChart"></canvas>
-            <canvas id="vibrationChart"></canvas>
-            <canvas id="acceleroChart"></canvas>
+          <div class="grid grid-cols-1 gap-6">
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+              <canvas id="humiditeChart"></canvas>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+              <canvas id="temperatureChart"></canvas>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+              <canvas id="vibrationChart"></canvas>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+              <canvas id="acceleroChart"></canvas>
+            </div>
           </div>
         </section>
       </main>
@@ -170,7 +183,7 @@
         options: {
           responsive: true,
           plugins: {
-            legend: { display: true },
+            legend: { display: true }
           }
         }
       });
@@ -191,7 +204,7 @@
         options: {
           responsive: true,
           plugins: {
-            legend: { display: true },
+            legend: { display: true }
           }
         }
       });
@@ -212,7 +225,7 @@
         options: {
           responsive: true,
           plugins: {
-            legend: { display: true },
+            legend: { display: true }
           }
         }
       });
@@ -222,7 +235,7 @@
         data: {
           labels: labels,
           datasets: [{
-            label: 'Accelero',
+            label: 'Accélération (g)',
             data: accelero,
             borderColor: '#10b981',
             backgroundColor: '#10b98133',
@@ -233,23 +246,23 @@
         options: {
           responsive: true,
           plugins: {
-            legend: { display: true },
+            legend: { display: true }
           }
         }
       });
     }
 
-    // دالة لتصفية البيانات
+    // دالة لتصفية البيانات بناءً على التواريخ المختارة
     function filterData() {
-      const start = new Date(document.getElementById('startTime').value);
-      const end = new Date(document.getElementById('endTime').value);
-
-      const filtered = originalData.filter(item => {
-        const timestamp = new Date(item.timestamp);
-        return timestamp >= start && timestamp <= end;
-      });
-
-      updateCharts(filtered);  // تحديث الرسوم البيانية بالبيانات المفلترة
+      const startTime = document.getElementById('startTime').value;
+      const endTime = document.getElementById('endTime').value;
+      
+      if (startTime && endTime) {
+        const filteredData = originalData.filter(item => {
+          return item.timestamp >= startTime && item.timestamp <= endTime;
+        });
+        updateCharts(filteredData);  // تحديث الرسوم البيانية بناءً على البيانات المفلترة
+      }
     }
 
     // دالة لتسجيل الدخول
@@ -277,6 +290,14 @@
       sections.forEach(section => section.classList.add('hidden'));
       document.getElementById(id).classList.remove('hidden');
     }
+
+    // دالة لتبديل القائمة الجانبية
+    document.getElementById('sidebarToggle').addEventListener('click', () => {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('transform');
+      sidebar.classList.toggle('-translate-x-64');
+    });
   </script>
+
 </body>
 </html>
