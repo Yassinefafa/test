@@ -112,6 +112,33 @@
     .pulse {
       animation: pulse 1.5s infinite;
     }
+    
+    /* Sidebar mobile styles */
+    @media (max-width: 767px) {
+      #sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+      }
+      
+      #sidebar.active {
+        transform: translateX(0);
+      }
+      
+      #sidebarOverlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 9;
+      }
+      
+      #sidebarOverlay.active {
+        display: block;
+      }
+    }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -255,6 +282,9 @@
 
   <!-- Main Content -->
   <div id="mainContent" class="hidden">
+    <!-- Sidebar overlay for mobile -->
+    <div id="sidebarOverlay" class=""></div>
+    
     <!-- Top Navigation Bar -->
     <header class="bg-white shadow-sm py-3 px-4 flex items-center justify-between fixed top-0 left-0 right-0 z-10">
       <div class="flex items-center">
@@ -292,25 +322,25 @@
     
     <div class="flex pt-16">
       <!-- Sidebar -->
-      <aside id="sidebar" class="bg-gray-800 text-white space-y-4 py-6 px-4 flex flex-col justify-between transform transition-all duration-300 ease-in-out w-64 fixed inset-y-0 left-0 z-10 md:static md:flex md:h-auto">
+      <aside id="sidebar" class="bg-gray-800 text-white space-y-4 py-6 px-4 flex flex-col justify-between w-64 fixed inset-y-0 left-0 z-10 transform transition-all duration-300 ease-in-out md:static md:h-auto">
         <nav class="space-y-2">
-          <a href="#" onclick="showPage('home')" class="flex items-center px-4 py-3 rounded-lg hover:bg-blue-600 transition-colors">
+          <a href="#" onclick="showPage('home'); closeSidebar();" class="flex items-center px-4 py-3 rounded-lg hover:bg-blue-600 transition-colors">
             <i class="fas fa-home mr-3"></i>
             <span>Accueil</span>
           </a>
-          <a href="#" onclick="showPage('dashboard')" class="flex items-center px-4 py-3 rounded-lg hover:bg-blue-600 transition-colors">
+          <a href="#" onclick="showPage('dashboard'); closeSidebar();" class="flex items-center px-4 py-3 rounded-lg hover:bg-blue-600 transition-colors">
             <i class="fas fa-tachometer-alt mr-3"></i>
             <span>Dashboard</span>
           </a>
-          <a href="#" onclick="showPage('graph')" class="flex items-center px-4 py-3 rounded-lg hover:bg-blue-600 transition-colors">
+          <a href="#" onclick="showPage('graph'); closeSidebar();" class="flex items-center px-4 py-3 rounded-lg hover:bg-blue-600 transition-colors">
             <i class="fas fa-chart-line mr-3"></i>
             <span>Graphiques</span>
           </a>
-          <a href="#" onclick="showPage('devices')" class="flex items-center px-4 py-3 rounded-lg hover:bg-blue-600 transition-colors">
+          <a href="#" onclick="showPage('devices'); closeSidebar();" class="flex items-center px-4 py-3 rounded-lg hover:bg-blue-600 transition-colors">
             <i class="fas fa-microchip mr-3"></i>
             <span>Appareils</span>
           </a>
-          <a href="#" onclick="showPage('settings')" class="flex items-center px-4 py-3 rounded-lg hover:bg-blue-600 transition-colors">
+          <a href="#" onclick="showPage('settings'); closeSidebar();" class="flex items-center px-4 py-3 rounded-lg hover:bg-blue-600 transition-colors">
             <i class="fas fa-cog mr-3"></i>
             <span>Paramètres</span>
           </a>
@@ -321,7 +351,7 @@
       </aside>
 
       <!-- Main Section -->
-      <main class="flex-1 overflow-y-auto p-4 md:ml-64 min-h-[calc(100vh-4rem)]">
+      <main class="flex-1 overflow-y-auto p-4 md:ml-0 min-h-[calc(100vh-4rem)]">
         <!-- Home Page -->
         <section id="home" class="">
           <div class="mb-8">
@@ -461,9 +491,9 @@
         <!-- Dashboard Page -->
         <section id="dashboard" class="hidden">
           <h2 class="text-2xl font-bold text-gray-800 mb-6">Tableau de bord</h2>
-          <div class="card overflow-hidden">
+          <div class="card p-6">
             <div class="p-4 border-b flex justify-between items-center">
-              <h3 class="font-medium">Données des capteurs en temps réel</h3>
+              <h3 class="font-medium text-gray-800">Données des capteurs en temps réel</h3>
               <div class="flex items-center space-x-2">
                 <span class="flex h-3 w-3">
                   <span class="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-green-400 opacity-75"></span>
@@ -472,7 +502,104 @@
                 <span class="text-sm text-green-600">Connecté</span>
               </div>
             </div>
-            <iframe src="https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c" class="w-full h-[600px]"></iframe>
+            
+            <div class="overflow-x-auto mt-4">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capteur</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valeur</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dernière mise à jour</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="bg-blue-100 p-2 rounded-full mr-3">
+                          <i class="fas fa-thermometer-half text-blue-600"></i>
+                        </div>
+                        <div>
+                          <div class="text-sm font-medium text-gray-900">Capteur Température #001</div>
+                          <div class="text-sm text-gray-500">ID: SN-123456</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="text-lg font-bold">24.5°C</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Normal</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Il y a 2 min</td>
+                  </tr>
+                  
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="bg-green-100 p-2 rounded-full mr-3">
+                          <i class="fas fa-tint text-green-600"></i>
+                        </div>
+                        <div>
+                          <div class="text-sm font-medium text-gray-900">Capteur Humidité #012</div>
+                          <div class="text-sm text-gray-500">ID: SN-789012</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="text-lg font-bold">45.2%</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Normal</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Il y a 3 min</td>
+                  </tr>
+                  
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="bg-purple-100 p-2 rounded-full mr-3">
+                          <i class="fas fa-vibration text-purple-600"></i>
+                        </div>
+                        <div>
+                          <div class="text-sm font-medium text-gray-900">Capteur Vibration #007</div>
+                          <div class="text-sm text-gray-500">ID: SN-345678</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="text-lg font-bold">8.7</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Alerte</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Il y a 5 min</td>
+                  </tr>
+                  
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="bg-red-100 p-2 rounded-full mr-3">
+                          <i class="fas fa-running text-red-600"></i>
+                        </div>
+                        <div>
+                          <div class="text-sm font-medium text-gray-900">Capteur Accélération #003</div>
+                          <div class="text-sm text-gray-500">ID: SN-901234</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="text-lg font-bold">1.5 m/s²</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Normal</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Il y a 7 min</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 
@@ -1132,13 +1259,31 @@
       });
     }
 
+    // Toggle sidebar on mobile
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      
+      sidebar.classList.toggle('active');
+      overlay.classList.toggle('active');
+    }
+    
+    // Close sidebar on mobile
+    function closeSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      
+      sidebar.classList.remove('active');
+      overlay.classList.remove('active');
+    }
+
     // Initialize the application
     function init() {
       // Setup sidebar toggle
-      document.getElementById('sidebarToggle').addEventListener('click', () => {
-        document.getElementById('sidebar').classList.toggle('hidden');
-        document.getElementById('sidebar').classList.toggle('md:flex');
-      });
+      document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
+      
+      // Setup sidebar overlay
+      document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
       
       // Setup current datetime for filters
       const now = new Date();
