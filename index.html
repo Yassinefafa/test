@@ -20,7 +20,7 @@
     
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #f1f5f9;
+      background: linear-gradient(135deg, #f0f4f8, #e2e8f0);
       overflow-x: hidden;
     }
     
@@ -29,15 +29,16 @@
       border-radius: 0.75rem;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
       transition: all 0.3s ease;
+      border: 1px solid #e2e8f0;
     }
     
     .card:hover {
-      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
       transform: translateY(-2px);
     }
     
     .btn {
-      background: var(--primary);
+      background: linear-gradient(to right, var(--primary), var(--secondary));
       color: white;
       padding: 0.6rem 1.2rem;
       border-radius: 0.5rem;
@@ -48,11 +49,12 @@
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
+      border: none;
     }
     
     .btn:hover {
-      background: var(--secondary);
       transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
     }
     
     .btn-outline {
@@ -139,9 +141,110 @@
         display: block;
       }
     }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    
+    /* Loading spinner */
+    .loader {
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      display: inline-block;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Device map */
+    .device-map {
+      position: relative;
+      width: 100%;
+      height: 400px;
+      background: linear-gradient(45deg, #e0f2fe, #dbeafe);
+      border-radius: 0.75rem;
+      overflow: hidden;
+    }
+    
+    .device-point {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    }
+    
+    .device-point:hover {
+      transform: translate(-50%, -50%) scale(1.5);
+      z-index: 10;
+    }
+    
+    .device-point.active {
+      width: 20px;
+      height: 20px;
+      z-index: 5;
+    }
+    
+    .device-info {
+      position: absolute;
+      background: white;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      min-width: 200px;
+      z-index: 20;
+      display: none;
+    }
+    
+    /* Gradient backgrounds */
+    .gradient-primary {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    }
+    
+    .gradient-warning {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+    
+    .gradient-success {
+      background: linear-gradient(135deg, #10b981, #059669);
+    }
+    
+    .gradient-purple {
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    }
+    
+    /* Chart improvements */
+    .chart-container {
+      position: relative;
+      height: 250px;
+      width: 100%;
+    }
   </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="min-h-screen">
 
   <!-- Notification System -->
   <div id="notificationContainer"></div>
@@ -150,8 +253,8 @@
   <div id="loginPage" class="flex items-center justify-center min-h-screen p-4">
     <div class="bg-white p-8 rounded-xl shadow-xl w-full max-w-md card">
       <div class="text-center mb-8">
-        <div class="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-          <i class="fas fa-microchip text-3xl text-blue-600"></i>
+        <div class="gradient-primary w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-microchip text-white text-3xl"></i>
         </div>
         <h2 class="text-3xl font-bold text-gray-800">Connexion Sécurisée</h2>
         <p class="text-gray-600 mt-2">Connectez-vous à votre tableau de bord IoT</p>
@@ -205,8 +308,8 @@
   <div id="registerPage" class="hidden flex items-center justify-center min-h-screen p-4">
     <div class="bg-white p-8 rounded-xl shadow-xl w-full max-w-md card">
       <div class="text-center mb-8">
-        <div class="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-          <i class="fas fa-user-plus text-3xl text-blue-600"></i>
+        <div class="gradient-primary w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-user-plus text-white text-3xl"></i>
         </div>
         <h2 class="text-3xl font-bold text-gray-800">Créer un compte</h2>
         <p class="text-gray-600 mt-2">Rejoignez notre plateforme IoT</p>
@@ -300,6 +403,13 @@
       <div class="flex items-center space-x-4">
         <div class="relative">
           <button class="text-gray-500 hover:text-gray-700">
+            <i class="fas fa-clock mr-1"></i>
+            <span id="currentTime">12:45:32</span>
+          </button>
+        </div>
+        
+        <div class="relative">
+          <button class="text-gray-500 hover:text-gray-700">
             <i class="fas fa-bell text-xl"></i>
           </button>
           <span class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full"></span>
@@ -322,7 +432,7 @@
     
     <div class="flex pt-16">
       <!-- Sidebar -->
-      <aside id="sidebar" class="bg-gray-800 text-white space-y-4 py-6 px-4 flex flex-col justify-between w-64 fixed inset-y-0 left-0 z-10 transform transition-all duration-300 ease-in-out md:static md:h-auto">
+      <aside id="sidebar" class="bg-gradient-to-b from-gray-800 to-gray-900 text-white space-y-4 py-6 px-4 flex flex-col justify-between w-64 fixed inset-y-0 left-0 z-10 transform transition-all duration-300 ease-in-out md:static md:h-auto">
         <nav class="space-y-2">
           <a href="#" onclick="showPage('home'); closeSidebar();" class="flex items-center px-4 py-3 rounded-lg hover:bg-blue-600 transition-colors">
             <i class="fas fa-home mr-3"></i>
@@ -345,7 +455,7 @@
             <span>Paramètres</span>
           </a>
         </nav>
-        <button onclick="logout()" class="w-full bg-red-600 py-2 rounded-lg text-white font-semibold hover:bg-red-700 transition-colors flex items-center justify-center">
+        <button onclick="logout()" class="w-full bg-gradient-to-r from-red-600 to-red-700 py-2 rounded-lg text-white font-semibold hover:from-red-700 hover:to-red-800 transition-colors flex items-center justify-center">
           <i class="fas fa-sign-out-alt mr-2"></i> Déconnexion
         </button>
       </aside>
@@ -478,12 +588,16 @@
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="card p-6">
               <h3 class="text-xl font-bold text-gray-800 mb-4">Statut des appareils</h3>
-              <canvas id="deviceStatusChart" height="250"></canvas>
+              <div class="chart-container">
+                <canvas id="deviceStatusChart"></canvas>
+              </div>
             </div>
             
             <div class="card p-6">
               <h3 class="text-xl font-bold text-gray-800 mb-4">Répartition des types d'appareils</h3>
-              <canvas id="deviceTypeChart" height="250"></canvas>
+              <div class="chart-container">
+                <canvas id="deviceTypeChart"></canvas>
+              </div>
             </div>
           </div>
         </section>
@@ -619,6 +733,9 @@
               <button onclick="filterData()" class="btn mt-2 sm:mt-0">
                 <i class="fas fa-filter mr-2"></i> Appliquer
               </button>
+              <button onclick="resetFilters()" class="btn-outline mt-2 sm:mt-0">
+                <i class="fas fa-redo mr-2"></i> Réinitialiser
+              </button>
             </div>
           </div>
 
@@ -631,7 +748,9 @@
                   <span class="font-semibold ml-1" id="currentHumidite">--%</span>
                 </div>
               </div>
-              <canvas id="humiditeChart" height="250"></canvas>
+              <div class="chart-container">
+                <canvas id="humiditeChart"></canvas>
+              </div>
             </div>
             
             <div class="card p-6">
@@ -642,7 +761,9 @@
                   <span class="font-semibold ml-1" id="currentTemperature">--°C</span>
                 </div>
               </div>
-              <canvas id="temperatureChart" height="250"></canvas>
+              <div class="chart-container">
+                <canvas id="temperatureChart"></canvas>
+              </div>
             </div>
           </div>
           
@@ -655,7 +776,9 @@
                   <span class="font-semibold ml-1" id="currentVibration">--</span>
                 </div>
               </div>
-              <canvas id="vibrationChart" height="250"></canvas>
+              <div class="chart-container">
+                <canvas id="vibrationChart"></canvas>
+              </div>
             </div>
             
             <div class="card p-6">
@@ -666,7 +789,9 @@
                   <span class="font-semibold ml-1" id="currentAccelero">-- m/s²</span>
                 </div>
               </div>
-              <canvas id="acceleroChart" height="250"></canvas>
+              <div class="chart-container">
+                <canvas id="acceleroChart"></canvas>
+              </div>
             </div>
           </div>
         </section>
@@ -784,12 +909,16 @@
           
           <div class="card p-6">
             <h3 class="text-xl font-bold text-gray-800 mb-4">Emplacement des appareils</h3>
-            <div class="bg-gray-200 border-2 border-dashed rounded-xl w-full h-96 flex items-center justify-center">
-              <div class="text-center">
-                <i class="fas fa-map-marker-alt text-4xl text-gray-400 mb-3"></i>
-                <p class="text-gray-600">Carte d'emplacement des appareils</p>
-                <p class="text-gray-500 text-sm mt-2">Les données de localisation seront affichées ici</p>
-              </div>
+            <div class="device-map" id="deviceMap">
+              <div class="device-point" style="top: 30%; left: 25%; background: #3b82f6;" data-device="Temp #001"></div>
+              <div class="device-point" style="top: 65%; left: 45%; background: #10b981;" data-device="Hum #012"></div>
+              <div class="device-point active" style="top: 45%; left: 70%; background: #f59e0b;" data-device="Vib #007"></div>
+              <div class="device-point" style="top: 25%; left: 55%; background: #8b5cf6;" data-device="Acc #003"></div>
+              <div class="device-point" style="top: 75%; left: 35%; background: #3b82f6;" data-device="Temp #002"></div>
+              <div class="device-point" style="top: 50%; left: 20%; background: #10b981;" data-device="Hum #011"></div>
+              <div class="device-point" style="top: 60%; left: 80%; background: #f59e0b;" data-device="Vib #008"></div>
+              <div class="device-point" style="top: 35%; left: 65%; background: #8b5cf6;" data-device="Acc #005"></div>
+              <div class="device-info" id="deviceInfo"></div>
             </div>
           </div>
         </section>
@@ -801,7 +930,9 @@
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="card p-6 lg:col-span-1">
               <div class="text-center mb-6">
-                <div class="bg-gray-200 border-2 border-dashed rounded-xl w-32 h-32 mx-auto mb-4"></div>
+                <div class="bg-gradient-to-r from-blue-400 to-blue-600 w-32 h-32 rounded-full mx-auto mb-4 flex items-center justify-center">
+                  <span class="text-white text-5xl font-bold" id="settingsInitial">A</span>
+                </div>
                 <h3 class="text-lg font-bold text-gray-800" id="settingsUsername">Admin</h3>
                 <p class="text-gray-600 text-sm" id="settingsEmail">admin@iot-dashboard.fr</p>
               </div>
@@ -891,7 +1022,8 @@
       currentUser: null,
       charts: {},
       data: [],
-      intervalId: null
+      intervalId: null,
+      timeInterval: null
     };
 
     // Notification system
@@ -926,6 +1058,13 @@
       }, 5000);
     }
 
+    // Update current time
+    function updateTime() {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString('fr-FR');
+      document.getElementById('currentTime').textContent = timeString;
+    }
+
     // Login function
     function login() {
       const username = document.getElementById('loginUser').value;
@@ -936,33 +1075,47 @@
         return;
       }
       
-      // Mock authentication
-      if (username === 'admin' && password === 'password') {
-        state.isLoggedIn = true;
-        state.currentUser = {
-          username: 'admin',
-          name: 'Administrateur',
-          email: 'admin@iot-dashboard.fr'
-        };
+      // Show loading indicator
+      const loginBtn = document.querySelector('#loginPage .btn');
+      const originalBtnText = loginBtn.innerHTML;
+      loginBtn.innerHTML = '<div class="loader"></div> Connexion en cours...';
+      
+      // Simulate API delay
+      setTimeout(() => {
+        // Mock authentication
+        if (username === 'admin' && password === 'password') {
+          state.isLoggedIn = true;
+          state.currentUser = {
+            username: 'admin',
+            name: 'Administrateur',
+            email: 'admin@iot-dashboard.fr'
+          };
+          
+          document.getElementById('loginPage').style.display = 'none';
+          document.getElementById('registerPage').style.display = 'none';
+          document.getElementById('mainContent').style.display = 'block';
+          
+          // Update UI with user info
+          const initial = state.currentUser.username.charAt(0).toUpperCase();
+          document.getElementById('usernameInitial').textContent = initial;
+          document.getElementById('settingsInitial').textContent = initial;
+          document.getElementById('usernameDisplay').textContent = state.currentUser.username;
+          document.getElementById('settingsUsername').textContent = state.currentUser.name;
+          document.getElementById('settingsEmail').textContent = state.currentUser.email;
+          
+          showPage('home');
+          fetchData();
+          setupCharts();
+          setupDeviceMap();
+          
+          showNotification('Connexion réussie! Bienvenue ' + state.currentUser.username, 'success');
+        } else {
+          showNotification('Nom d\'utilisateur ou mot de passe incorrect', 'error');
+        }
         
-        document.getElementById('loginPage').style.display = 'none';
-        document.getElementById('registerPage').style.display = 'none';
-        document.getElementById('mainContent').style.display = 'block';
-        
-        // Update UI with user info
-        document.getElementById('usernameInitial').textContent = state.currentUser.username.charAt(0).toUpperCase();
-        document.getElementById('usernameDisplay').textContent = state.currentUser.username;
-        document.getElementById('settingsUsername').textContent = state.currentUser.name;
-        document.getElementById('settingsEmail').textContent = state.currentUser.email;
-        
-        showPage('home');
-        fetchData();
-        setupCharts();
-        
-        showNotification('Connexion réussie! Bienvenue ' + state.currentUser.username, 'success');
-      } else {
-        showNotification('Nom d\'utilisateur ou mot de passe incorrect', 'error');
-      }
+        // Restore button
+        loginBtn.innerHTML = originalBtnText;
+      }, 1500);
     }
 
     // Register function
@@ -983,9 +1136,20 @@
         return;
       }
       
-      // Mock registration
-      showNotification('Compte créé avec succès! Vous pouvez maintenant vous connecter', 'success');
-      showLoginForm();
+      // Show loading indicator
+      const registerBtn = document.querySelector('#registerPage .btn');
+      const originalBtnText = registerBtn.innerHTML;
+      registerBtn.innerHTML = '<div class="loader"></div> Création du compte...';
+      
+      // Simulate API delay
+      setTimeout(() => {
+        // Mock registration
+        showNotification('Compte créé avec succès! Vous pouvez maintenant vous connecter', 'success');
+        showLoginForm();
+        
+        // Restore button
+        registerBtn.innerHTML = originalBtnText;
+      }, 1500);
     }
 
     // Show register form
@@ -1009,6 +1173,10 @@
       if (state.intervalId) {
         clearInterval(state.intervalId);
         state.intervalId = null;
+      }
+      
+      if (state.timeInterval) {
+        clearInterval(state.timeInterval);
       }
       
       // Destroy charts
@@ -1044,8 +1212,14 @@
     // Fetch data from API
     async function fetchData() {
       try {
+        // Show loading indicator
+        const currentValues = ['currentHumidite', 'currentTemperature', 'currentVibration', 'currentAccelero'];
+        currentValues.forEach(id => {
+          document.getElementById(id).innerHTML = '<div class="loader inline-block"></div>';
+        });
+        
         // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
         // Mock data for demo
         const mockData = [];
@@ -1142,6 +1316,18 @@
       showNotification(`Données filtrées: ${filteredData.length} points affichés`, 'success');
     }
 
+    // Reset filters
+    function resetFilters() {
+      const now = new Date();
+      const startTime = new Date(now - 86400000); // 1 day ago
+      
+      document.getElementById('startTime').value = formatDateTime(startTime);
+      document.getElementById('endTime').value = formatDateTime(now);
+      
+      updateCharts(state.data);
+      showNotification('Filtres réinitialisés', 'success');
+    }
+
     // Update charts with new data
     function updateCharts(data) {
       const labels = data.map(item => {
@@ -1173,7 +1359,7 @@
             label: label,
             data: data,
             borderColor: color,
-            backgroundColor: color + '20',
+            backgroundColor: `${color}20`,
             borderWidth: 2,
             pointRadius: 3,
             pointBackgroundColor: color,
@@ -1212,6 +1398,48 @@
       });
     }
 
+    // Setup device map
+    function setupDeviceMap() {
+      const map = document.getElementById('deviceMap');
+      const infoBox = document.getElementById('deviceInfo');
+      const points = map.querySelectorAll('.device-point');
+      
+      points.forEach(point => {
+        point.addEventListener('click', (e) => {
+          e.stopPropagation();
+          
+          // Set active point
+          points.forEach(p => p.classList.remove('active'));
+          point.classList.add('active');
+          
+          // Show info box
+          const device = point.getAttribute('data-device');
+          infoBox.innerHTML = `
+            <h4 class="font-bold text-gray-800 mb-2">${device}</h4>
+            <p class="text-sm text-gray-600 mb-1"><i class="fas fa-map-marker-alt mr-2"></i> Bâtiment C, Étage 3</p>
+            <p class="text-sm text-gray-600 mb-1"><i class="fas fa-wifi mr-2"></i> Connecté</p>
+            <p class="text-sm text-gray-600 mb-1"><i class="fas fa-battery-three-quarters mr-2"></i> 78%</p>
+            <p class="text-sm text-gray-600"><i class="fas fa-clock mr-2"></i> Dernière mise à jour: 2 min</p>
+          `;
+          
+          // Position info box
+          const rect = map.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          
+          infoBox.style.left = `${x + 20}px`;
+          infoBox.style.top = `${y}px`;
+          infoBox.style.display = 'block';
+        });
+      });
+      
+      // Hide info box when clicking elsewhere
+      map.addEventListener('click', (e) => {
+        if (e.target.classList.contains('device-point')) return;
+        infoBox.style.display = 'none';
+      });
+    }
+
     // Setup initial charts
     function setupCharts() {
       // Device status chart
@@ -1222,7 +1450,8 @@
           labels: ['Actif', 'Inactif', 'En alerte'],
           datasets: [{
             data: [8, 2, 3],
-            backgroundColor: ['#10b981', '#94a3b8', '#f59e0b']
+            backgroundColor: ['#10b981', '#94a3b8', '#f59e0b'],
+            borderWidth: 0
           }]
         },
         options: {
@@ -1232,7 +1461,8 @@
             legend: {
               position: 'bottom'
             }
-          }
+          },
+          cutout: '70%'
         }
       });
       
@@ -1244,7 +1474,8 @@
           labels: ['Température', 'Humidité', 'Vibration', 'Accélération'],
           datasets: [{
             data: [6, 4, 2, 1],
-            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#f43f5e']
+            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#f43f5e'],
+            borderWidth: 0
           }]
         },
         options: {
@@ -1291,6 +1522,10 @@
       
       document.getElementById('startTime').value = formatDateTime(startTime);
       document.getElementById('endTime').value = formatDateTime(now);
+      
+      // Start updating time
+      updateTime();
+      state.timeInterval = setInterval(updateTime, 1000);
       
       // Simulate user is logged in for demo
       // Remove this in production
