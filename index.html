@@ -11,25 +11,9 @@
     body {
       font-family: 'Inter', sans-serif;
     }
-
-    /* Loader Style */
-    .loader {
-      border-top-color: #3498db;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
-
-  <!-- Loading Indicator -->
-  <div id="loading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-    <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16"></div>
-  </div>
 
   <!-- Login Page -->
   <div id="loginPage" class="flex items-center justify-center min-h-screen">
@@ -45,7 +29,7 @@
   <div id="mainContent" class="hidden">
     <div class="flex h-screen">
       <!-- Sidebar -->
-      <aside id="sidebar" class="bg-gray-800 text-white space-y-4 py-6 px-4 flex flex-col justify-between transform transition-all duration-300 ease-in-out w-64 fixed inset-0 md:static md:flex md:h-auto z-10 md:w-64 md:hidden">
+      <aside id="sidebar" class="bg-gray-800 text-white space-y-4 py-6 px-4 flex flex-col justify-between md:block w-64 fixed inset-0 z-10 md:static md:h-auto">
         <button id="sidebarToggle" class="text-white md:hidden absolute top-4 left-4">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-8 w-8">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -96,21 +80,6 @@
 
         <section id="graph" class="hidden">
           <h2 class="text-2xl font-bold mb-6">Graphiques en Temps Réel</h2>
-
-          <!-- Filtre de temps -->
-          <div class="flex flex-col sm:flex-row items-center gap-4 mb-6">
-            <div class="flex-1">
-              <label class="block text-sm font-medium text-gray-700 mb-1">De (date et heure)</label>
-              <input type="datetime-local" id="startTime" class="border rounded px-3 py-2 w-full">
-            </div>
-            <div class="flex-1">
-              <label class="block text-sm font-medium text-gray-700 mb-1">À (date et heure)</label>
-              <input type="datetime-local" id="endTime" class="border rounded px-3 py-2 w-full">
-            </div>
-            <button onclick="filterData()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Appliquer</button>
-          </div>
-
-          <!-- Les Graphiques -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <div class="bg-white p-6 rounded-lg shadow-lg">
               <canvas id="humiditeChart"></canvas>
@@ -136,170 +105,154 @@
 
     // دالة لجلب البيانات
     async function fetchData() {
-      document.getElementById('loading').classList.remove('hidden');  // عرض الـ Loader
-
       try {
         const response = await fetch("https://script.google.com/macros/s/AKfycby8FB58JbAnePfafVoZNfCGu6m9ie3_01u0SMVH310YYUZUWutx8Nla3noNW3HT0gCK/exec");
         const rawData = await response.json();
         console.log("Data fetched:", rawData);  // للتحقق من البيانات المسترجعة
 
-        // تنظيف وتحويل البيانات
         const cleanedData = rawData.map(item => {
           const date = new Date(item.Date);
           const time = new Date(item.Heure);
-          
           const timestamp = new Date(
             date.getFullYear(), date.getMonth(), date.getDate(),
             time.getHours(), time.getMinutes(), time.getSeconds()
-          ).getTime();
+          );
 
           return {
-            timestamp: timestamp,
-            humidity: item.Humidite,
-            temperature: item.Température,
-            vibration: item.Vibration,
-            accelero: item.Accelero
+            timestamp: timestamp.toISOString(),
+            humidite: parseFloat(item["Humidité "] || 0),
+            temperature: parseFloat(item["Température"] || 0),
+            vibration: parseFloat(item["Vibration "] || 0),
+            accelero: Math.sqrt(
+              Math.pow(item["Accel_X "] || 0, 2) +
+              Math.pow(item["Accel_Y"] || 0, 2) +
+              Math.pow(item["Accel_Z "] || 0, 2)
+            )
           };
         });
 
         originalData = cleanedData;
         updateCharts(cleanedData);
-
       } catch (error) {
         console.error("Error fetching data:", error);
-      } finally {
-        document.getElementById('loading').classList.add('hidden');  // إخفاء الـ Loader
       }
     }
 
-    // دالة لتحديث الرسوم البيانية
     function updateCharts(data) {
-      if (charts.humidity) {
-        charts.humidity.data.datasets[0].data = data.map(item => item.humidity);
-        charts.humidity.update();
-      }
-      if (charts.temperature) {
-        charts.temperature.data.datasets[0].data = data.map(item => item.temperature);
-        charts.temperature.update();
-      }
-      if (charts.vibration) {
-        charts.vibration.data.datasets[0].data = data.map(item => item.vibration);
-        charts.vibration.update();
-      }
-      if (charts.accelero) {
-        charts.accelero.data.datasets[0].data = data.map(item => item.accelero);
-        charts.accelero.update();
-      }
-    }
+      const labels = data.map(item => item.timestamp);
+      const humidite = data.map(item => item.humidite);
+      const temperature = data.map(item => item.temperature);
+      const vibration = data.map(item => item.vibration);
+      const accelero = data.map(item => item.accelero);
 
-    // دالة لتصفية البيانات حسب الفترة الزمنية
-    function filterData() {
-      const startTime = document.getElementById('startTime').value;
-      const endTime = document.getElementById('endTime').value;
+      // إذا كانت الرسوم البيانية موجودة، نقوم بتحديثها
+      if (charts['humiditeChart']) charts['humiditeChart'].destroy();
+      if (charts['temperatureChart']) charts['temperatureChart'].destroy();
+      if (charts['vibrationChart']) charts['vibrationChart'].destroy();
+      if (charts['acceleroChart']) charts['acceleroChart'].destroy();
 
-      if (!startTime || !endTime) {
-        alert("يرجى اختيار تاريخين صالحين.");
-        return;
-      }
-
-      const filteredData = originalData.filter(item => {
-        const timestamp = new Date(item.timestamp);
-        return timestamp >= new Date(startTime) && timestamp <= new Date(endTime);
+      // إنشاء الرسوم البيانية الجديدة
+      charts['humiditeChart'] = new Chart(document.getElementById('humiditeChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Humidité (%)',
+            data: humidite,
+            borderColor: '#3b82f6',
+            backgroundColor: '#3b82f633',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true }
+          }
+        }
       });
 
-      if (filteredData.length === 0) {
-        alert("Aucune donnée disponible pour cette période.");
-        return;
-      }
+      charts['temperatureChart'] = new Chart(document.getElementById('temperatureChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Température (°C)',
+            data: temperature,
+            borderColor: '#f97316',
+            backgroundColor: '#f9731633',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true }
+          }
+        }
+      });
 
-      updateCharts(filteredData);  // تحديث الرسوم البيانية مع البيانات المفلترة
+      charts['vibrationChart'] = new Chart(document.getElementById('vibrationChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Vibration',
+            data: vibration,
+            borderColor: '#10b981',
+            backgroundColor: '#10b98133',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true }
+          }
+        }
+      });
+
+      charts['acceleroChart'] = new Chart(document.getElementById('acceleroChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Accélération (m/s²)',
+            data: accelero,
+            borderColor: '#f43f5e',
+            backgroundColor: '#f43f5e33',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true }
+          }
+        }
+      });
     }
 
-    // دالة لتبديل عرض الصفحات
     function showPage(page) {
-      document.querySelectorAll('section').forEach(sec => sec.classList.add('hidden'));
+      document.querySelectorAll('section').forEach(section => {
+        section.classList.add('hidden');
+      });
       document.getElementById(page).classList.remove('hidden');
     }
 
-    // دالة تسجيل الخروج
-    function logout() {
-      document.getElementById('mainContent').classList.add('hidden');
-      document.getElementById('loginPage').classList.remove('hidden');
-    }
+    // Toggle sidebar for mobile view
+    document.getElementById('sidebarToggle').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('hidden');
+    });
 
-    // دالة لتسجيل الدخول
-    function login() {
-      const user = document.getElementById('loginUser').value;
-      const pass = document.getElementById('loginPass').value;
-
-      if (user === 'admin' && pass === 'admin') {
-        document.getElementById('loginPage').classList.add('hidden');
-        document.getElementById('mainContent').classList.remove('hidden');
-        fetchData();  // جلب البيانات بعد تسجيل الدخول
-      } else {
-        alert("Nom d'utilisateur ou mot de passe incorrect.");
-      }
-    }
-
-    // إعداد الرسوم البيانية
-    window.onload = function() {
-      const ctxHumidity = document.getElementById('humiditeChart').getContext('2d');
-      charts.humidity = new Chart(ctxHumidity, {
-        type: 'line',
-        data: {
-          labels: [], // سيتم تحديث هذه لاحقًا
-          datasets: [{
-            label: 'Humidité',
-            data: [],
-            borderColor: 'rgba(75, 192, 192, 1)',
-            fill: false
-          }]
-        }
-      });
-
-      const ctxTemperature = document.getElementById('temperatureChart').getContext('2d');
-      charts.temperature = new Chart(ctxTemperature, {
-        type: 'line',
-        data: {
-          labels: [], // سيتم تحديث هذه لاحقًا
-          datasets: [{
-            label: 'Température',
-            data: [],
-            borderColor: 'rgba(255, 99, 132, 1)',
-            fill: false
-          }]
-        }
-      });
-
-      const ctxVibration = document.getElementById('vibrationChart').getContext('2d');
-      charts.vibration = new Chart(ctxVibration, {
-        type: 'line',
-        data: {
-          labels: [],
-          datasets: [{
-            label: 'Vibration',
-            data: [],
-            borderColor: 'rgba(153, 102, 255, 1)',
-            fill: false
-          }]
-        }
-      });
-
-      const ctxAccelero = document.getElementById('acceleroChart').getContext('2d');
-      charts.accelero = new Chart(ctxAccelero, {
-        type: 'line',
-        data: {
-          labels: [],
-          datasets: [{
-            label: 'Accéléromètre',
-            data: [],
-            borderColor: 'rgba(255, 159, 64, 1)',
-            fill: false
-          }]
-        }
-      });
+    // On page load, initialize the login page
+    window.onload = () => {
+      fetchData();
     };
   </script>
-
 </body>
 </html>
