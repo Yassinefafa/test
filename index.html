@@ -1,169 +1,305 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="theme-color" content="#10b981" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IoT Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Loader Style */
+    .loader {
+      border-top-color: #3498db;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100 min-h-screen">
+
+  <!-- Loading Indicator -->
+  <div id="loading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16"></div>
+  </div>
+
   <!-- Login Page -->
-  <div id="loginPage" class="min-h-screen flex items-center justify-center">
-    <div class="bg-white p-8 rounded shadow-md w-full max-w-sm">
-      <h1 class="text-2xl font-bold mb-6 text-center">Connexion</h1>
-      <input id="username" class="w-full mb-4 p-2 border rounded" type="text" placeholder="Nom d'utilisateur" />
-      <input id="password" class="w-full mb-4 p-2 border rounded" type="password" placeholder="Mot de passe" />
-      <button onclick="login()" class="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600">Se connecter</button>
+  <div id="loginPage" class="flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+      <h2 class="text-2xl font-semibold text-center text-gray-800 mb-6">Connexion Sécurisée</h2>
+      <input id="loginUser" type="text" placeholder="Nom d'utilisateur" class="w-full mb-4 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400">
+      <input id="loginPass" type="password" placeholder="Mot de passe" class="w-full mb-6 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400">
+      <button onclick="login()" class="w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700">Connexion</button>
     </div>
   </div>
 
   <!-- Main Content -->
   <div id="mainContent" class="hidden">
-    <!-- Navbar -->
-    <nav class="bg-white shadow-md p-4 flex justify-between items-center">
-      <div class="text-xl font-bold">Tableau de bord IoT</div>
-      <div class="flex items-center gap-4">
-        <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Déconnexion</button>
-        <button id="sidebarToggle" class="md:hidden bg-gray-200 p-2 rounded">☰</button>
-      </div>
-    </nav>
-
-    <!-- Content -->
-    <div class="flex">
+    <div class="flex h-screen">
       <!-- Sidebar -->
-      <aside id="sidebar" class="hidden md:flex flex-col w-64 bg-white p-4 shadow-md space-y-4">
-        <button onclick="showPage('home')" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Accueil</button>
-        <button onclick="showPage('graph')" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Graphiques</button>
-        <button onclick="showPage('settings')" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Paramètres</button>
+      <aside id="sidebar" class="bg-gray-800 text-white space-y-4 py-6 px-4 flex flex-col justify-between transform transition-all duration-300 ease-in-out w-64 fixed inset-0 md:static md:flex md:h-auto z-10 md:w-64 md:hidden">
+        <button id="sidebarToggle" class="text-white md:hidden absolute top-4 left-4">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-8 w-8">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+        <nav class="space-y-2">
+          <a href="#" onclick="showPage('home')" class="block px-4 py-2 rounded hover:bg-blue-600">🏠 Accueil</a>
+          <a href="#" onclick="showPage('dashboard')" class="block px-4 py-2 rounded hover:bg-blue-600">📊 Dashboard</a>
+          <a href="#" onclick="showPage('settings')" class="block px-4 py-2 rounded hover:bg-blue-600">⚙️ Paramètres</a>
+          <a href="#" onclick="showPage('graph')" class="block px-4 py-2 rounded hover:bg-blue-600">📈 Graphiques</a>
+        </nav>
+        <button onclick="logout()" class="w-full bg-red-600 py-2 rounded-md text-white font-bold hover:bg-red-700">🚪 Déconnexion</button>
       </aside>
 
-      <!-- Pages -->
-      <main class="flex-1 p-6">
-        <!-- Home Page -->
+      <!-- Main Section -->
+      <main class="flex-1 overflow-y-auto p-4 ml-64 md:ml-0">
         <section id="home">
           <h2 class="text-2xl font-bold mb-4">Bienvenue</h2>
-          <p class="text-gray-700">Sélectionnez une section depuis la barre latérale.</p>
+          <p>Sélectionnez une section pour afficher les données.</p>
         </section>
 
-        <!-- Graph Page -->
-        <section id="graph" class="hidden">
-          <h2 class="text-2xl font-bold mb-4">Graphiques des capteurs</h2>
-          <button onclick="fetchData()" class="mb-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Actualiser les données</button>
-          <canvas id="sensorChart" class="bg-white rounded shadow-md"></canvas>
+        <section id="dashboard" class="hidden">
+          <h2 class="text-2xl font-bold mb-4">Tableau de bord</h2>
+          <iframe src="https://docs.google.com/spreadsheets/d/1tqB-t3cDJiDhAHsgSGWJw7p4-pnE8pHHqubPHIStZ8c" class="w-full h-[500px] border rounded"></iframe>
         </section>
 
-        <!-- Settings Page -->
         <section id="settings" class="hidden">
-          <h2 class="text-2xl font-bold mb-4">Paramètres</h2>
-          <p class="text-gray-600">Fonctionnalités à venir...</p>
+          <h2 class="text-2xl font-bold mb-6">Paramètres du compte</h2>
+          <div class="mb-6">
+            <h3 class="text-lg font-semibold mb-2">Changer le mot de passe</h3>
+            <input type="password" placeholder="Nouveau mot de passe" class="w-full mb-2 px-4 py-2 border rounded">
+            <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Modifier</button>
+          </div>
+
+          <div class="mb-6">
+            <h3 class="text-lg font-semibold mb-2">Mettre à jour le nom d'utilisateur</h3>
+            <input type="text" placeholder="Nouveau nom d'utilisateur" class="w-full mb-2 px-4 py-2 border rounded">
+            <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Mettre à jour</button>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-semibold mb-2">Gestion des utilisateurs</h3>
+            <input type="text" placeholder="Nom d'utilisateur" class="w-full mb-2 px-4 py-2 border rounded">
+            <input type="password" placeholder="Mot de passe" class="w-full mb-2 px-4 py-2 border rounded">
+            <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Ajouter</button>
+          </div>
+        </section>
+
+        <section id="graph" class="hidden">
+          <h2 class="text-2xl font-bold mb-6">Graphiques en Temps Réel</h2>
+
+          <!-- Filtre de temps -->
+          <div class="flex flex-col sm:flex-row items-center gap-4 mb-6">
+            <div class="flex-1">
+              <label class="block text-sm font-medium text-gray-700 mb-1">De (date et heure)</label>
+              <input type="datetime-local" id="startTime" class="border rounded px-3 py-2 w-full">
+            </div>
+            <div class="flex-1">
+              <label class="block text-sm font-medium text-gray-700 mb-1">À (date et heure)</label>
+              <input type="datetime-local" id="endTime" class="border rounded px-3 py-2 w-full">
+            </div>
+            <button onclick="filterData()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Appliquer</button>
+          </div>
+
+          <!-- Les Graphiques -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+              <canvas id="humiditeChart"></canvas>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+              <canvas id="temperatureChart"></canvas>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+              <canvas id="vibrationChart"></canvas>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+              <canvas id="acceleroChart"></canvas>
+            </div>
+          </div>
         </section>
       </main>
     </div>
   </div>
 
-  <!-- Script -->
   <script>
-    const chartColors = {
-      temp: 'rgba(255, 99, 132, 0.7)',
-      humidity: 'rgba(54, 162, 235, 0.7)',
-      accel: 'rgba(75, 192, 192, 0.7)'
-    };
+    let originalData = [];
+    let charts = {};  // لحفظ الرسوم البيانية
 
-    let sensorChart;
-
-    function login() {
-      const user = document.getElementById("username").value.trim();
-      const pass = document.getElementById("password").value.trim();
-
-      if (user === "admin" && pass === "1234") {
-        localStorage.setItem("loggedIn", "true");
-        document.getElementById("loginPage").style.display = "none";
-        document.getElementById("mainContent").style.display = "block";
-        showPage("home");
-      } else {
-        alert("Identifiants incorrects.");
-      }
-    }
-
-    function logout() {
-      localStorage.removeItem("loggedIn");
-      location.reload();
-    }
-
-    function showPage(page) {
-      document.querySelectorAll("section").forEach(s => s.classList.add("hidden"));
-      document.getElementById(page).classList.remove("hidden");
-
-      if (page === "graph") {
-        fetchData();
-      }
-    }
-
+    // دالة لجلب البيانات
     async function fetchData() {
+      document.getElementById('loading').classList.remove('hidden');  // عرض الـ Loader
+
       try {
-        const response = await fetch("https://opensheet.elk.sh/1cO0ToA3t7Vi5BqX13wXBbMVzPPCE4K7fEYsUjcZXXrI/Feuil1");
+        const response = await fetch("https://script.google.com/macros/s/AKfycby8FB58JbAnePfafVoZNfCGu6m9ie3_01u0SMVH310YYUZUWutx8Nla3noNW3HT0gCK/exec");
         const rawData = await response.json();
+        console.log("Data fetched:", rawData);  // للتحقق من البيانات المسترجعة
 
-        const data = rawData.map(item => ({
-          timestamp: new Date(item.timestamp).toLocaleString('fr-FR'),
-          temperature: parseFloat(item.Temperature || 0),
-          humidity: parseFloat(item.Humidity || 0),
-          accelero: Math.sqrt(
-            Math.pow(parseFloat(item["Accel_X "] || 0), 2) +
-            Math.pow(parseFloat(item["Accel_Y"] || 0), 2) +
-            Math.pow(parseFloat(item["Accel_Z "] || 0), 2)
-          )
-        }));
+        // تنظيف وتحويل البيانات
+        const cleanedData = rawData.map(item => {
+          const date = new Date(item.Date);
+          const time = new Date(item.Heure);
+          
+          const timestamp = new Date(
+            date.getFullYear(), date.getMonth(), date.getDate(),
+            time.getHours(), time.getMinutes(), time.getSeconds()
+          ).getTime();
 
-        updateChart(data);
-      } catch (err) {
-        alert("Erreur lors de la récupération des données.");
-        console.error(err);
+          return {
+            timestamp: timestamp,
+            humidity: item.Humidite,
+            temperature: item.Température,
+            vibration: item.Vibration,
+            accelero: item.Accelero
+          };
+        });
+
+        originalData = cleanedData;
+        updateCharts(cleanedData);
+
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        document.getElementById('loading').classList.add('hidden');  // إخفاء الـ Loader
       }
     }
 
-    function updateChart(data) {
-      const labels = data.map(d => d.timestamp);
-      const tempData = data.map(d => d.temperature);
-      const humidData = data.map(d => d.humidity);
-      const accelData = data.map(d => d.accelero);
+    // دالة لتحديث الرسوم البيانية
+    function updateCharts(data) {
+      if (charts.humidity) {
+        charts.humidity.data.datasets[0].data = data.map(item => item.humidity);
+        charts.humidity.update();
+      }
+      if (charts.temperature) {
+        charts.temperature.data.datasets[0].data = data.map(item => item.temperature);
+        charts.temperature.update();
+      }
+      if (charts.vibration) {
+        charts.vibration.data.datasets[0].data = data.map(item => item.vibration);
+        charts.vibration.update();
+      }
+      if (charts.accelero) {
+        charts.accelero.data.datasets[0].data = data.map(item => item.accelero);
+        charts.accelero.update();
+      }
+    }
 
-      const ctx = document.getElementById("sensorChart").getContext("2d");
+    // دالة لتصفية البيانات حسب الفترة الزمنية
+    function filterData() {
+      const startTime = document.getElementById('startTime').value;
+      const endTime = document.getElementById('endTime').value;
 
-      if (sensorChart) sensorChart.destroy();
+      if (!startTime || !endTime) {
+        alert("يرجى اختيار تاريخين صالحين.");
+        return;
+      }
 
-      sensorChart = new Chart(ctx, {
-        type: "line",
+      const filteredData = originalData.filter(item => {
+        const timestamp = new Date(item.timestamp);
+        return timestamp >= new Date(startTime) && timestamp <= new Date(endTime);
+      });
+
+      if (filteredData.length === 0) {
+        alert("Aucune donnée disponible pour cette période.");
+        return;
+      }
+
+      updateCharts(filteredData);  // تحديث الرسوم البيانية مع البيانات المفلترة
+    }
+
+    // دالة لتبديل عرض الصفحات
+    function showPage(page) {
+      document.querySelectorAll('section').forEach(sec => sec.classList.add('hidden'));
+      document.getElementById(page).classList.remove('hidden');
+    }
+
+    // دالة تسجيل الخروج
+    function logout() {
+      document.getElementById('mainContent').classList.add('hidden');
+      document.getElementById('loginPage').classList.remove('hidden');
+    }
+
+    // دالة لتسجيل الدخول
+    function login() {
+      const user = document.getElementById('loginUser').value;
+      const pass = document.getElementById('loginPass').value;
+
+      if (user === 'admin' && pass === 'admin') {
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
+        fetchData();  // جلب البيانات بعد تسجيل الدخول
+      } else {
+        alert("Nom d'utilisateur ou mot de passe incorrect.");
+      }
+    }
+
+    // إعداد الرسوم البيانية
+    window.onload = function() {
+      const ctxHumidity = document.getElementById('humiditeChart').getContext('2d');
+      charts.humidity = new Chart(ctxHumidity, {
+        type: 'line',
         data: {
-          labels,
-          datasets: [
-            { label: "Température (°C)", data: tempData, borderColor: chartColors.temp, fill: false },
-            { label: "Humidité (%)", data: humidData, borderColor: chartColors.humidity, fill: false },
-            { label: "Accélération (g)", data: accelData, borderColor: chartColors.accel, fill: false },
-          ]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { position: "top" }, title: { display: true, text: "Capteurs en temps réel" } },
-          scales: { x: { display: true, title: { display: true, text: "Heure" } } }
+          labels: [], // سيتم تحديث هذه لاحقًا
+          datasets: [{
+            label: 'Humidité',
+            data: [],
+            borderColor: 'rgba(75, 192, 192, 1)',
+            fill: false
+          }]
         }
       });
-    }
 
-    // INIT
-    window.onload = () => {
-      if (localStorage.getItem("loggedIn") === "true") {
-        document.getElementById("loginPage").style.display = "none";
-        document.getElementById("mainContent").style.display = "block";
-        showPage("home");
-      }
+      const ctxTemperature = document.getElementById('temperatureChart').getContext('2d');
+      charts.temperature = new Chart(ctxTemperature, {
+        type: 'line',
+        data: {
+          labels: [], // سيتم تحديث هذه لاحقًا
+          datasets: [{
+            label: 'Température',
+            data: [],
+            borderColor: 'rgba(255, 99, 132, 1)',
+            fill: false
+          }]
+        }
+      });
 
-      document.getElementById("sidebarToggle").addEventListener("click", () => {
-        document.getElementById("sidebar").classList.toggle("hidden");
+      const ctxVibration = document.getElementById('vibrationChart').getContext('2d');
+      charts.vibration = new Chart(ctxVibration, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Vibration',
+            data: [],
+            borderColor: 'rgba(153, 102, 255, 1)',
+            fill: false
+          }]
+        }
+      });
+
+      const ctxAccelero = document.getElementById('acceleroChart').getContext('2d');
+      charts.accelero = new Chart(ctxAccelero, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Accéléromètre',
+            data: [],
+            borderColor: 'rgba(255, 159, 64, 1)',
+            fill: false
+          }]
+        }
       });
     };
   </script>
+
 </body>
 </html>
