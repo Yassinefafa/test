@@ -29,7 +29,7 @@
   <div id="mainContent" class="hidden">
     <div class="flex h-screen">
       <!-- Sidebar -->
-      <aside id="sidebar" class="bg-gray-800 text-white space-y-4 py-6 px-4 flex flex-col justify-between md:block w-64 fixed inset-0 z-10 md:static md:h-auto">
+      <aside id="sidebar" class="bg-gray-800 text-white space-y-4 py-6 px-4 flex flex-col justify-between transform transition-all duration-300 ease-in-out w-64 fixed inset-0 md:static md:flex md:h-auto z-10 md:w-64">
         <button id="sidebarToggle" class="text-white md:hidden absolute top-4 left-4">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-8 w-8">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -46,7 +46,7 @@
 
       <!-- Main Section -->
       <main class="flex-1 overflow-y-auto p-4 ml-64 md:ml-0">
-        <section id="home">
+        <section id="home" class="">
           <h2 class="text-2xl font-bold mb-4">Bienvenue</h2>
           <p>Sélectionnez une section pour afficher les données.</p>
         </section>
@@ -80,6 +80,21 @@
 
         <section id="graph" class="hidden">
           <h2 class="text-2xl font-bold mb-6">Graphiques en Temps Réel</h2>
+
+          <!-- Filtre de temps -->
+          <div class="flex flex-col sm:flex-row items-center gap-4 mb-6">
+            <div class="flex-1">
+              <label class="block text-sm font-medium text-gray-700 mb-1">De (date et heure)</label>
+              <input type="datetime-local" id="startTime" class="border rounded px-3 py-2 w-full">
+            </div>
+            <div class="flex-1">
+              <label class="block text-sm font-medium text-gray-700 mb-1">À (date et heure)</label>
+              <input type="datetime-local" id="endTime" class="border rounded px-3 py-2 w-full">
+            </div>
+            <button onclick="filterData()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Appliquer</button>
+          </div>
+
+          <!-- Les Graphiques -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <div class="bg-white p-6 rounded-lg shadow-lg">
               <canvas id="humiditeChart"></canvas>
@@ -110,9 +125,11 @@
         const rawData = await response.json();
         console.log("Data fetched:", rawData);  // للتحقق من البيانات المسترجعة
 
+        // تنظيف وتحويل البيانات
         const cleanedData = rawData.map(item => {
           const date = new Date(item.Date);
           const time = new Date(item.Heure);
+          
           const timestamp = new Date(
             date.getFullYear(), date.getMonth(), date.getDate(),
             time.getHours(), time.getMinutes(), time.getSeconds()
@@ -132,12 +149,13 @@
         });
 
         originalData = cleanedData;
-        updateCharts(cleanedData);
+        updateCharts(cleanedData);  // تحديث الرسوم البيانية بالبيانات المبدئية
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     }
 
+    // دالة لتحديث الرسوم البيانية
     function updateCharts(data) {
       const labels = data.map(item => item.timestamp);
       const humidite = data.map(item => item.humidite);
@@ -237,6 +255,46 @@
       });
     }
 
+    // دالة لتصفية البيانات بين تاريخين
+    function filterData() {
+      const startTime = document.getElementById('startTime').value;
+      const endTime = document.getElementById('endTime').value;
+
+      if (!startTime || !endTime) {
+        alert("يرجى اختيار تاريخين صالحين.");
+        return;
+      }
+
+      const filteredData = originalData.filter(item => {
+        const timestamp = new Date(item.timestamp);
+        return timestamp >= new Date(startTime) && timestamp <= new Date(endTime);
+      });
+
+      updateCharts(filteredData);  // تحديث الرسوم البيانية مع البيانات المفلترة
+    }
+
+    // الدالة الخاصة بتسجيل الدخول
+    function login() {
+      const user = document.getElementById('loginUser').value;
+      const pass = document.getElementById('loginPass').value;
+
+      // تحقق من اسم المستخدم وكلمة المرور
+      if (user === "admin" && pass === "password") {
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        fetchData();  // جلب البيانات بعد تسجيل الدخول
+      } else {
+        alert("Nom d'utilisateur ou mot de passe incorrect");
+      }
+    }
+
+    // الدالة الخاصة بتسجيل الخروج
+    function logout() {
+      document.getElementById('loginPage').style.display = 'block';
+      document.getElementById('mainContent').style.display = 'none';
+    }
+
+    // الدالة لعرض الأقسام
     function showPage(page) {
       document.querySelectorAll('section').forEach(section => {
         section.classList.add('hidden');
@@ -244,14 +302,11 @@
       document.getElementById(page).classList.remove('hidden');
     }
 
-    // Toggle sidebar for mobile view
-    document.getElementById('sidebarToggle').addEventListener('click', () => {
-      document.getElementById('sidebar').classList.toggle('hidden');
-    });
-
-    // On page load, initialize the login page
+    // جلب البيانات عند تحميل الصفحة
     window.onload = () => {
-      fetchData();
+      document.getElementById('sidebarToggle').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.toggle('hidden');
+      });
     };
   </script>
 </body>
