@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>عرض بيانات جدول جوجل مع فلاتر احترافية وأنيقة</title>
+    <title>بيانات جوجل شيت ورسوم بيانية</title>
     <!-- تضمين Tailwind CSS لتصميم عصري ومتجاوب -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- تضمين مكتبة D3.js للرسوم البيانية -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         /* خط "Inter" لتحسين المظهر العام */
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6; /* لون خلفية خفيف */
         }
-        /* تصميم مخصص لأزرار الفلاتر لجعلها تبدو احترافية أكثر */
+        /* تصميم مخصص لأزرار الفلاتر والأزرار العامة */
         button {
             transition: all 0.2s ease-in-out;
             transform: translateY(0);
@@ -51,7 +53,7 @@
             padding-bottom: 0.875rem;
             position: sticky; /* لجعل الرؤوس ثابتة عند التمرير الأفقي */
             top: 0; /* مهم لـ sticky */
-            z-index: 10; /* لضمان ظهور الرؤوس فوق محتوى الجدول عند التمرير */
+            z-index: 20; /* لضمان ظهور الرؤوس فوق محتوى الجدول عند التمرير */
         }
 
         /* إضافة فاصل سفلي خفيف لرؤوس الأعمدة */
@@ -84,54 +86,212 @@
         td:not(:last-child) {
             border-right: 1px solid #e5e7eb;
         }
+
+        /* أنماط D3.js للرسم البياني */
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: #cbd5e1; /* لون رمادي خفيف للمحاور */
+            shape-rendering: crispEdges;
+        }
+
+        .axis text {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            fill: #4b5563; /* لون نص المحاور */
+        }
+
+        .line {
+            fill: none;
+            stroke: #4f46e5; /* لون الخط الأزرق */
+            stroke-width: 2px;
+        }
+
+        .dot {
+            fill: #4f46e5;
+            stroke: #fff;
+            stroke-width: 1.5px;
+        }
+
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            width: auto;
+            height: auto;
+            padding: 8px;
+            font: 12px sans-serif;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            pointer-events: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 100; /* لضمان ظهور التلميح فوق كل شيء */
+        }
+
+        /* تصميم القائمة الجانبية */
+        .sidebar {
+            width: 250px;
+            background-color: #374151; /* لون رمادي داكن للخلفية */
+            color: #fff;
+            position: fixed;
+            top: 0;
+            right: -250px; /* مخفية في البداية */
+            height: 100%;
+            padding-top: 4rem; /* مسافة للرأس */
+            transition: right 0.3s ease-in-out;
+            z-index: 50; /* فوق المحتوى ولكن تحت التلميح */
+            box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar.open {
+            right: 0; /* تظهر عند الفتح */
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar ul li a {
+            display: block;
+            padding: 1rem 1.5rem;
+            text-decoration: none;
+            color: #d1d5db; /* لون نص خفيف */
+            transition: background-color 0.2s ease;
+        }
+        .sidebar ul li a:hover {
+            background-color: #4b5563; /* لون عند التمرير */
+            color: #fff;
+        }
+        .sidebar .close-btn {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: none; /* مخفي افتراضياً، يظهر على الجوال */
+        }
+
+        /* زر الهامبرغر */
+        .hamburger-btn {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 60; /* فوق الشريط الجانبي */
+            background-color: #4f46e5;
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        /* إخفاء زر الهامبرغر والقائمة الجانبية على الشاشات الكبيرة */
+        @media (min-width: 1024px) { /* breakpoint for large screens */
+            .sidebar {
+                position: static; /* ليست ثابتة */
+                width: 200px; /* عرض ثابت على الشاشات الكبيرة */
+                height: auto;
+                padding-top: 0;
+                box-shadow: none;
+                background-color: transparent; /* خلفية شفافة */
+                display: block; /* مرئية دائمًا */
+                margin-left: 1.5rem; /* مسافة عن المحتوى الرئيسي */
+            }
+            .sidebar ul li a {
+                color: #4b5563; /* لون نص داكن على الخلفية الفاتحة */
+            }
+            .sidebar ul li a:hover {
+                background-color: #e0e7ff; /* لون عند التمرير */
+                color: #4f46e5; /* لون نص أزرق */
+            }
+            .hamburger-btn {
+                display: none; /* إخفاء زر الهامبرغر */
+            }
+            .sidebar .close-btn {
+                display: none; /* إخفاء زر الإغلاق */
+            }
+        }
     </style>
 </head>
-<body class="p-4 bg-gray-100 flex flex-col items-center min-h-screen">
-    <!-- عنوان الصفحة -->
-    <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6 text-center">
-        بيانات من جدول جوجل
-    </h1>
+<body class="p-4 bg-gray-100 flex min-h-screen">
 
-    <!-- قسم فلاتر البيانات -->
-    <div class="mb-6 w-full max-w-5xl bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-xl font-semibold text-gray-700 mb-4 text-center">فلاتر البيانات</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <div>
-                <label for="filterDateFrom" class="block text-sm font-medium text-gray-700 text-right">تاريخ من:</label>
-                <input type="date" id="filterDateFrom" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 text-right dir-rtl">
+    <!-- زر الهامبرغر (يظهر على الجوال فقط) -->
+    <button id="hamburgerBtn" class="hamburger-btn lg:hidden">
+        ☰
+    </button>
+
+    <!-- القائمة الجانبية -->
+    <aside id="sidebar" class="sidebar lg:relative lg:block">
+        <button id="closeSidebarBtn" class="close-btn lg:hidden">✕</button>
+        <div class="p-4 text-2xl font-bold text-white mb-4 lg:text-gray-800 lg:p-0 lg:mb-6 lg:text-center">
+            لوحة التحكم
+        </div>
+        <ul>
+            <li><a href="#" id="showTableBtn" class="bg-indigo-700 lg:bg-indigo-100">عرض البيانات</a></li>
+            <li><a href="#" id="showChartBtn" class="">الرسم البياني</a></li>
+        </ul>
+    </aside>
+
+    <!-- المحتوى الرئيسي للصفحة -->
+    <main class="flex-1 flex flex-col items-center p-4">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6 text-center">
+            بيانات من جدول جوجل
+        </h1>
+
+        <!-- قسم فلاتر البيانات -->
+        <div class="mb-6 w-full max-w-5xl bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4 text-center">فلاتر البيانات</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div>
+                    <label for="filterDateFrom" class="block text-sm font-medium text-gray-700 text-right">تاريخ من:</label>
+                    <input type="date" id="filterDateFrom" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 text-right dir-rtl">
+                </div>
+                <div>
+                    <label for="filterDateTo" class="block text-sm font-medium text-gray-700 text-right">تاريخ إلى:</label>
+                    <input type="date" id="filterDateTo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 text-right dir-rtl">
+                </div>
+                <div>
+                    <label for="filterTimeFrom" class="block text-sm font-medium text-gray-700 text-right">توقيت من:</label>
+                    <input type="time" id="filterTimeFrom" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 text-right dir-rtl">
+                </div>
+                <div>
+                    <label for="filterTimeTo" class="block text-sm font-medium text-gray-700 text-right">توقيت إلى:</label>
+                    <input type="time" id="filterTimeTo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 text-right dir-rtl">
+                </div>
             </div>
-            <div>
-                <label for="filterDateTo" class="block text-sm font-medium text-gray-700 text-right">تاريخ إلى:</label>
-                <input type="date" id="filterDateTo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 text-right dir-rtl">
-            </div>
-            <div>
-                <label for="filterTimeFrom" class="block text-sm font-medium text-gray-700 text-right">توقيت من:</label>
-                <input type="time" id="filterTimeFrom" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 text-right dir-rtl">
-            </div>
-            <div>
-                <label for="filterTimeTo" class="block text-sm font-medium text-gray-700 text-right">توقيت إلى:</label>
-                <input type="time" id="filterTimeTo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 text-right dir-rtl">
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button id="applyFilterBtn" class="flex-1 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-150 ease-in-out">
+                    تطبيق الفلتر
+                </button>
+                <button id="clearFilterBtn" class="flex-1 px-4 py-2 bg-gray-400 text-white font-semibold rounded-md shadow-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition duration-150 ease-in-out">
+                    مسح الفلاتر
+                </button>
             </div>
         </div>
-        <div class="flex flex-col sm:flex-row gap-4">
-            <button id="applyFilterBtn" class="flex-1 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-150 ease-in-out">
-                تطبيق الفلتر
-            </button>
-            <button id="clearFilterBtn" class="flex-1 px-4 py-2 bg-gray-400 text-white font-semibold rounded-md shadow-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition duration-150 ease-in-out">
-                مسح الفلاتر
-            </button>
+
+        <!-- رسالة التحميل (عامة لكل من الجدول والرسم البياني) -->
+        <div id="loading" class="text-lg text-gray-600 mb-4 animate-pulse">
+            جاري تحميل البيانات...
         </div>
-    </div>
 
-    <!-- رسالة التحميل -->
-    <div id="loading" class="text-lg text-gray-600 mb-4 animate-pulse">
-        جاري تحميل البيانات...
-    </div>
+        <!-- حاوية الجدول -->
+        <div id="table-view" class="w-full max-w-5xl bg-white shadow-lg rounded-lg overflow-x-auto">
+            <!-- سيتم إدراج الجدول هنا بواسطة JavaScript -->
+        </div>
 
-    <!-- حاوية الجدول حيث سيتم عرض البيانات -->
-    <div id="table-container" class="w-full max-w-5xl bg-white shadow-lg rounded-lg overflow-x-auto">
-        <!-- سيتم إدراج الجدول هنا بواسطة JavaScript -->
-    </div>
+        <!-- حاوية الرسم البياني (مخفية افتراضياً) -->
+        <div id="chart-view" class="w-full max-w-5xl bg-white shadow-lg rounded-lg p-6 flex justify-center items-center hidden">
+            <!-- سيتم إدراج الرسم البياني هنا بواسطة JavaScript -->
+            <svg class="chart"></svg>
+        </div>
+    </main>
 
     <script>
         // رابط Google Apps Script الخاص بك
@@ -139,12 +299,15 @@
 
         // متغير لتخزين جميع البيانات التي تم جلبها من جدول جوجل
         let allSheetData = [];
+        // لتتبع عرض الصفحة الحالي
+        let currentPage = 'table'; // الافتراضي هو عرض الجدول
 
         // ******** إعدادات الأعمدة (يرجى تعديلها حسب أسماء الأعمدة في جدولك) ********
-        // بناءً على صور وحدة التحكم (Console) التي أرسلتها، أسماء الأعمدة هي "Date" و "Heure" بحرف كبير في البداية.
+        // بناءً على صور وحدة التحكم (Console) التي أرسلتها، أسماء الأعمدة هي "Date" و "Heure" و "Température (°C)".
         // تأكد من مطابقة حالة الأحرف تمامًا!
         const DATE_COLUMN_NAME = "Date";
         const TIME_COLUMN_NAME = "Heure";
+        const TEMPERATURE_COLUMN_NAME = "Température (°C)"; // اسم عمود درجة الحرارة
         // *******************************************************************
 
         /**
@@ -154,7 +317,7 @@
          */
         function formatDate(date) {
             const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0'); // الأشهر تبدأ من 0
+            const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
         }
@@ -171,36 +334,161 @@
         }
 
         /**
+         * دالة لتحويل سلسلة ISO Date/Time إلى تنسيق تاريخ فقط (YYYY-MM-DD).
+         * @param {string} isoString - سلسلة تاريخ ISO (مثل "2025-06-22T23:00:00.000Z").
+         * @returns {string} التاريخ المنسق (YYYY-MM-DD).
+         */
+        function formatIsoDateOnly(isoString) {
+            if (!isoString) return '';
+            try {
+                const date = new Date(isoString);
+                if (isNaN(date.getTime())) {
+                    const datePart = isoString.split('T')[0];
+                    const recheckedDate = new Date(datePart);
+                    if (!isNaN(recheckedDate.getTime())) {
+                        return datePart;
+                    }
+                    return isoString;
+                }
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            } catch (e) {
+                console.error("Error parsing ISO date string:", isoString, e);
+                return isoString;
+            }
+        }
+
+        /**
+         * دالة لتحويل سلسلة ISO Date/Time إلى تنسيق وقت فقط (HH:MM:SS).
+         * @param {string} isoString - سلسلة تاريخ ISO (مثل "1899-12-30T17:27:03.000Z").
+         * @returns {string} التوقيت المنسق (HH:MM:SS).
+         */
+        function formatIsoTimeOnly(isoString) {
+            if (!isoString) return '';
+            try {
+                const date = new Date(isoString);
+                if (isNaN(date.getTime())) {
+                    const timePart = isoString.split('T')[1];
+                    if (timePart) {
+                        const timeSegments = timePart.split(':');
+                        if (timeSegments.length >= 2) {
+                            const hours = timeSegments[0].padStart(2, '0');
+                            const minutes = timeSegments[1].padStart(2, '0');
+                            const seconds = timeSegments.length > 2 ? timeSegments[2].substring(0,2).padStart(2, '0') : '00';
+                            return `${hours}:${minutes}:${seconds}`;
+                        }
+                    }
+                    return isoString;
+                }
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const seconds = String(date.getSeconds()).padStart(2, '0');
+                return `${hours}:${minutes}:${seconds}`;
+            } catch (e) {
+                console.error("Error parsing ISO time string:", isoString, e);
+                return isoString;
+            }
+        }
+
+        /**
+         * دالة لتحويل سلسلة التاريخ والوقت من جدول بيانات Google إلى كائن Date صالح.
+         * تحاول التعامل مع التنسيقات المختلفة التي قد تأتي بها البيانات.
+         * @param {string} dateStr - سلسلة التاريخ (قد تكون ISO أو YYYY-MM-DD أو DD/MM/YYYY).
+         * @param {string} timeStr - سلسلة الوقت (مثل "HH:MM" أو "HH:MM:SS").
+         * @returns {Date | null} كائن Date أو null إذا فشل التحويل.
+         */
+        function parseDateTime(dateStr, timeStr) {
+            let fullDateTimeStr;
+
+            // إذا كان dateStr يحتوي على 'T' فهذا يعني أنه قد يكون ISO بالفعل
+            if (dateStr && typeof dateStr === 'string' && dateStr.includes('T')) {
+                fullDateTimeStr = dateStr;
+            } else {
+                // دمج التاريخ والوقت
+                fullDateTimeStr = `${dateStr}T${timeStr}`;
+            }
+
+            const date = new Date(fullDateTimeStr);
+
+            // تحقق مما إذا كان التاريخ صالحًا بعد التحويل
+            if (isNaN(date.getTime())) {
+                // محاولة أخرى: إذا كان تنسيق الوقت HH:MM، أضف الثواني
+                if (timeStr && typeof timeStr === 'string' && timeStr.split(':').length === 2) {
+                    fullDateTimeStr = `${dateStr}T${timeStr}:00`;
+                    const recheckedDate = new Date(fullDateTimeStr);
+                    if (!isNaN(recheckedDate.getTime())) {
+                        return recheckedDate;
+                    }
+                }
+                // محاولة أخرى: إذا كان التاريخ بتنسيق DD/MM/YYYY
+                const parts = dateStr.split('/');
+                if (parts.length === 3) {
+                    const d = parseInt(parts[0]);
+                    const m = parseInt(parts[1]) - 1; // الشهر يبدأ من 0
+                    const y = parseInt(parts[2]);
+                    const timeParts = timeStr.split(':');
+                    if (timeParts.length >= 2) {
+                        const h = parseInt(timeParts[0]);
+                        const min = parseInt(timeParts[1]);
+                        const sec = timeParts.length > 2 ? parseInt(timeParts[2]) : 0;
+                        const validDate = new Date(y, m, d, h, min, sec);
+                        if (!isNaN(validDate.getTime())) {
+                            return validDate;
+                        }
+                    }
+                }
+                console.warn(`Failed to parse date-time string: ${dateStr} ${timeStr}`);
+                return null; // فشل التحويل
+            }
+            return date;
+        }
+
+        /**
          * دالة لجلب البيانات من Google Apps Script API.
          * تُظهر رسالة تحميل وتُخفيها بعد اكتمال الجلب.
          */
         async function fetchData() {
             const loadingElement = document.getElementById("loading");
-            const tableContainer = document.getElementById("table-container");
-
-            loadingElement.style.display = "block"; // إظهار رسالة التحميل
+            loadingElement.style.display = "block";
 
             try {
-                // استخدام Fetch API لجلب البيانات
                 const response = await fetch(SCRIPT_URL);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
-                allSheetData = data; // تخزين البيانات الأصلية
-                displayData(allSheetData); // عرض جميع البيانات في الجدول مبدئياً
+                allSheetData = data.map(d => {
+                    // معالجة البيانات الخام لتحويلها إلى تنسيقات صالحة للاستخدام
+                    const dateTime = parseDateTime(d[DATE_COLUMN_NAME], d[TIME_COLUMN_NAME]);
+                    const temperature = +d[TEMPERATURE_COLUMN_NAME]; // تحويل إلى رقم، + لتجنب مشاكل التنسيق
+                    
+                    return {
+                        ...d, // الاحتفاظ بجميع البيانات الأصلية
+                        parsedDateTime: dateTime,
+                        parsedTemperature: isNaN(temperature) ? null : temperature
+                    };
+                }).filter(d => d.parsedDateTime !== null && d.parsedTemperature !== null); // تصفية البيانات غير الصالحة
+
+                showPage(currentPage); // عرض الصفحة الافتراضية بعد جلب البيانات
             } catch (error) {
                 console.error("Error fetching data:", error);
-                // عرض رسالة خطأ إذا فشل الجلب
-                tableContainer.innerHTML = `
+                document.getElementById("table-view").innerHTML = `
                     <div class="p-6 text-red-600 text-center">
                         <p class="font-semibold mb-2">فشل تحميل البيانات.</p>
                         <p>يرجى التحقق من رابط السكربت وأذونات النشر.</p>
                         <p>تفاصيل الخطأ: ${error.message}</p>
                     </div>
                 `;
+                 document.getElementById("chart-view").innerHTML = `
+                    <div class="p-6 text-red-600 text-center">
+                        <p class="font-semibold mb-2">فشل تحميل بيانات الرسم البياني.</p>
+                        <p>تفاصيل الخطأ: ${error.message}</p>
+                    </div>
+                `;
             } finally {
-                loadingElement.style.display = "none"; // إخفاء رسالة التحميل
+                loadingElement.style.display = "none";
             }
         }
 
@@ -214,95 +502,69 @@
             const filterTimeFromValue = document.getElementById("filterTimeFrom").value;
             const filterTimeToValue = document.getElementById("filterTimeTo").value;
 
-            // إذا لم يتم جلب البيانات بعد، لا تفعل شيئاً
             if (allSheetData.length === 0) {
                 console.warn("No data to filter. Please wait for data to load.");
+                showPage(currentPage); // محاولة إعادة عرض الصفحة حتى لو كانت البيانات فارغة
                 return;
             }
 
-            // البدء بجميع البيانات ثم تطبيق الفلاتر تدريجياً
-            let filteredData = [...allSheetData]; // عمل نسخة للبيانات لتصفيتها
+            let filteredData = [...allSheetData];
 
-            // فلترة حسب التاريخ
-            if (filterDateFromValue || filterDateToValue) {
-                filteredData = filteredData.filter(row => {
-                    const rowDateStr = row[DATE_COLUMN_NAME];
-                    // تخطي الصفوف التي لا تحتوي على عمود التاريخ المحدد
-                    if (!rowDateStr) return false;
-
-                    const rowDate = new Date(rowDateStr); // تحويل تاريخ الصف إلى كائن Date
-                    // لضمان مقارنة صحيحة لليوم بأكمله، يتم تعيين الوقت إلى بداية اليوم
-                    rowDate.setHours(0, 0, 0, 0);
+            if (filterDateFromValue || filterDateToValue || filterTimeFromValue || filterTimeToValue) {
+                filteredData = filteredData.filter(d => {
+                    const rowDateTime = d.parsedDateTime;
+                    if (!rowDateTime) return false;
 
                     let dateMatch = true;
-
-                    // فلتر "من" التاريخ
-                    if (filterDateFromValue) {
-                        const fromDateObj = new Date(filterDateFromValue);
-                        fromDateObj.setHours(0, 0, 0, 0); // بداية اليوم
-                        if (rowDate < fromDateObj) {
-                            dateMatch = false;
-                        }
-                    }
-                    // فلتر "إلى" التاريخ
-                    if (filterDateToValue) {
-                        const toDateObj = new Date(filterDateToValue);
-                        toDateObj.setHours(23, 59, 59, 999); // نهاية اليوم
-                        if (rowDate > toDateObj) {
-                            dateMatch = false;
-                        }
-                    }
-                    return dateMatch;
-                });
-            }
-
-            // فلترة حسب التوقيت
-            if (filterTimeFromValue || filterTimeToValue) {
-                filteredData = filteredData.filter(row => {
-                    const rowTimeStr = row[TIME_COLUMN_NAME];
-                    // تخطي الصفوف التي لا تحتوي على عمود التوقيت المحدد
-                    if (!rowTimeStr) return false;
-
-                    // لإنشاء كائن Date من التوقيت فقط، نستخدم تاريخ وهمي
-                    const dummyDate = "2000-01-01T"; // أي تاريخ ثابت
-
-                    // التأكد من أن التوقيت يحتوي على ثوانٍ لتجنب مشاكل التحويل
-                    let fullRowTimeStr = rowTimeStr;
-                    if (rowTimeStr.split(':').length === 2) { // إذا كان HH:MM فقط
-                        fullRowTimeStr += ':00'; // أضف الثواني الافتراضية
-                    }
-                    const rowDateTime = new Date(dummyDate + fullRowTimeStr);
-
                     let timeMatch = true;
 
-                    // فلتر "من" التوقيت
-                    if (filterTimeFromValue) {
-                        let fullFilterTimeFrom = filterTimeFromValue;
-                        if (filterTimeFromValue.split(':').length === 2) {
-                            fullFilterTimeFrom += ':00';
-                        }
-                        const fromDateTime = new Date(dummyDate + fullFilterTimeFrom);
-                        if (rowDateTime < fromDateTime) {
-                            timeMatch = false;
+                    // فلترة حسب التاريخ
+                    if (filterDateFromValue) {
+                        const fromDateObj = new Date(filterDateFromValue);
+                        fromDateObj.setHours(0, 0, 0, 0);
+                        if (rowDateTime < fromDateObj) {
+                            dateMatch = false;
                         }
                     }
-                    // فلتر "إلى" التوقيت
-                    if (filterTimeToValue) {
-                        let fullFilterTimeTo = filterTimeToValue;
-                        if (filterTimeToValue.split(':').length === 2) {
-                            fullFilterTimeTo += ':59'; // لتضمين الدقيقة كاملة
-                        }
-                        const toDateTime = new Date(dummyDate + fullFilterTimeFrom); // Changed from fullFilterTimeTo to fullFilterTimeFrom, was a typo.
-                        if (rowDateTime > toDateTime) {
-                            timeMatch = false;
+                    if (filterDateToValue) {
+                        const toDateObj = new Date(filterDateToValue);
+                        toDateObj.setHours(23, 59, 59, 999);
+                        if (rowDateTime > toDateObj) {
+                            dateMatch = false;
                         }
                     }
-                    return timeMatch;
+
+                    // فلترة حسب التوقيت (فقط إذا كان التاريخ ضمن النطاق أو لم يتم تطبيق فلترة التاريخ)
+                    if (dateMatch && (filterTimeFromValue || filterTimeToValue)) {
+                        const rowTimeHours = rowDateTime.getHours();
+                        const rowTimeMinutes = rowDateTime.getMinutes();
+                        const rowTimeSeconds = rowDateTime.getSeconds(); // للحصول على دقة أكبر
+
+                        if (filterTimeFromValue) {
+                            const [fromHours, fromMinutes] = filterTimeFromValue.split(':').map(Number);
+                            // المقارنة بالثواني لضمان الدقة
+                            if (rowTimeHours < fromHours || (rowTimeHours === fromHours && rowTimeMinutes < fromMinutes)) {
+                                timeMatch = false;
+                            } else if (rowTimeHours === fromHours && rowTimeMinutes === fromMinutes && rowTimeSeconds < 0) { // وقت البدء غالباً 00 ثانية
+                                timeMatch = false;
+                            }
+                        }
+                        if (filterTimeToValue) {
+                            const [toHours, toMinutes] = filterTimeToValue.split(':').map(Number);
+                            // المقارنة بالثواني لضمان الدقة (نهاية الدقيقة / الثانية)
+                            if (rowTimeHours > toHours || (rowTimeHours === toHours && rowTimeMinutes > toMinutes)) {
+                                timeMatch = false;
+                            } else if (rowTimeHours === toHours && rowTimeMinutes === toMinutes && rowTimeSeconds > 59) { // وقت الانتهاء غالباً 59 ثانية
+                                timeMatch = false;
+                            }
+                        }
+                    }
+
+                    return dateMatch && timeMatch;
                 });
             }
 
-            // عرض البيانات المصفاة
-            displayData(filteredData);
+            showPage(currentPage, filteredData); // عرض الصفحة الحالية بالبيانات المصفاة
         }
 
         /**
@@ -313,94 +575,28 @@
             document.getElementById("filterDateTo").value = "";
             document.getElementById("filterTimeFrom").value = "";
             document.getElementById("filterTimeTo").value = "";
-            displayData(allSheetData); // عرض جميع البيانات الأصلية مرة أخرى
+            showPage(currentPage, allSheetData); // عرض الصفحة الحالية بجميع البيانات الأصلية
         }
 
         /**
-         * دالة لتحويل سلسلة ISO Date/Time إلى تنسيق تاريخ فقط (YYYY-MM-DD).
-         * @param {string} isoString - سلسلة تاريخ ISO (مثل "2025-06-22T23:00:00.000Z").
-         * @returns {string} التاريخ المنسق (YYYY-MM-DD).
+         * دالة لعرض الجدول.
+         * @param {Array<Object>} data - البيانات المراد عرضها.
          */
-        function formatIsoDateOnly(isoString) {
-            if (!isoString) return '';
-            try {
-                const date = new Date(isoString);
-                // تحقق مما إذا كان التاريخ صالحًا
-                if (isNaN(date.getTime())) {
-                    // إذا لم يكن التاريخ صالحًا، حاول استخراج التاريخ من الجزء الأول من السلسلة
-                    const datePart = isoString.split('T')[0];
-                    const recheckedDate = new Date(datePart);
-                    if (!isNaN(recheckedDate.getTime())) {
-                        return datePart; // إذا كان الجزء الأول تاريخًا صالحًا، أرجعه
-                    }
-                    return isoString; // إرجاع السلسلة الأصلية إذا فشل التحويل تمامًا
-                }
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                return `${year}-${month}-${day}`;
-            } catch (e) {
-                console.error("Error parsing ISO date string:", isoString, e);
-                return isoString; // Return original if parsing fails
-            }
-        }
+        function renderTable(data) {
+            const tableContainer = document.getElementById("table-view");
+            tableContainer.innerHTML = ''; // مسح أي محتوى سابق
 
-        /**
-         * دالة لتحويل سلسلة ISO Date/Time إلى تنسيق وقت فقط (HH:MM:SS).
-         * @param {string} isoString - سلسلة تاريخ ISO (مثل "1899-12-30T17:27:03.000Z").
-         * @returns {string} التوقيت المنسق (HH:MM:SS).
-         */
-        function formatIsoTimeOnly(isoString) {
-            if (!isoString) return '';
-            try {
-                const date = new Date(isoString);
-                 // تحقق مما إذا كان التاريخ صالحًا
-                if (isNaN(date.getTime())) {
-                    // إذا لم يكن التاريخ صالحًا، حاول استخراج الوقت من الجزء الثاني من السلسلة
-                    const timePart = isoString.split('T')[1];
-                    if (timePart) {
-                        const timeSegments = timePart.split(':');
-                        if (timeSegments.length >= 2) {
-                            const hours = timeSegments[0].padStart(2, '0');
-                            const minutes = timeSegments[1].padStart(2, '0');
-                            // اقتطع الثواني لتجنب أجزاء المللي ثانية إذا كانت موجودة
-                            const seconds = timeSegments.length > 2 ? timeSegments[2].substring(0,2).padStart(2, '0') : '00';
-                             return `${hours}:${minutes}:${seconds}`;
-                        }
-                    }
-                    return isoString; // إرجاع السلسلة الأصلية إذا فشل التحويل تمامًا
-                }
-                const hours = String(date.getHours()).padStart(2, '0');
-                const minutes = String(date.getMinutes()).padStart(2, '0');
-                const seconds = String(date.getSeconds()).padStart(2, '0');
-                return `${hours}:${minutes}:${seconds}`;
-            } catch (e) {
-                console.error("Error parsing ISO time string:", isoString, e);
-                return isoString; // Return original if parsing fails
-            }
-        }
-
-
-        /**
-         * دالة لعرض البيانات المُستلمة في جدول HTML.
-         * @param {Array<Object>} data - مصفوفة الكائنات التي تمثل صفوف البيانات.
-         */
-        function displayData(data) {
-            const tableContainer = document.getElementById("table-container");
-
-            // إذا لم تكن هناك بيانات أو كانت فارغة
             if (!data || data.length === 0) {
                 tableContainer.innerHTML = `
                     <div class="p-6 text-gray-600 text-center">
-                        <p>لا توجد بيانات متاحة لعرضها بعد التصفية.</p>
+                        <p>لا توجد بيانات متاحة لعرضها في الجدول.</p>
                     </div>
                 `;
                 return;
             }
 
-            // إنشاء عناصر الجدول ديناميكيًا
             const table = document.createElement("table");
-            table.className = "min-w-full divide-y divide-gray-200"; // تم تعديل هذا
+            table.className = "min-w-full divide-y divide-gray-200 rounded-lg";
 
             const thead = document.createElement("thead");
             thead.className = "bg-gray-50";
@@ -408,65 +604,246 @@
             const tbody = document.createElement("tbody");
             tbody.className = "bg-white divide-y divide-gray-200";
 
-            // إنشاء صف الرؤوس (Headers)
-            const headers = Object.keys(data[0]); // الحصول على أسماء الأعمدة من الكائن الأول
+            const headers = Object.keys(data[0]);
             const headerRow = document.createElement("tr");
             headers.forEach(headerText => {
                 const th = document.createElement("th");
                 th.textContent = headerText;
-                // تطبيق فئات Tailwind CSS على رؤوس الجدول
-                th.className = "px-6 py-3 text-center text-xs font-bold text-white uppercase tracking-wider"; // تم تعديل هذا
+                th.className = "px-6 py-3 text-center text-xs font-bold text-white uppercase tracking-wider";
                 headerRow.appendChild(th);
             });
             thead.appendChild(headerRow);
             table.appendChild(thead);
 
-            // إنشاء صفوف البيانات (Rows)
             data.forEach((rowData, index) => {
                 const tr = document.createElement("tr");
-                // تطبيق فئات Tailwind CSS على الصفوف (للتلوين المتناوب hover)
                 tr.className = index % 2 === 0 ? "bg-white" : "bg-gray-50";
 
                 headers.forEach(headerText => {
                     const td = document.createElement("td");
                     let cellContent = rowData[headerText];
 
-                    // تطبيق التنسيق للتاريخ والتوقيت إذا كانت الأعمدة مطابقة
+                    // تطبيق التنسيق للتاريخ والتوقيت
                     if (headerText === DATE_COLUMN_NAME) {
-                        const formattedDate = formatIsoDateOnly(cellContent);
-                        cellContent = formattedDate;
+                        cellContent = formatIsoDateOnly(cellContent);
                     } else if (headerText === TIME_COLUMN_NAME) {
-                        const formattedTime = formatIsoTimeOnly(cellContent);
-                        cellContent = formattedTime;
+                        cellContent = formatIsoTimeOnly(cellContent);
                     } else if (typeof cellContent === 'string' && cellContent.includes('T') && cellContent.includes('Z')) {
-                        // محاولة تنسيق أي سلسلة ISO تاريخ/وقت تظهر في أي عمود آخر
                         const formattedDateInOtherColumn = formatIsoDateOnly(cellContent);
                         if (formattedDateInOtherColumn !== cellContent) {
                             cellContent = formattedDateInOtherColumn;
                         }
                     }
                     
-                    // استخدام textContent لضمان التعامل الآمن مع النصوص
                     td.textContent = cellContent;
-                    // تطبيق فئات Tailwind CSS على خلايا البيانات
-                    td.className = "px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center"; // تم تعديل هذا
+                    td.className = "px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center";
                     tr.appendChild(td);
                 });
                 tbody.appendChild(tr);
             });
             table.appendChild(tbody);
-
-            // مسح المحتوى القديم وإضافة الجدول الجديد إلى الحاوية
-            tableContainer.innerHTML = "";
             tableContainer.appendChild(table);
+        }
+
+        /**
+         * دالة لرسم الرسم البياني لدرجة الحرارة باستخدام D3.js.
+         * @param {Array<Object>} data - البيانات المراد رسمها. يجب أن تحتوي على parsedDateTime و parsedTemperature.
+         */
+        function renderChart(data) {
+            const chartContainer = document.getElementById("chart-view");
+            chartContainer.innerHTML = '<svg class="chart"></svg>'; // مسح أي رسم بياني سابق
+
+            const filteredChartData = data.filter(d => d.parsedDateTime && d.parsedTemperature !== null);
+
+            if (!filteredChartData || filteredChartData.length === 0) {
+                chartContainer.innerHTML = `
+                    <div class="p-6 text-gray-600 text-center">
+                        <p>لا توجد بيانات متاحة للرسم البياني بعد التصفية.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const margin = { top: 20, right: 30, bottom: 60, left: 60 };
+            const containerWidth = chartContainer.offsetWidth; // استخدام عرض الحاوية الفعلية
+            const containerHeight = 400; // ارتفاع ثابت للرسم البياني
+
+            const width = containerWidth - margin.left - margin.right;
+            const height = containerHeight - margin.top - margin.bottom;
+
+            const svg = d3.select(chartContainer).select(".chart")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // تعريف المقاييس (Scales)
+            const xScale = d3.scaleTime()
+                .domain(d3.extent(filteredChartData, d => d.parsedDateTime))
+                .range([0, width]);
+
+            const yScale = d3.scaleLinear()
+                .domain([d3.min(filteredChartData, d => d.parsedTemperature) * 0.95, d3.max(filteredChartData, d => d.parsedTemperature) * 1.05]) // توسيع النطاق قليلاً
+                .range([height, 0]);
+
+            // إضافة المحاور (Axes)
+            const xAxis = svg.append("g")
+                .attr("class", "axis x-axis")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(xScale).tickFormat(d3.timeFormat("%Y-%m-%d %H:%M")));
+            
+            xAxis.selectAll("text")
+                .attr("transform", "rotate(-45)")
+                .style("text-anchor", "end");
+
+            svg.append("g")
+                .attr("class", "axis y-axis")
+                .call(d3.axisLeft(yScale));
+
+            // إضافة تسمية للمحور Y
+            svg.append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 0 - margin.left + 15)
+                .attr("x", 0 - (height / 2))
+                .attr("dy", "1em")
+                .style("text-anchor", "middle")
+                .style("fill", "#4b5563")
+                .text("درجة الحرارة (°C)");
+
+            // تعريف منشئ الخط (Line generator)
+            const line = d3.line()
+                .x(d => xScale(d.parsedDateTime))
+                .y(d => yScale(d.parsedTemperature));
+
+            // رسم الخط
+            svg.append("path")
+                .datum(filteredChartData)
+                .attr("class", "line")
+                .attr("d", line);
+
+            // إضافة نقاط البيانات وتأثير التلميح (Tooltip)
+            const tooltip = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("opacity", 0);
+
+            svg.selectAll(".dot")
+                .data(filteredChartData)
+                .enter().append("circle")
+                .attr("class", "dot")
+                .attr("cx", d => xScale(d.parsedDateTime))
+                .attr("cy", d => yScale(d.parsedTemperature))
+                .attr("r", 4)
+                .on("mouseover", function(event, d) {
+                    tooltip.transition()
+                        .duration(200)
+                        .style("opacity", .9);
+                    tooltip.html(`التاريخ: ${d3.timeFormat("%Y-%m-%d %H:%M")(d.parsedDateTime)}<br/>درجة الحرارة: ${d.parsedTemperature}°C`)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", function(d) {
+                    tooltip.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+                });
+            
+            // التعامل مع تغيير حجم النافذة لرسم الرسم البياني مرة أخرى
+            window.addEventListener('resize', () => {
+                // إعادة جلب البيانات المصفاة الحالية (أو الأصلية) وإعادة رسم الرسم البياني
+                // يمكن تحسين ذلك بتخزين البيانات المصفاة بدلاً من إعادة تصفيتها
+                applyFilters(); // لتطبيق الفلاتر على البيانات الحالية وإعادة الرسم
+            });
+        }
+
+
+        /**
+         * دالة لتبديل عرض الصفحة بين الجدول والرسم البياني.
+         * @param {string} page - اسم الصفحة ('table' أو 'chart').
+         * @param {Array<Object>} [dataToDisplay] - البيانات المراد عرضها (إذا كانت مصفاة).
+         */
+        function showPage(page, dataToDisplay = allSheetData) {
+            currentPage = page;
+            const tableView = document.getElementById('table-view');
+            const chartView = document.getElementById('chart-view');
+            const showTableBtn = document.getElementById('showTableBtn');
+            const showChartBtn = document.getElementById('showChartBtn');
+            const sidebar = document.getElementById('sidebar');
+
+            // إغلاق القائمة الجانبية على الجوال بعد اختيار الصفحة
+            if (window.innerWidth < 1024) { // 1024px هو نقطة توقف Tailwind 'lg'
+                sidebar.classList.remove('open');
+            }
+
+            // تحديث حالة الأزرار في القائمة الجانبية
+            showTableBtn.classList.remove('bg-indigo-700', 'lg:bg-indigo-100', 'text-white', 'lg:text-indigo-600');
+            showChartBtn.classList.remove('bg-indigo-700', 'lg:bg-indigo-100', 'text-white', 'lg:text-indigo-600');
+            showTableBtn.classList.add('bg-transparent', 'lg:bg-transparent', 'text-gray-300', 'lg:text-gray-700');
+            showChartBtn.classList.add('bg-transparent', 'lg:bg-transparent', 'text-gray-300', 'lg:text-gray-700');
+
+
+            if (page === 'table') {
+                tableView.classList.remove('hidden');
+                chartView.classList.add('hidden');
+                showTableBtn.classList.add('bg-indigo-700', 'lg:bg-indigo-100', 'text-white', 'lg:text-indigo-600');
+                showTableBtn.classList.remove('bg-transparent', 'lg:bg-transparent', 'text-gray-300', 'lg:text-gray-700');
+
+                renderTable(dataToDisplay);
+            } else if (page === 'chart') {
+                tableView.classList.add('hidden');
+                chartView.classList.remove('hidden');
+                showChartBtn.classList.add('bg-indigo-700', 'lg:bg-indigo-100', 'text-white', 'lg:text-indigo-600');
+                showChartBtn.classList.remove('bg-transparent', 'lg:bg-transparent', 'text-gray-300', 'lg:text-gray-700');
+                
+                renderChart(dataToDisplay);
+            }
         }
 
         // استدعاء دالة جلب البيانات عند تحميل محتوى DOM بالكامل
         document.addEventListener("DOMContentLoaded", () => {
             fetchData(); // جلب البيانات أولاً
+
             // إضافة مستمعي الأحداث لأزرار الفلاتر
             document.getElementById("applyFilterBtn").addEventListener("click", applyFilters);
             document.getElementById("clearFilterBtn").addEventListener("click", clearFilters);
+
+            // مستمعي أحداث أزرار القائمة الجانبية
+            document.getElementById("showTableBtn").addEventListener("click", (e) => {
+                e.preventDefault(); // منع الانتقال إلى رابط #
+                showPage('table');
+            });
+            document.getElementById("showChartBtn").addEventListener("click", (e) => {
+                e.preventDefault(); // منع الانتقال إلى رابط #
+                showPage('chart');
+            });
+
+            // منطق تبديل القائمة الجانبية على الجوال
+            const sidebar = document.getElementById('sidebar');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+
+            hamburgerBtn.addEventListener('click', () => {
+                sidebar.classList.add('open');
+            });
+
+            closeSidebarBtn.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+            });
+
+            // إغلاق القائمة الجانبية عند النقر خارجها على الجوال
+            document.body.addEventListener('click', (event) => {
+                if (window.innerWidth < 1024 && sidebar.classList.contains('open') &&
+                    !sidebar.contains(event.target) && !hamburgerBtn.contains(event.target)) {
+                    sidebar.classList.remove('open');
+                }
+            });
+            
+            // إعادة رسم الرسم البياني عند تغيير حجم الشاشة لضمان تجاوبه
+            window.addEventListener('resize', () => {
+                if (currentPage === 'chart') {
+                    // إذا كانت صفحة الرسم البياني معروضة، أعد رسمها
+                    applyFilters(); // لإعادة تطبيق الفلاتر وإعادة الرسم بناءً على الحجم الجديد
+                }
+            });
         });
     </script>
 </body>
