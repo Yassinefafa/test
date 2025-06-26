@@ -6,7 +6,6 @@
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
   <style>
     body { margin: 0; font-family: Arial; background-color: #f4f4f4; direction: ltr; }
@@ -37,20 +36,13 @@
 
 <div class="main-page" id="mainPage">
   <div class="sidebar">
-    <button onclick="showChart('temp')">📈 Temperature</button>
-    <button onclick="showChart('humidity')">💧 Humidity</button>
     <button onclick="showChart('accelX')">↔️ Acceleration X</button>
     <button onclick="showChart('accelY')">↕️ Acceleration Y</button>
     <button onclick="showChart('accelZ')">🔃 Acceleration Z</button>
     <button onclick="showChart('gyroX')">🧭 Gyroscope X</button>
     <button onclick="showChart('gyroY')">🧭 Gyroscope Y</button>
     <button onclick="showChart('gyroZ')">🧭 Gyroscope Z</button>
-    <button onclick="showChart('vibration')">📳 Vibration</button>
-    <button onclick="showChart('ntc')">🌡️ NTC Temp</button>
-    <button onclick="showChart('courant')">⚡ Courant</button>
-    <button onclick="showChart('battery')">🔋 Batterie</button>
     <button onclick="showTable()">📋 Full Table</button>
-    <button onclick="downloadPDF()">🖨️ Export PDF</button>
     <div class="bottom-buttons">
       <button onclick="changeLang('ar')">🇲🇦 العربية</button>
       <button onclick="changeLang('fr')">🇫🇷 Français</button>
@@ -93,12 +85,41 @@
     }
   }
 
+  function changeLang(lang) {
+    const langData = {
+      ar: {
+        "login-title": "تسجيل الدخول",
+        "username": "اسم المستخدم",
+        "password": "كلمة السر",
+        "login-button": "دخول"
+      },
+      fr: {
+        "login-title": "Connexion",
+        "username": "Nom d'utilisateur",
+        "password": "Mot de passe",
+        "login-button": "Se connecter"
+      },
+      en: {
+        "login-title": "Login",
+        "username": "Username",
+        "password": "Password",
+        "login-button": "Login"
+      }
+    };
+    const selectedLang = langData[lang] || langData.en;
+    for (const key in selectedLang) {
+      if (selectedLang.hasOwnProperty(key)) {
+        document.getElementById(key).textContent = selectedLang[key];
+      }
+    }
+  }
+
   async function refreshData() {
     const url = "https://script.google.com/macros/s/AKfycbyyOjiF-mX-oC2AeYB2antb3GMRKsMLfzegN6DRx5Q_XsceQMNOjAipsAMyxPI3Ca2NDA/exec";
     const response = await fetch(url);
     const data = await response.json();
     window.sensorData = data.filter(row => row["Température (°C)"].includes("Temp"));
-    showChart('temp');
+    showChart('accelX');
   }
 
   function showChart(type) {
@@ -107,18 +128,12 @@
     let values = [], label = '', color = 'blue';
 
     const map = {
-      temp: ["Température (°C)", "Température (°C)", "red"],
-      humidity: ["Humidité (%)", "Humidité (%)", "blue"],
-      accelX: ["Accélération X", "Accélération X", "green"],
-      accelY: ["Accélération Y", "Accélération Y", "darkgreen"],
-      accelZ: ["Accélération Z", "Accélération Z", "lightgreen"],
+      accelX: ["Accélération X", "Acceleration X", "green"],
+      accelY: ["Accélération Y", "Acceleration Y", "darkgreen"],
+      accelZ: ["Accélération Z", "Acceleration Z", "lightgreen"],
       gyroX: ["Gyroscope X", "Gyroscope X", "purple"],
       gyroY: ["Gyroscope Y", "Gyroscope Y", "darkpurple"],
-      gyroZ: ["Gyroscope Z", "Gyroscope Z", "violet"],
-      vibration: ["Vibration", "Vibration", "orange"],
-      ntc: ["Temp. NTC (°C)", "Temp. NTC (°C)", "brown"],
-      courant: ["Courant (V Bruts)", "Courant (V Bruts)", "black"],
-      battery: ["Batterie (V)", "Batterie (V)", "gray"]
+      gyroZ: ["Gyroscope Z", "Gyroscope Z", "violet"]
     };
 
     if (!map[type]) return alert("Chart not supported");
@@ -154,14 +169,6 @@
     });
     document.getElementById('mainChart').style.display = 'none';
     document.getElementById('tableContainer').style.display = 'block';
-  }
-
-  function downloadPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    doc.text("Sensor Chart Report", 20, 20);
-    doc.addImage(window.myChart.toBase64Image(), 'PNG', 10, 30, 180, 80);
-    doc.save("chart-report.pdf");
   }
 </script>
 </body>
