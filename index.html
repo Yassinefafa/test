@@ -472,7 +472,13 @@
                 allSheetData = data.map(d => {
                     // معالجة البيانات الخام لتحويلها إلى تنسيقات صالحة للاستخدام
                     const dateTime = parseDateTime(d[DATE_COLUMN_NAME], d[TIME_COLUMN_NAME]);
-                    const temperature = parseFloat(d[TEMPERATURE_COLUMN_NAME]); // استخدم parseFloat
+                    
+                    let temperatureValue = d[TEMPERATURE_COLUMN_NAME];
+                    // Replace comma with dot for decimal parsing if needed
+                    if (typeof temperatureValue === 'string' && temperatureValue.includes(',')) {
+                        temperatureValue = temperatureValue.replace(',', '.');
+                    }
+                    const temperature = Number(temperatureValue); // Use Number() for more robust parsing
 
                     // Log invalid temperature values
                     if (isNaN(temperature)) {
@@ -524,6 +530,13 @@
             const filterTimeFromValue = document.getElementById("filterTimeFrom").value;
             const filterTimeToValue = document.getElementById("filterTimeTo").value;
 
+            console.log("Applying filters with values:", {
+                filterDateFromValue: filterDateFromValue,
+                filterDateToValue: filterDateToValue,
+                filterTimeFromValue: filterTimeFromValue,
+                filterTimeToValue: filterTimeToValue
+            });
+
             if (allSheetData.length === 0) {
                 console.warn("No data to filter. Please wait for data to load.");
                 showPage(currentPage);
@@ -534,7 +547,10 @@
 
             filteredData = filteredData.filter(d => {
                 const rowDateTime = d.parsedDateTime;
-                if (!rowDateTime) return false; // تجاوز الصفوف إذا كان التاريخ غير صالح
+                if (!rowDateTime) {
+                    console.log(`  Filtering out row because parsedDateTime is null for row: ${JSON.stringify(d)}`);
+                    return false;
+                }
 
                 let dateMatch = true;
                 let timeMatch = true;
@@ -545,6 +561,7 @@
                     fromDateObj.setHours(0, 0, 0, 0); // Start of the day
                     if (rowDateTime < fromDateObj) {
                         dateMatch = false;
+                        console.log(`  Row Date (${formatDate(rowDateTime)}) < From Date (${formatDate(fromDateObj)}) -> dateMatch = false for row: ${JSON.stringify(d[DATE_COLUMN_NAME])}`);
                     }
                 }
                 if (filterDateToValue) {
@@ -552,6 +569,7 @@
                     toDateObj.setHours(23, 59, 59, 999); // End of the day
                     if (rowDateTime > toDateObj) {
                         dateMatch = false;
+                        console.log(`  Row Date (${formatDate(rowDateTime)}) > To Date (${formatDate(toDateObj)}) -> dateMatch = false for row: ${JSON.stringify(d[DATE_COLUMN_NAME])}`);
                     }
                 }
 
@@ -563,6 +581,8 @@
                     const rowTimeOnly = new Date(dummyTimeCompareDate);
                     rowTimeOnly.setHours(rowDateTime.getHours(), rowDateTime.getMinutes(), rowDateTime.getSeconds(), rowDateTime.getMilliseconds());
 
+                    console.log(`  Row Time Only for row ${JSON.stringify(d[DATE_COLUMN_NAME])} ${JSON.stringify(d[TIME_COLUMN_NAME])}: ${formatTime(rowTimeOnly)}`);
+
                     if (filterTimeFromValue) {
                         const [fromHours, fromMinutes] = filterTimeFromValue.split(':').map(Number);
                         const fromTimeOnly = new Date(dummyTimeCompareDate);
@@ -570,6 +590,7 @@
 
                         if (rowTimeOnly < fromTimeOnly) {
                             timeMatch = false;
+                            console.log(`    Row Time (${formatTime(rowTimeOnly)}) < From Time (${formatTime(fromTimeOnly)}) -> timeMatch = false for row: ${JSON.stringify(d[TIME_COLUMN_NAME])}`);
                         }
                     }
 
@@ -580,8 +601,14 @@
 
                         if (rowTimeOnly > toTimeOnly) {
                             timeMatch = false;
+                            console.log(`    Row Time (${formatTime(rowTimeOnly)}) > To Time (${formatTime(toTimeOnly)}) -> timeMatch = false for row: ${JSON.stringify(d[TIME_COLUMN_NAME])}`);
                         }
                     }
+                }
+                
+                // Log final decision for each row
+                if (!(dateMatch && timeMatch)) {
+                    console.log(`Filtering out row ${JSON.stringify(d[DATE_COLUMN_NAME])} ${JSON.stringify(d[TIME_COLUMN_NAME])} - Final decision: dateMatch=${dateMatch}, timeMatch=${timeMatch}`);
                 }
 
                 return dateMatch && timeMatch;
@@ -689,6 +716,14 @@
                 return;
             }
 
+            // Ensure valid domain for scales to avoid D3 errors with very small ranges
+            const minTemp = d3.min(filteredChartData, d => d.parsedTemperature);
+            const maxTemp = d3.max(filteredChartData, d => d.parsedTemperature);
+            
+            // Add some padding to min/max temperature for better visualization
+            const yDomainMin = (minTemp !== undefined && minTemp !== null) ? minTemp * 0.9 : 0;
+            const yDomainMax = (maxTemp !== undefined && maxTemp !== null) ? maxTemp * 1.1 : 100; // Default range if data is uniform
+
             const margin = { top: 20, right: 30, bottom: 60, left: 60 };
             const containerWidth = chartContainer.offsetWidth; // استخدام عرض الحاوية الفعلية
             const containerHeight = 400; // ارتفاع ثابت للرسم البياني
@@ -710,7 +745,7 @@
                 .range([0, width]);
 
             const yScale = d3.scaleLinear()
-                .domain([d3.min(filteredChartData, d => d.parsedTemperature) * 0.9, d3.max(filteredChartData, d => d.parsedTemperature) * 1.1]) // توسيع النطاق أكثر قليلاً
+                .domain([yDomainMin, yDomainMax])
                 .range([height, 0]);
 
             // إضافة خطوط الشبكة الأفقية
