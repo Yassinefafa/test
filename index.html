@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>عرض بيانات جدول جوجل مع فلاتر</title>
+    <title>عرض بيانات جدول جوجل مع فلاتر احترافية وأنيقة</title>
     <!-- تضمين Tailwind CSS لتصميم عصري ومتجاوب -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -12,37 +12,77 @@
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6; /* لون خلفية خفيف */
         }
-        /* تصميم أساسي للجدول */
+        /* تصميم مخصص لأزرار الفلاتر لجعلها تبدو احترافية أكثر */
+        button {
+            transition: all 0.2s ease-in-out;
+            transform: translateY(0);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* تحسينات إضافية لتصميم الجدول */
         table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            background-color: #fff;
-            border-radius: 0.5rem; /* حواف مستديرة للجدول */
-            overflow: hidden; /* لإخفاء المحتوى الزائد الذي يتجاوز الحواف المستديرة */
+            border-collapse: separate; /* مهم لـ border-radius */
+            border-spacing: 0;
+            border-radius: 0.75rem; /* حواف مستديرة أكثر */
+            overflow: hidden; /* لضمان أن الحواف المستديرة تعمل بشكل صحيح مع المحتوى */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); /* ظل أكبر وأكثر وضوحًا */
         }
+
         th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: right; /* محاذاة النص لليمين */
+            border: none; /* إزالة الحدود الافتراضية للخلايا */
+            padding: 1rem 1.25rem; /* مسافة بادئة محسّنة */
+            font-size: 0.95rem; /* حجم خط مناسب */
+            text-align: center; /* محاذاة النص إلى الوسط */
         }
+
         th {
-            background-color: #4CAF50;
-            color: white;
+            background-color: #4f46e5; /* لون أزرق داكن لرؤوس الجدول */
+            color: white; /* لون الكتابة أبيض */
+            font-weight: 700; /* خط أثقل وأكثر بروزًا */
             text-transform: uppercase;
+            padding-top: 0.875rem;
+            padding-bottom: 0.875rem;
+            position: sticky; /* لجعل الرؤوس ثابتة عند التمرير الأفقي */
+            top: 0; /* مهم لـ sticky */
+            z-index: 10; /* لضمان ظهور الرؤوس فوق محتوى الجدول عند التمرير */
         }
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
+
+        /* إضافة فاصل سفلي خفيف لرؤوس الأعمدة */
+        th:not(:last-child) {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            border-right: 1px solid rgba(255, 255, 255, 0.1); /* فاصل عمودي بين الرؤوس */
         }
-        tr:hover {
-            background-color: #ddd;
+        th:last-child {
+             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
-        #loading {
-            text-align: center;
-            padding: 20px;
-            font-size: 1.2em;
-            color: #555;
+
+        /* حواف مستديرة لزوايا رؤوس الجدول العلوية */
+        th:first-child {
+            border-top-right-radius: 0.75rem;
+        }
+        th:last-child {
+            border-top-left-radius: 0.75rem;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9fafb; /* لون خلفية فاتح للصفوف الزوجية */
+        }
+
+        tbody tr:hover {
+            background-color: #eef2ff; /* لون أزرق فاتح عند التمرير فوق الصف */
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        /* إضافة فاصل خفيف بين خلايا البيانات */
+        td:not(:last-child) {
+            border-right: 1px solid #e5e7eb;
         }
     </style>
 </head>
@@ -360,7 +400,7 @@
 
             // إنشاء عناصر الجدول ديناميكيًا
             const table = document.createElement("table");
-            table.className = "min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden";
+            table.className = "min-w-full divide-y divide-gray-200"; // تم تعديل هذا
 
             const thead = document.createElement("thead");
             thead.className = "bg-gray-50";
@@ -375,7 +415,7 @@
                 const th = document.createElement("th");
                 th.textContent = headerText;
                 // تطبيق فئات Tailwind CSS على رؤوس الجدول
-                th.className = "px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider";
+                th.className = "px-6 py-3 text-center text-xs font-bold text-white uppercase tracking-wider"; // تم تعديل هذا
                 headerRow.appendChild(th);
             });
             thead.appendChild(headerRow);
@@ -391,34 +431,25 @@
                     const td = document.createElement("td");
                     let cellContent = rowData[headerText];
 
-                    // ************ رسائل تصحيح للمطور ************
-                    console.log(`Processing column: ${headerText}, Original content: ${cellContent}`);
-                    // ********************************************
-
                     // تطبيق التنسيق للتاريخ والتوقيت إذا كانت الأعمدة مطابقة
                     if (headerText === DATE_COLUMN_NAME) {
                         const formattedDate = formatIsoDateOnly(cellContent);
-                        console.log(`  Formatted DATE: ${formattedDate}`); // رسالة تصحيح
                         cellContent = formattedDate;
                     } else if (headerText === TIME_COLUMN_NAME) {
                         const formattedTime = formatIsoTimeOnly(cellContent);
-                        console.log(`  Formatted HEURE: ${formattedTime}`); // رسالة تصحيح
                         cellContent = formattedTime;
                     } else if (typeof cellContent === 'string' && cellContent.includes('T') && cellContent.includes('Z')) {
                         // محاولة تنسيق أي سلسلة ISO تاريخ/وقت تظهر في أي عمود آخر
-                        // بناءً على المشكلة المحددة (ظهور تواريخ في عمود درجة الحرارة)
                         const formattedDateInOtherColumn = formatIsoDateOnly(cellContent);
-                        // إذا كانت السلسلة تتحول لتاريخ صالح، استخدم التنسيق
                         if (formattedDateInOtherColumn !== cellContent) {
                             cellContent = formattedDateInOtherColumn;
-                            console.log(`  Detected ISO date in non-DATE/HEURE column (${headerText}), formatted as: ${cellContent}`); // رسالة تصحيح
                         }
                     }
                     
                     // استخدام textContent لضمان التعامل الآمن مع النصوص
                     td.textContent = cellContent;
                     // تطبيق فئات Tailwind CSS على خلايا البيانات
-                    td.className = "px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right";
+                    td.className = "px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center"; // تم تعديل هذا
                     tr.appendChild(td);
                 });
                 tbody.appendChild(tr);
