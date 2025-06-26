@@ -266,7 +266,7 @@
                 </div>
                 <div>
                     <label for="filterDateTo" class="block text-sm font-medium text-gray-700 text-right">تاريخ إلى:</label>
-                    <input type="date" id="filterDateTo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-ring-indigo-200 focus:ring-opacity-50 p-2 text-right dir-rtl">
+                    <input type="date" id="filterDateTo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 text-right dir-rtl">
                 </div>
                 <div>
                     <label for="filterTimeFrom" class="block text-sm font-medium text-gray-700 text-right">توقيت من:</label>
@@ -405,53 +405,50 @@
 
         /**
          * دالة لتحويل سلسلة التاريخ والوقت من جدول بيانات Google إلى كائن Date صالح.
-         * تحاول التعامل مع التنسيقات المختلفة التي قد تأتي بها البيانات.
-         * @param {string} dateStr - سلسلة التاريخ (قد تكون ISO أو నేపథ్యంలో-MM-DD أو DD/MM/YYYY).
+         * تحاول التعامل مع التنسيقات المختلفة التي قد تأتي بها البيانات (ISO, DD/MM/YYYY, YYYY-MM-DD).
+         * @param {string} dateStr - سلسلة التاريخ (مثل "2025-06-22" أو "22/06/2025" أو "2025-06-22T...").
          * @param {string} timeStr - سلسلة الوقت (مثل "HH:MM" أو "HH:MM:SS").
          * @returns {Date | null} كائن Date أو null إذا فشل التحويل.
          */
         function parseDateTime(dateStr, timeStr) {
-            let fullDateTimeStr;
+            if (!dateStr) return null; // Ensure dateStr exists
 
-            // إذا كان dateStr يحتوي على 'T' فهذا يعني أنه قد يكون ISO بالفعل
-            if (dateStr && typeof dateStr === 'string' && dateStr.includes('T')) {
-                fullDateTimeStr = dateStr;
+            let year, month, day;
+
+            // First, try to parse DD/MM/YYYY format explicitly if it contains '/'
+            const parts = dateStr.split('/');
+            if (parts.length === 3) {
+                day = parseInt(parts[0]);
+                month = parseInt(parts[1]) - 1; // Month is 0-indexed
+                year = parseInt(parts[2]);
             } else {
-                // دمج التاريخ والوقت
-                fullDateTimeStr = `${dateStr}T${timeStr}`;
+                // If not DD/MM/YYYY, assume YYYY-MM-DD or extract from ISO
+                const isoDateParts = dateStr.split('T')[0].split('-'); // Get YYYY-MM-DD part from ISO or direct
+                if (isoDateParts.length === 3) {
+                    year = parseInt(isoDateParts[0]);
+                    month = parseInt(isoDateParts[1]) - 1;
+                    day = parseInt(isoDateParts[2]);
+                } else {
+                    console.warn(`Could not determine date format for dateStr: ${dateStr}`);
+                    return null;
+                }
             }
 
-            const date = new Date(fullDateTimeStr);
+            let hours = 0, minutes = 0, seconds = 0;
+            if (timeStr && typeof timeStr === 'string') {
+                const timeParts = timeStr.split(':');
+                if (timeParts.length >= 2) {
+                    hours = parseInt(timeParts[0]) || 0;
+                    minutes = parseInt(timeParts[1]) || 0;
+                    seconds = timeParts.length > 2 ? parseInt(timeParts[2]) || 0 : 0;
+                }
+            }
 
-            // تحقق مما إذا كان التاريخ صالحًا بعد التحويل
+            const date = new Date(year, month, day, hours, minutes, seconds);
+
             if (isNaN(date.getTime())) {
-                // محاولة أخرى: إذا كان تنسيق الوقت HH:MM، أضف الثواني
-                if (timeStr && typeof timeStr === 'string' && timeStr.split(':').length === 2) {
-                    fullDateTimeStr = `${dateStr}T${timeStr}:00`;
-                    const recheckedDate = new Date(fullDateTimeStr);
-                    if (!isNaN(recheckedDate.getTime())) {
-                        return recheckedDate;
-                    }
-                }
-                // محاولة أخرى: إذا كان التاريخ بتنسيق DD/MM/YYYY
-                const parts = dateStr.split('/');
-                if (parts.length === 3) {
-                    const d = parseInt(parts[0]);
-                    const m = parseInt(parts[1]) - 1; // الشهر يبدأ من 0
-                    const y = parseInt(parts[2]);
-                    const timeParts = timeStr.split(':');
-                    if (timeParts.length >= 2) {
-                        const h = parseInt(timeParts[0]);
-                        const min = parseInt(timeParts[1]);
-                        const sec = timeParts.length > 2 ? parseInt(timeParts[2]) : 0;
-                        const validDate = new Date(y, m, d, h, min, sec);
-                        if (!isNaN(validDate.getTime())) {
-                            return validDate;
-                        }
-                    }
-                }
-                console.warn(`Failed to parse date-time string: ${dateStr} ${timeStr}`);
-                return null; // فشل التحويل
+                console.warn(`Failed to create Date object from: dateStr='${dateStr}', timeStr='${timeStr}'. Resulting date: ${date}`);
+                return null;
             }
             return date;
         }
@@ -477,8 +474,9 @@
                     const dateTime = parseDateTime(d[DATE_COLUMN_NAME], d[TIME_COLUMN_NAME]);
                     const temperature = parseFloat(d[TEMPERATURE_COLUMN_NAME]); // استخدم parseFloat
 
-                    if (isNaN(temperature)) { // Check if temperature is NaN *after* parsing
-                         console.warn(`Invalid temperature value found for row: ${JSON.stringify(d)}. Original: '${d[TEMPERATURE_COLUMN_NAME]}'`);
+                    // Log invalid temperature values
+                    if (isNaN(temperature)) {
+                         console.warn(`Invalid temperature value found for row: ${JSON.stringify(d)}. Original temperature string: '${d[TEMPERATURE_COLUMN_NAME]}'. Check if 'Température (°C)' column in your sheet contains non-numeric data.`);
                     }
                     
                     return {
@@ -489,7 +487,7 @@
                 }).filter(d => {
                     const isValid = d.parsedDateTime !== null && d.parsedTemperature !== null;
                     if (!isValid) {
-                        console.warn("Filtering out invalid row:", d); // Log filtered out rows
+                        console.warn("Filtering out invalid row (either date/time or temperature is null):", d); // Log filtered out rows
                     }
                     return isValid;
                 });
@@ -541,26 +539,26 @@
                 let dateMatch = true;
                 let timeMatch = true;
 
-                // فلترة حسب التاريخ
+                // Date filtering
                 if (filterDateFromValue) {
                     const fromDateObj = new Date(filterDateFromValue);
-                    fromDateObj.setHours(0, 0, 0, 0); // بداية اليوم
+                    fromDateObj.setHours(0, 0, 0, 0); // Start of the day
                     if (rowDateTime < fromDateObj) {
                         dateMatch = false;
                     }
                 }
                 if (filterDateToValue) {
                     const toDateObj = new Date(filterDateToValue);
-                    toDateObj.setHours(23, 59, 59, 999); // نهاية اليوم
+                    toDateObj.setHours(23, 59, 59, 999); // End of the day
                     if (rowDateTime > toDateObj) {
                         dateMatch = false;
                     }
                 }
 
-                // فلترة حسب التوقيت، فقط إذا كان التاريخ ضمن النطاق
+                // Time filtering, only if dateMatch is true
                 if (dateMatch && (filterTimeFromValue || filterTimeToValue)) {
-                    // إنشاء تاريخ وهمي للمقارنة الزمنية لعزل مكون الوقت
-                    const dummyTimeCompareDate = new Date('2000-01-01T00:00:00'); // تاريخ/وقت وهمي ثابت
+                    // Create a dummy date for time comparisons to isolate time component
+                    const dummyTimeCompareDate = new Date('2000-01-01T00:00:00'); // Fixed dummy date/time
 
                     const rowTimeOnly = new Date(dummyTimeCompareDate);
                     rowTimeOnly.setHours(rowDateTime.getHours(), rowDateTime.getMinutes(), rowDateTime.getSeconds(), rowDateTime.getMilliseconds());
@@ -568,17 +566,17 @@
                     if (filterTimeFromValue) {
                         const [fromHours, fromMinutes] = filterTimeFromValue.split(':').map(Number);
                         const fromTimeOnly = new Date(dummyTimeCompareDate);
-                        fromTimeOnly.setHours(fromHours, fromMinutes, 0, 0); // من الساعة:الدقيقة:00.000
+                        fromTimeOnly.setHours(fromHours, fromMinutes, 0, 0); // From HH:MM:00.000
 
                         if (rowTimeOnly < fromTimeOnly) {
                             timeMatch = false;
                         }
                     }
 
-                    if (filterTimeToValue && timeMatch) { // تحقق فقط إذا كان فلتر "من" الوقت لا يزال يسمح
+                    if (filterTimeToValue && timeMatch) { // Only check if fromTime filter still allows
                         const [toHours, toMinutes] = filterTimeToValue.split(':').map(Number);
                         const toTimeOnly = new Date(dummyTimeCompareDate);
-                        toTimeOnly.setHours(toHours, toMinutes, 59, 999); // إلى الساعة:الدقيقة:59.999 (نهاية الدقيقة)
+                        toTimeOnly.setHours(toHours, toMinutes, 59, 999); // To HH:MM:59.999 (end of minute)
 
                         if (rowTimeOnly > toTimeOnly) {
                             timeMatch = false;
