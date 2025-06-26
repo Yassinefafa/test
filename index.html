@@ -1,153 +1,138 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>مراقبة البيانات</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>لوحة المراقبة الذكية</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100">
-  <div class="container mx-auto p-4">
-    <h1 class="text-3xl text-center font-semibold mb-6">📊 مراقبة البيانات البيئية والكهربائية</h1>
+<body class="bg-gray-100 text-right font-sans">
 
-    <!-- فلترة البيانات -->
-    <div class="p-4 bg-gray-100 rounded-lg shadow mb-6">
-      <h2 class="text-lg font-semibold mb-2">🔍 فلترة البيانات</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        <div>
-          <label for="startDate" class="block text-sm font-medium text-gray-700">📅 التاريخ من:</label>
-          <input type="date" id="startDate" class="mt-1 block w-full p-2 border rounded" />
-        </div>
-        <div>
-          <label for="endDate" class="block text-sm font-medium text-gray-700">📅 التاريخ إلى:</label>
-          <input type="date" id="endDate" class="mt-1 block w-full p-2 border rounded" />
-        </div>
-        <div>
-          <label for="startTime" class="block text-sm font-medium text-gray-700">⏰ الوقت من:</label>
-          <input type="time" id="startTime" class="mt-1 block w-full p-2 border rounded" />
-        </div>
-        <div>
-          <label for="endTime" class="block text-sm font-medium text-gray-700">⏰ الوقت إلى:</label>
-          <input type="time" id="endTime" class="mt-1 block w-full p-2 border rounded" />
-        </div>
-      </div>
-    </div>
-
-    <!-- الجدول لعرض البيانات -->
-    <div class="overflow-x-auto bg-white shadow-md rounded-lg">
-      <table class="min-w-full text-sm text-center">
-        <thead class="bg-gray-200">
-          <tr>
-            <th class="px-4 py-2">التاريخ</th>
-            <th class="px-4 py-2">الوقت</th>
-            <th class="px-4 py-2">درجة الحرارة (°C)</th>
-            <th class="px-4 py-2">الرطوبة (%)</th>
-            <th class="px-4 py-2">التسارع X</th>
-            <th class="px-4 py-2">التسارع Y</th>
-            <th class="px-4 py-2">التسارع Z</th>
-            <th class="px-4 py-2">الجهد</th>
-          </tr>
-        </thead>
-        <tbody id="dataTable">
-          <!-- سيتم ملء الجدول بالبيانات هنا عبر JavaScript -->
-        </tbody>
-      </table>
-    </div>
-
-    <!-- رسم بياني -->
-    <div class="mt-6">
-      <canvas id="dataChart"></canvas>
-    </div>
+<!-- صفحة تسجيل الدخول -->
+<div id="loginPage" class="h-screen flex items-center justify-center">
+  <div class="bg-white p-8 rounded shadow-md w-full max-w-sm">
+    <h2 class="text-2xl font-bold mb-4 text-center">تسجيل الدخول</h2>
+    <input id="username" class="border w-full p-2 mb-4 rounded" type="text" placeholder="اسم المستخدم" />
+    <input id="password" class="border w-full p-2 mb-4 rounded" type="password" placeholder="كلمة المرور" />
+    <button onclick="login()" class="bg-blue-500 text-white w-full py-2 rounded hover:bg-blue-600">دخول</button>
   </div>
+</div>
 
-  <script>
-    // نموذج البيانات (على سبيل المثال)
-    const data = [
-      { date: "2025-06-23", time: "16:43:43", temp: 28.9, humidity: 48, accelX: 0.96, accelY: -0.00, accelZ: 0.28, voltage: 1.52 },
-      { date: "2025-06-23", time: "16:44:02", temp: 28.9, humidity: 48, accelX: 0.96, accelY: -0.00, accelZ: 0.28, voltage: 1.53 },
-      { date: "2025-06-23", time: "16:44:19", temp: 29.0, humidity: 47, accelX: 0.97, accelY: -0.01, accelZ: 0.28, voltage: 1.54 },
-      { date: "2025-06-23", time: "16:44:39", temp: 29.1, humidity: 47, accelX: 0.97, accelY: -0.01, accelZ: 0.28, voltage: 1.55 },
-      // أضف المزيد من البيانات هنا حسب الحاجة
-    ];
+<!-- لوحة البيانات -->
+<div id="dashboard" class="hidden h-screen">
+  <div class="flex h-full">
+    
+    <!-- القائمة الجانبية -->
+    <aside class="w-64 bg-white shadow-md p-4 space-y-4">
+      <h2 class="text-xl font-bold mb-4 text-center">📊 القائمة</h2>
+      <button onclick="showChart('temp')" class="w-full text-right hover:bg-blue-100 p-2 rounded">درجة الحرارة</button>
+      <button onclick="showChart('humidity')" class="w-full text-right hover:bg-blue-100 p-2 rounded">الرطوبة</button>
+      <button onclick="showChart('accel')" class="w-full text-right hover:bg-blue-100 p-2 rounded">التسارع XYZ</button>
+      <button onclick="showChart('gyro')" class="w-full text-right hover:bg-blue-100 p-2 rounded">الجايروسكوب XYZ</button>
+      <button onclick="showChart('vibration')" class="w-full text-right hover:bg-blue-100 p-2 rounded">الاهتزاز</button>
+    </aside>
 
-    // تحديث الجدول بالبيانات
-    function updateTable(filteredData) {
-      const tableBody = document.getElementById("dataTable");
-      tableBody.innerHTML = "";
-      filteredData.forEach(row => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td class="px-4 py-2">${row.date}</td>
-          <td class="px-4 py-2">${row.time}</td>
-          <td class="px-4 py-2">${row.temp} °C</td>
-          <td class="px-4 py-2">${row.humidity} %</td>
-          <td class="px-4 py-2">${row.accelX}</td>
-          <td class="px-4 py-2">${row.accelY}</td>
-          <td class="px-4 py-2">${row.accelZ}</td>
-          <td class="px-4 py-2">${row.voltage} V</td>
-        `;
-        tableBody.appendChild(tr);
-      });
+    <!-- المحتوى الرئيسي -->
+    <main class="flex-1 p-6 overflow-auto">
+      <div class="flex flex-wrap gap-4 mb-4">
+        <input type="date" id="dateFilter" class="p-2 border rounded" />
+        <input type="time" id="timeFrom" class="p-2 border rounded" />
+        <input type="time" id="timeTo" class="p-2 border rounded" />
+        <button onclick="applyFilters()" class="bg-blue-500 text-white px-4 py-2 rounded">تصفية</button>
+      </div>
+
+      <div class="bg-white p-4 rounded shadow-md">
+        <canvas id="mainChart" height="100"></canvas>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+  const data = [
+    { time: "2024-06-26T10:00", temp: 28.5, humidity: 45, ax: 0.12, ay: 0.05, az: 0.96, gx: 0.01, gy: 0.03, gz: 0.02, vibration: 1 },
+    { time: "2024-06-26T10:10", temp: 29.0, humidity: 47, ax: 0.11, ay: 0.04, az: 0.97, gx: 0.02, gy: 0.01, gz: 0.03, vibration: 1 },
+    { time: "2024-06-26T10:20", temp: 29.4, humidity: 46, ax: 0.10, ay: 0.03, az: 0.95, gx: 0.01, gy: 0.04, gz: 0.02, vibration: 0 },
+    // أضف بيانات إضافية هنا حسب الحاجة
+  ];
+
+  let chartInstance;
+
+  function login() {
+    const user = document.getElementById('username').value;
+    const pass = document.getElementById('password').value;
+    if (user === "admin" && pass === "1234") {
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      showChart('temp');
+    } else {
+      alert("بيانات الدخول غير صحيحة!");
+    }
+  }
+
+  function applyFilters() {
+    const date = document.getElementById('dateFilter').value;
+    const timeFrom = document.getElementById('timeFrom').value;
+    const timeTo = document.getElementById('timeTo').value;
+
+    return data.filter(row => {
+      const dt = new Date(row.time);
+      if (date && dt.toISOString().slice(0, 10) !== date) return false;
+      const t = dt.toTimeString().slice(0, 5);
+      if (timeFrom && t < timeFrom) return false;
+      if (timeTo && t > timeTo) return false;
+      return true;
+    });
+  }
+
+  function showChart(type) {
+    const filtered = applyFilters();
+    const labels = filtered.map(r => new Date(r.time).toLocaleTimeString());
+
+    let datasets = [];
+
+    switch (type) {
+      case 'temp':
+        datasets = [{ label: "درجة الحرارة °C", data: filtered.map(r => r.temp), borderColor: "red" }];
+        break;
+      case 'humidity':
+        datasets = [{ label: "الرطوبة %", data: filtered.map(r => r.humidity), borderColor: "blue" }];
+        break;
+      case 'accel':
+        datasets = [
+          { label: "X", data: filtered.map(r => r.ax), borderColor: "green" },
+          { label: "Y", data: filtered.map(r => r.ay), borderColor: "orange" },
+          { label: "Z", data: filtered.map(r => r.az), borderColor: "purple" }
+        ];
+        break;
+      case 'gyro':
+        datasets = [
+          { label: "X", data: filtered.map(r => r.gx), borderColor: "green" },
+          { label: "Y", data: filtered.map(r => r.gy), borderColor: "orange" },
+          { label: "Z", data: filtered.map(r => r.gz), borderColor: "purple" }
+        ];
+        break;
+      case 'vibration':
+        datasets = [{ label: "الاهتزاز", data: filtered.map(r => r.vibration), borderColor: "black" }];
+        break;
     }
 
-    // الفلترة حسب التاريخ والوقت
-    function filterData() {
-      const startDate = document.getElementById('startDate').value;
-      const endDate = document.getElementById('endDate').value;
-      const startTime = document.getElementById('startTime').value;
-      const endTime = document.getElementById('endTime').value;
-
-      const filteredData = data.filter(row => {
-        const rowDate = row.date;
-        const rowTime = row.time;
-
-        const dateCondition = (!startDate || rowDate >= startDate) && (!endDate || rowDate <= endDate);
-        const timeCondition = (!startTime || rowTime >= startTime) && (!endTime || rowTime <= endTime);
-
-        return dateCondition && timeCondition;
-      });
-
-      updateTable(filteredData);
-    }
-
-    // إعداد الرسم البياني
-    const ctx = document.getElementById('dataChart').getContext('2d');
-    const dataChart = new Chart(ctx, {
+    if (chartInstance) chartInstance.destroy();
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    chartInstance = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: data.map(row => row.time),  // وضع الأوقات على المحور الأفقي
-        datasets: [
-          {
-            label: 'درجة الحرارة (°C)',
-            data: data.map(row => row.temp),
-            borderColor: 'rgba(255, 99, 132, 1)',
-            fill: false,
-          },
-          {
-            label: 'الرطوبة (%)',
-            data: data.map(row => row.humidity),
-            borderColor: 'rgba(54, 162, 235, 1)',
-            fill: false,
-          },
-          {
-            label: 'الجهد (V)',
-            data: data.map(row => row.voltage),
-            borderColor: 'rgba(75, 192, 192, 1)',
-            fill: false,
-          },
-        ],
+        labels: labels,
+        datasets: datasets
       },
+      options: {
+        responsive: true,
+        scales: { y: { beginAtZero: true } }
+      }
     });
+  }
+</script>
 
-    // الاستماع لتغييرات الفلاتر
-    document.getElementById('startDate').addEventListener('change', filterData);
-    document.getElementById('endDate').addEventListener('change', filterData);
-    document.getElementById('startTime').addEventListener('change', filterData);
-    document.getElementById('endTime').addEventListener('change', filterData);
-
-    // تحميل البيانات الأولية
-    updateTable(data);
-  </script>
 </body>
 </html>
