@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <title>لوحة البيانات</title>
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
   <style>
     body { margin: 0; font-family: Arial; background-color: #f4f4f4; }
@@ -35,11 +35,11 @@
 
 <div class="main-page" id="mainPage">
   <div class="sidebar">
-    <button onclick="showChart('Température (°C)')">📈 <span data-key="temp">درجة الحرارة</span></button>
-    <button onclick="showChart('Humidité (%)')">💧 <span data-key="humidity">الرطوبة</span></button>
-    <button onclick="showChart('Accélération X')">🧭 <span data-key="accel">التسارع</span></button>
-    <button onclick="showChart('Gyroscope X')">🌀 <span data-key="gyro">الجيروسكوب</span></button>
-    <button onclick="showChart('Vibration')">📳 <span data-key="vibration">الاهتزاز</span></button>
+    <button onclick="showChart('temp')">📈 <span data-key="temp">درجة الحرارة</span></button>
+    <button onclick="showChart('humidity')">💧 <span data-key="humidity">الرطوبة</span></button>
+    <button onclick="showChart('accel')">🧭 <span data-key="accel">التسارع</span></button>
+    <button onclick="showChart('gyro')">🌀 <span data-key="gyro">الجيروسكوب</span></button>
+    <button onclick="showChart('vibration')">📳 <span data-key="vibration">الاهتزاز</span></button>
     <button onclick="showTable()">📋 <span data-key="table">عرض الجدول الكامل</span></button>
     <div class="bottom-buttons">
       <button onclick="changeLang('ar')">🇲🇦 العربية</button>
@@ -98,14 +98,13 @@
     }
   }
 
-  let rawData = [];
-
   async function refreshData() {
     const url = "https://script.google.com/macros/s/AKfycbyyOjiF-mX-oC2AeYB2antb3GMRKsMLfzegN6DRx5Q_XsceQMNOjAipsAMyxPI3Ca2NDA/exec";
     const response = await fetch(url);
     const data = await response.json();
-    rawData = data;
-    buildTable(data);
+    const filtered = data.filter(row => Object.keys(row).length === Object.keys(data[0]).length);
+    buildTable(filtered);
+    buildChart(filtered);
   }
 
   function buildTable(data) {
@@ -121,22 +120,20 @@
     document.getElementById('tableContainer').style.display = "block";
   }
 
-  function showTable() {
-    buildTable(rawData);
-  }
+  function buildChart(data) {
+    const labels = data.map(row => row["Heure"]);
+    const values = data.map(row => {
+      const temp = parseFloat((row["Temp. NTC (°C)"] || '').toString().replace(/[^0-9.-]+/g, ''));
+      return isNaN(temp) ? null : temp;
+    });
 
-  function showChart(metric) {
-    if (!rawData || rawData.length === 0) return;
-    const labels = rawData.map(row => row["Heure"]);
-    const values = rawData.map(row => parseFloat(row[metric])).filter(v => !isNaN(v));
     const ctx = document.getElementById('mainChart').getContext('2d');
-    if (window.currentChart) window.currentChart.destroy();
-    window.currentChart = new Chart(ctx, {
+    new Chart(ctx, {
       type: 'line',
       data: {
         labels: labels,
         datasets: [{
-          label: metric,
+          label: "Temp. NTC (°C)",
           data: values,
           borderColor: 'blue',
           borderWidth: 2,
@@ -150,6 +147,15 @@
     });
     document.getElementById('mainChart').style.display = "block";
     document.getElementById('tableContainer').style.display = "none";
+  }
+
+  function showTable() {
+    document.getElementById('mainChart').style.display = "none";
+    document.getElementById('tableContainer').style.display = "block";
+  }
+
+  function showChart(type) {
+    refreshData();
   }
 </script>
 </body>
