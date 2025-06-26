@@ -102,32 +102,19 @@
     const url = "https://script.google.com/macros/s/AKfycbyyOjiF-mX-oC2AeYB2antb3GMRKsMLfzegN6DRx5Q_XsceQMNOjAipsAMyxPI3Ca2NDA/exec";
     const response = await fetch(url);
     const data = await response.json();
-    buildTable(data);
-    buildChart(data);
+    const filtered = data.filter(row => row["Température (°C)"].includes("Temp:"));
+    buildTable(filtered);
+    buildChart(filtered);
   }
 
   function buildTable(data) {
     if (!data || data.length === 0) return;
-
-    let allKeys = new Set();
-    data.forEach(row => {
-      Object.keys(row).forEach(k => allKeys.add(k));
-    });
-    const headers = Array.from(allKeys);
-
-    const completedData = data.map(row => {
-      let filled = {};
-      headers.forEach(key => {
-        filled[key] = row[key] !== undefined ? row[key] : "N/A";
-      });
-      return filled;
-    });
-
+    const headers = Object.keys(data[0]);
     const columns = headers.map(key => ({ title: key, data: key }));
 
     $('#dataTable').DataTable({
       destroy: true,
-      data: completedData,
+      data: data,
       columns: columns,
       language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/ar.json' }
     });
@@ -137,10 +124,7 @@
 
   function buildChart(data) {
     const labels = data.map(row => row["Heure"]);
-    const values = data.map(row => {
-      const temp = parseFloat((row["Température (°C)"] || '').match(/[\d.]+/));
-      return isNaN(temp) ? null : temp;
-    });
+    const values = data.map(row => parseFloat((row["Température (°C)"] || '').match(/\d+(\.\d+)?/)));
 
     const ctx = document.getElementById('mainChart').getContext('2d');
     new Chart(ctx, {
@@ -162,6 +146,15 @@
     });
     document.getElementById('mainChart').style.display = "block";
     document.getElementById('tableContainer').style.display = "none";
+  }
+
+  function showTable() {
+    document.getElementById('mainChart').style.display = "none";
+    document.getElementById('tableContainer').style.display = "block";
+  }
+
+  function showChart(type) {
+    refreshData(); // You can pass the type and filter the data later by chart type
   }
 </script>
 </body>
