@@ -2,161 +2,817 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>لوحة البيانات</title>
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- CSS -->
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body { margin: 0; font-family: Arial; background-color: #f4f4f4; direction: rtl; }
-    .login-page, .main-page { display: none; height: 100vh; }
-    .login-page { display: flex; justify-content: center; align-items: center; background: #222; color: white; }
-    .login-box { background: #333; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px #000; }
-    .login-box input { width: 100%; margin: 10px 0; padding: 10px; }
-    .sidebar { width: 220px; background: #2c3e50; color: white; position: fixed; height: 100%; padding-top: 20px; right: auto; left: 0; text-align: right; }
-    .sidebar button { display: block; background: none; color: white; border: none; width: 100%; text-align: right; padding: 15px; cursor: pointer; }
-    .sidebar .bottom-buttons { position: absolute; bottom: 20px; width: 100%; }
-    .content { margin-right: 220px; padding: 20px; }
-    .filters { margin-bottom: 20px; }
-    canvas { background: white; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
-    #mainChart, #tableContainer { display: none; }
-    #dataTable_wrapper { background: white; padding: 10px; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
+    :root {
+      --primary-color: #3498db;
+      --secondary-color: #2c3e50;
+      --accent-color: #e74c3c;
+      --light-color: #ecf0f1;
+      --dark-color: #2c3e50;
+      --success-color: #2ecc71;
+      --warning-color: #f39c12;
+      --danger-color: #e74c3c;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fa;
+      color: #333;
+      direction: rtl;
+      line-height: 1.6;
+    }
+    
+    .page {
+      display: none;
+      height: 100vh;
+      transition: all 0.3s ease;
+    }
+    
+    /* صفحة تسجيل الدخول */
+    .login-page {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, var(--secondary-color), var(--dark-color));
+      color: white;
+    }
+    
+    .login-box {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2.5rem;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 400px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .login-box h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: white;
+      font-weight: 600;
+    }
+    
+    .input-group {
+      margin-bottom: 1.2rem;
+      position: relative;
+    }
+    
+    .input-group input {
+      width: 100%;
+      padding: 12px 15px;
+      border: none;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.9);
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+    
+    .input-group input:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+    }
+    
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 0.5rem;
+    }
+    
+    .login-btn:hover {
+      background-color: #2980b9;
+      transform: translateY(-2px);
+    }
+    
+    /* الصفحة الرئيسية */
+    .main-page {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      min-height: 100vh;
+    }
+    
+    /* الشريط الجانبي */
+    .sidebar {
+      background: var(--secondary-color);
+      color: white;
+      padding-top: 1.5rem;
+      position: relative;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .nav-item {
+      display: flex;
+      align-items: center;
+      padding: 0.8rem 1.2rem;
+      margin: 0.2rem 0;
+      color: white;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border-right: 3px solid transparent;
+    }
+    
+    .nav-item:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      border-right: 3px solid var(--primary-color);
+    }
+    
+    .nav-item.active {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-right: 3px solid var(--primary-color);
+    }
+    
+    .nav-item i {
+      margin-left: 0.5rem;
+      font-size: 1.1rem;
+    }
+    
+    .bottom-buttons {
+      position: absolute;
+      bottom: 1rem;
+      width: 100%;
+      padding: 0 1rem;
+    }
+    
+    .lang-btn {
+      display: block;
+      width: 100%;
+      padding: 0.5rem;
+      margin: 0.3rem 0;
+      background: none;
+      border: none;
+      color: white;
+      text-align: right;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-radius: 3px;
+    }
+    
+    .lang-btn:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .logout-btn {
+      color: var(--danger-color);
+      font-weight: 600;
+      margin-top: 1rem;
+    }
+    
+    /* المحتوى الرئيسي */
+    .content {
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+    
+    /* فلترات البيانات */
+    .filters {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+    }
+    
+    .filter-group {
+      display: flex;
+      align-items: center;
+    }
+    
+    .filter-group label {
+      margin-left: 0.5rem;
+      font-weight: 500;
+    }
+    
+    .filter-group input {
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    
+    .filter-group input:focus {
+      border-color: var(--primary-color);
+      outline: none;
+    }
+    
+    .refresh-btn {
+      padding: 0.5rem 1rem;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+    
+    .refresh-btn:hover {
+      background-color: #2980b9;
+      transform: translateY(-1px);
+    }
+    
+    /* الرسوم البيانية */
+    .chart-container {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      margin-bottom: 1.5rem;
+      position: relative;
+      height: 400px;
+    }
+    
+    #mainChart {
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* الجدول */
+    .table-container {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* رسائل التنبيه */
+    .alert {
+      padding: 0.8rem 1rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    
+    .alert-success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    
+    .alert-error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    
+    /* التكيف مع الشاشات الصغيرة */
+    @media (max-width: 768px) {
+      .main-page {
+        grid-template-columns: 1fr;
+      }
+      
+      .sidebar {
+        display: none;
+      }
+      
+      .content {
+        margin-right: 0;
+        padding: 1rem;
+      }
+      
+      .filters {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .filter-group {
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+    }
   </style>
 </head>
 <body>
-<div class="login-page" id="loginPage">
-  <div class="login-box">
-    <h2 id="login-title">تسجيل الدخول</h2>
-    <input type="text" id="username" placeholder="اسم المستخدم">
-    <input type="password" id="password" placeholder="كلمة المرور">
-    <button onclick="login()" id="login-button">دخول</button>
-  </div>
-</div>
-
-<div class="main-page" id="mainPage">
-  <div class="sidebar">
-    <button onclick="showChart('temp')">📈 <span data-key="temp">درجة الحرارة</span></button>
-    <button onclick="showChart('humidity')">💧 <span data-key="humidity">الرطوبة</span></button>
-    <button onclick="showChart('accel')">🧭 <span data-key="accel">التسارع</span></button>
-    <button onclick="showChart('gyro')">🌀 <span data-key="gyro">الجيروسكوب</span></button>
-    <button onclick="showChart('vibration')">📳 <span data-key="vibration">الاهتزاز</span></button>
-    <button onclick="showTable()">📋 <span data-key="table">عرض الجدول الكامل</span></button>
-    <div class="bottom-buttons">
-      <button onclick="changeLang('ar')">🇲🇦 العربية</button>
-      <button onclick="changeLang('fr')">🇫🇷 Français</button>
-      <button onclick="changeLang('en')">🇬🇧 English</button>
-      <button onclick="logout()" style="color: red;">🚪 <span data-key="logout">خروج</span></button>
+  <!-- صفحة تسجيل الدخول -->
+  <div class="page login-page" id="loginPage">
+    <div class="login-box">
+      <h2 id="login-title">تسجيل الدخول</h2>
+      <div class="alert alert-error" id="loginError"></div>
+      <div class="input-group">
+        <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="username">
+      </div>
+      <div class="input-group">
+        <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password">
+      </div>
+      <button class="login-btn" onclick="login()" id="login-button">دخول</button>
     </div>
   </div>
-  <div class="content">
-    <div class="filters">
-      <label data-key="date">التاريخ:</label>
-      <input type="date" id="dateFilter">
-      <label data-key="from">من:</label>
-      <input type="time" id="timeFrom">
-      <label data-key="to">إلى:</label>
-      <input type="time" id="timeTo">
-      <button onclick="refreshData()" data-key="refresh">تحديث</button>
+
+  <!-- الصفحة الرئيسية -->
+  <div class="page main-page" id="mainPage">
+    <!-- الشريط الجانبي -->
+    <div class="sidebar">
+      <div class="nav-item active" onclick="showChart('temp')">
+        <i class="fas fa-temperature-high"></i>
+        <span data-key="temp">درجة الحرارة</span>
+      </div>
+      <div class="nav-item" onclick="showChart('humidity')">
+        <i class="fas fa-tint"></i>
+        <span data-key="humidity">الرطوبة</span>
+      </div>
+      <div class="nav-item" onclick="showChart('accel')">
+        <i class="fas fa-compass"></i>
+        <span data-key="accel">التسارع</span>
+      </div>
+      <div class="nav-item" onclick="showChart('gyro')">
+        <i class="fas fa-sync-alt"></i>
+        <span data-key="gyro">الجيروسكوب</span>
+      </div>
+      <div class="nav-item" onclick="showChart('vibration')">
+        <i class="fas fa-vibration"></i>
+        <span data-key="vibration">الاهتزاز</span>
+      </div>
+      <div class="nav-item" onclick="showTable()">
+        <i class="fas fa-table"></i>
+        <span data-key="table">عرض الجدول الكامل</span>
+      </div>
+      
+      <div class="bottom-buttons">
+        <button class="lang-btn" onclick="changeLang('ar')">
+          <i class="fas fa-language"></i> العربية
+        </button>
+        <button class="lang-btn" onclick="changeLang('fr')">
+          <i class="fas fa-language"></i> Français
+        </button>
+        <button class="lang-btn" onclick="changeLang('en')">
+          <i class="fas fa-language"></i> English
+        </button>
+        <button class="lang-btn logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> <span data-key="logout">خروج</span>
+        </button>
+      </div>
     </div>
-    <canvas id="mainChart" width="1000" height="400"></canvas>
-    <div id="tableContainer">
-      <table id="dataTable" class="display"></table>
+
+    <!-- المحتوى الرئيسي -->
+    <div class="content">
+      <div class="alert alert-success" id="successAlert"></div>
+      <div class="alert alert-error" id="errorAlert"></div>
+      
+      <!-- فلترات البيانات -->
+      <div class="filters">
+        <div class="filter-group">
+          <input type="date" id="dateFilter">
+          <label data-key="date">التاريخ:</label>
+        </div>
+        <div class="filter-group">
+          <input type="time" id="timeTo">
+          <label data-key="to">إلى:</label>
+        </div>
+        <div class="filter-group">
+          <input type="time" id="timeFrom">
+          <label data-key="from">من:</label>
+        </div>
+        <button class="refresh-btn" onclick="refreshData()">
+          <i class="fas fa-sync-alt"></i> <span data-key="refresh">تحديث</span>
+        </button>
+      </div>
+      
+      <!-- الرسوم البيانية -->
+      <div class="chart-container" id="chartContainer">
+        <canvas id="mainChart"></canvas>
+      </div>
+      
+      <!-- الجدول -->
+      <div class="table-container" id="tableContainer">
+        <table id="dataTable" class="display" style="width:100%"></table>
+      </div>
     </div>
   </div>
-</div>
 
-<script>
-  const translations = {
-    ar: { login: "تسجيل الدخول", temp: "درجة الحرارة", humidity: "الرطوبة", accel: "التسارع", gyro: "الجيروسكوب", vibration: "الاهتزاز", table: "عرض الجدول الكامل", logout: "خروج", date: "التاريخ:", from: "من:", to: "إلى:", refresh: "تحديث" },
-    fr: { login: "Connexion", temp: "Température", humidity: "Humidité", accel: "Accélération", gyro: "Gyroscope", vibration: "Vibration", table: "Table complète", logout: "Déconnexion", date: "Date:", from: "De:", to: "À:", refresh: "Rafraîchir" },
-    en: { login: "Login", temp: "Temperature", humidity: "Humidity", accel: "Acceleration", gyro: "Gyroscope", vibration: "Vibration", table: "Full Table", logout: "Logout", date: "Date:", from: "From:", to: "To:", refresh: "Refresh" }
-  };
+  <!-- المكتبات المطلوبة -->
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 
-  function changeLang(lang) {
-    document.querySelectorAll('[data-key]').forEach(el => {
-      const key = el.getAttribute('data-key');
-      el.innerText = translations[lang][key];
-    });
-    document.getElementById("login-title").innerText = translations[lang].login;
-    document.getElementById("login-button").innerText = translations[lang].login;
-  }
-
-  function logout() {
-    document.getElementById("mainPage").style.display = "none";
-    document.getElementById("loginPage").style.display = "flex";
-  }
-
-  function login() {
-    const user = document.getElementById("username").value;
-    const pass = document.getElementById("password").value;
-    if (user === "admin" && pass === "admin") {
-      document.getElementById("loginPage").style.display = "none";
-      document.getElementById("mainPage").style.display = "block";
-      refreshData();
-    } else {
-      alert("معلومات الدخول خاطئة");
-    }
-  }
-
-  async function refreshData() {
-    const url = "https://script.google.com/macros/s/AKfycbyyOjiF-mX-oC2AeYB2antb3GMRKsMLfzegN6DRx5Q_XsceQMNOjAipsAMyxPI3Ca2NDA/exec";
-    const response = await fetch(url);
-    const data = await response.json();
-    const cleanData = data.filter(row => typeof row["Température (°C)"] === "string" && row["Température (°C)"].includes("Temp:"));
-    buildTable(cleanData);
-    buildChart(cleanData, 'Température (°C)', "درجة الحرارة");
-  }
-
-  function buildTable(data) {
-    if (!data || data.length === 0) return;
-    const headers = Object.keys(data[0]);
-    const columns = headers.map(h => ({ title: h, data: h }));
-    $('#dataTable').DataTable({
-      destroy: true,
-      data: data,
-      columns: columns,
-      language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/ar.json' }
-    });
-    document.getElementById('mainChart').style.display = "none";
-    document.getElementById('tableContainer').style.display = "block";
-  }
-
-  function buildChart(data, field, label) {
-    const labels = data.map(row => row["Heure"]);
-    const values = data.map(row => {
-      const match = (row[field] || '').match(/\d+(\.\d+)?/);
-      return match ? parseFloat(match[0]) : null;
-    });
-    const ctx = document.getElementById('mainChart').getContext('2d');
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{ label: label, data: values, borderColor: 'blue', borderWidth: 2, fill: false }]
+  <script>
+    // بيانات الترجمة
+    const translations = {
+      ar: {
+        temp: "درجة الحرارة",
+        humidity: "الرطوبة",
+        accel: "التسارع",
+        gyro: "الجيروسكوب",
+        vibration: "الاهتزاز",
+        table: "عرض الجدول الكامل",
+        logout: "خروج",
+        date: "التاريخ:",
+        from: "من:",
+        to: "إلى:",
+        refresh: "تحديث",
+        loginTitle: "تسجيل الدخول",
+        loginButton: "دخول",
+        usernamePlaceholder: "اسم المستخدم",
+        passwordPlaceholder: "كلمة المرور",
+        noData: "لا توجد بيانات متاحة",
+        loading: "جاري تحميل البيانات...",
+        dataUpdated: "تم تحديث البيانات بنجاح",
+        loginError: "خطأ في اسم المستخدم أو كلمة المرور"
       },
-      options: { responsive: true, scales: { y: { beginAtZero: false } } }
-    });
-    document.getElementById('mainChart').style.display = "block";
-    document.getElementById('tableContainer').style.display = "none";
-  }
+      fr: {
+        temp: "Température",
+        humidity: "Humidité",
+        accel: "Accélération",
+        gyro: "Gyroscope",
+        vibration: "Vibration",
+        table: "Afficher le tableau complet",
+        logout: "Déconnexion",
+        date: "Date:",
+        from: "De:",
+        to: "À:",
+        refresh: "Actualiser",
+        loginTitle: "Connexion",
+        loginButton: "Connexion",
+        usernamePlaceholder: "Nom d'utilisateur",
+        passwordPlaceholder: "Mot de passe",
+        noData: "Aucune donnée disponible",
+        loading: "Chargement des données...",
+        dataUpdated: "Données mises à jour avec succès",
+        loginError: "Nom d'utilisateur ou mot de passe incorrect"
+      },
+      en: {
+        temp: "Temperature",
+        humidity: "Humidity",
+        accel: "Acceleration",
+        gyro: "Gyroscope",
+        vibration: "Vibration",
+        table: "Show Full Table",
+        logout: "Logout",
+        date: "Date:",
+        from: "From:",
+        to: "To:",
+        refresh: "Refresh",
+        loginTitle: "Login",
+        loginButton: "Login",
+        usernamePlaceholder: "Username",
+        passwordPlaceholder: "Password",
+        noData: "No data available",
+        loading: "Loading data...",
+        dataUpdated: "Data updated successfully",
+        loginError: "Invalid username or password"
+      }
+    };
 
-  function showChart(type) {
-    refreshData().then(() => {
-      const fieldMap = {
-        temp: ["Température (°C)", "درجة الحرارة"],
-        humidity: ["Humidité (%)", "الرطوبة"],
-        accel: ["Accélération X", "التسارع X"],
-        gyro: ["Gyroscope X", "الجيروسكوب X"],
-        vibration: ["Vibration", "الاهتزاز"]
-      };
-      const [field, label] = fieldMap[type];
-      buildChart(JSON.parse(localStorage.getItem("cachedData")), field, label);
+    // المتغيرات العامة
+    let currentLang = 'ar';
+    let currentView = 'temp';
+    let chart = null;
+    let dataTable = null;
+    let allData = [];
+    let filteredData = [];
+    
+    // عند تحميل الصفحة
+    $(document).ready(function() {
+      // تعيين التاريخ الحالي كقيمة افتراضية
+      const today = new Date().toISOString().split('T')[0];
+      $('#dateFilter').val(today);
+      
+      // تحميل اللغة الافتراضية
+      changeLang(currentLang);
+      
+      // إخفاء الجدول وإظهار الرسم البياني افتراضيًا
+      $('#tableContainer').hide();
+      $('#chartContainer').show();
+      
+      // محاكاة بيانات للعرض (يجب استبدالها ببيانات حقيقية)
+      mockData();
     });
-  }
-
-  function showTable() {
-    refreshData();
-  }
-</script>
+    
+    // تغيير اللغة
+    function changeLang(lang) {
+      currentLang = lang;
+      
+      // تحديث نص العناصر
+      $('[data-key]').each(function() {
+        const key = $(this).data('key');
+        $(this).text(translations[lang][key]);
+      });
+      
+      // تحديث عناصر واجهة المستخدم الأخرى
+      $('#login-title').text(translations[lang].loginTitle);
+      $('#login-button').text(translations[lang].loginButton);
+      $('#username').attr('placeholder', translations[lang].usernamePlaceholder);
+      $('#password').attr('placeholder', translations[lang].passwordPlaceholder);
+      
+      // تحديث الجدول إذا كان مرئيًا
+      if (dataTable) {
+        updateTable();
+      }
+      
+      // تحديث الرسم البياني إذا كان مرئيًا
+      if (chart) {
+        updateChart();
+      }
+    }
+    
+    // تسجيل الدخول
+    function login() {
+      const username = $('#username').val();
+      const password = $('#password').val();
+      
+      // هنا يجب إضافة التحقق من صحة بيانات الدخول
+      // هذا مثال بسيط للتوضيح فقط
+      if (username === 'admin' && password === 'admin') {
+        $('#loginPage').hide();
+        $('#mainPage').show();
+        showSuccessMessage(translations[currentLang].dataUpdated);
+      } else {
+        showLoginError(translations[currentLang].loginError);
+      }
+    }
+    
+    // تسجيل الخروج
+    function logout() {
+      $('#mainPage').hide();
+      $('#loginPage').show();
+      $('#username').val('');
+      $('#password').val('');
+      $('#loginError').hide();
+    }
+    
+    // عرض رسم بياني
+    function showChart(type) {
+      currentView = type;
+      
+      // تحديث العنصر النشط في القائمة الجانبية
+      $('.nav-item').removeClass('active');
+      $(`.nav-item:contains('${translations[currentLang][type]}')`).addClass('active');
+      
+      $('#tableContainer').hide();
+      $('#chartContainer').show();
+      
+      updateChart();
+    }
+    
+    // عرض الجدول
+    function showTable() {
+      currentView = 'table';
+      
+      // تحديث العنصر النشط في القائمة الجانبية
+      $('.nav-item').removeClass('active');
+      $(`.nav-item:contains('${translations[currentLang].table}')`).addClass('active');
+      
+      $('#chartContainer').hide();
+      $('#tableContainer').show();
+      
+      updateTable();
+    }
+    
+    // تحديث الرسم البياني
+    function updateChart() {
+      if (!filteredData.length) {
+        showErrorMessage(translations[currentLang].noData);
+        return;
+      }
+      
+      const ctx = document.getElementById('mainChart').getContext('2d');
+      
+      // تدمير الرسم البياني القديم إذا كان موجودًا
+      if (chart) {
+        chart.destroy();
+      }
+      
+      // تحضير البيانات للرسم البياني حسب النوع المحدد
+      let labels = [];
+      let data = [];
+      let label = '';
+      let unit = '';
+      
+      switch(currentView) {
+        case 'temp':
+          label = translations[currentLang].temp;
+          unit = '°C';
+          filteredData.forEach(item => {
+            labels.push(item.timestamp);
+            data.push(item.temperature);
+          });
+          break;
+        case 'humidity':
+          label = translations[currentLang].humidity;
+          unit = '%';
+          filteredData.forEach(item => {
+            labels.push(item.timestamp);
+            data.push(item.humidity);
+          });
+          break;
+        case 'accel':
+          label = translations[currentLang].accel;
+          unit = 'm/s²';
+          filteredData.forEach(item => {
+            labels.push(item.timestamp);
+            data.push(item.acceleration);
+          });
+          break;
+        case 'gyro':
+          label = translations[currentLang].gyro;
+          unit = 'rad/s';
+          filteredData.forEach(item => {
+            labels.push(item.timestamp);
+            data.push(item.gyroscope);
+          });
+          break;
+        case 'vibration':
+          label = translations[currentLang].vibration;
+          unit = 'Hz';
+          filteredData.forEach(item => {
+            labels.push(item.timestamp);
+            data.push(item.vibration);
+          });
+          break;
+      }
+      
+      // إنشاء الرسم البياني
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: `${label} (${unit})`,
+            data: data,
+            borderColor: '#3498db',
+            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: false
+            }
+          },
+          plugins: {
+            tooltip: {
+              mode: 'index',
+              intersect: false
+            },
+            legend: {
+              position: 'top',
+              rtl: currentLang === 'ar'
+            }
+          }
+        }
+      });
+    }
+    
+    // تحديث الجدول
+    function updateTable() {
+      if (!filteredData.length) {
+        showErrorMessage(translations[currentLang].noData);
+        return;
+      }
+      
+      // تدمير الجدول القديم إذا كان موجودًا
+      if (dataTable) {
+        dataTable.destroy();
+      }
+      
+      // تحضير بيانات الجدول
+      const tableData = filteredData.map(item => {
+        return {
+          timestamp: item.timestamp,
+          temperature: item.temperature + ' °C',
+          humidity: item.humidity + ' %',
+          acceleration: item.acceleration + ' m/s²',
+          gyroscope: item.gyroscope + ' rad/s',
+          vibration: item.vibration + ' Hz'
+        };
+      });
+      
+      // إنشاء الجدول
+      dataTable = $('#dataTable').DataTable({
+        data: tableData,
+        columns: [
+          { title: translations[currentLang].date, data: 'timestamp' },
+          { title: translations[currentLang].temp, data: 'temperature' },
+          { title: translations[currentLang].humidity, data: 'humidity' },
+          { title: translations[currentLang].accel, data: 'acceleration' },
+          { title: translations[currentLang].gyro, data: 'gyroscope' },
+          { title: translations[currentLang].vibration, data: 'vibration' }
+        ],
+        language: {
+          url: currentLang === 'ar' ? 
+            'https://cdn.datatables.net/plug-ins/1.13.6/i18n/ar.json' :
+            currentLang === 'fr' ? 
+            'https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json' :
+            'https://cdn.datatables.net/plug-ins/1.13.6/i18n/en-GB.json'
+        },
+        dom: '<"top"f>rt<"bottom"lip><"clear">',
+        responsive: true,
+        pageLength: 10,
+        order: [[0, 'desc']]
+      });
+    }
+    
+    // تحديث البيانات حسب الفلتر
+    function refreshData() {
+      showLoadingMessage(translations[currentLang].loading);
+      
+      const date = $('#dateFilter').val();
+      const fromTime = $('#timeFrom').val();
+      const toTime = $('#timeTo').val();
+      
+      // هنا يجب إضافة استدعاء API أو تصفية البيانات المحلية
+      // هذا مثال بسيط للتوضيح فقط
+      setTimeout(() => {
+        if (date) {
+          filteredData = allData.filter(item => {
+            const itemDate = item.timestamp.split(' ')[0];
+            return itemDate === date;
+          });
+        } else {
+          filteredData = [...allData];
+        }
+        
+        // تطبيق فلتر الوقت إذا كان محددًا
+        if (fromTime && toTime) {
+          filteredData = filteredData.filter(item => {
+            const itemTime = item.timestamp.split(' ')[1];
+            return itemTime >= fromTime && itemTime <= toTime;
+          });
+        }
+        
+        // تحديث العرض حسب النوع الحالي
+        if (currentView === 'table') {
+          updateTable();
+        } else {
+          updateChart();
+        }
+        
+        showSuccessMessage(translations[currentLang].dataUpdated);
+      }, 500);
+    }
+    
+    // عرض رسالة نجاح
+    function showSuccessMessage(message) {
+      $('#successAlert').text(message).show().delay(3000).fadeOut();
+      $('#errorAlert').hide();
+    }
+    
+    // عرض رسالة خطأ
+    function showErrorMessage(message) {
+      $('#errorAlert').text(message).show();
+      $('#successAlert').hide();
+    }
+    
+    // عرض رسالة تحميل
+    function showLoadingMessage(message) {
+      $('#successAlert').text(message).show();
+      $('#errorAlert').hide();
+    }
+    
+    // عرض خطأ تسجيل الدخول
+    function showLoginError(message) {
+      $('#loginError').text(message).show().delay(3000).fadeOut();
+    }
+    
+    // محاكاة بيانات للعرض (يجب استبدالها ببيانات حقيقية)
+    function mockData() {
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+      
+      // إنشاء بيانات عشوائية
+      for (let i = 0; i < 24; i++) {
+        const hour = i.toString().padStart(2, '0');
+        allData.push({
+          timestamp: `${today} ${hour}:00:00`,
+          temperature: (20 + Math.random() * 10).toFixed(1),
+          humidity: (40 + Math.random() * 30).toFixed(1),
+          acceleration: (0.5 + Math.random() * 1.5).toFixed(2),
+          gyroscope: (0.1 + Math.random() * 0.5).toFixed(3),
+          vibration: (50 + Math.random() * 100).toFixed(1)
+        });
+      }
+      
+      filteredData = [...allData];
+    }
+  </script>
 </body>
 </html>
