@@ -1,204 +1,180 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>لوحة البيانات</title>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
   <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      background-color: #f4f4f4;
-    }
-    .login-page, .main-page {
-      display: none;
-      height: 100vh;
-    }
-    .login-page {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #222;
-      color: white;
-    }
-    .login-box {
-      background: #333;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #000;
-    }
-    .login-box input {
-      width: 100%;
-      margin: 10px 0;
-      padding: 10px;
-    }
-    .sidebar {
-      width: 200px;
-      background: #2c3e50;
-      color: white;
-      position: fixed;
-      height: 100%;
-      padding-top: 20px;
-    }
-    .sidebar button {
-      display: block;
-      background: none;
-      color: white;
-      border: none;
-      width: 100%;
-      text-align: right;
-      padding: 15px;
-      cursor: pointer;
-    }
-    .content {
-      margin-right: 200px;
-      padding: 20px;
-    }
-    .filters {
-      margin-bottom: 20px;
-    }
-    input[type="date"], input[type="time"] {
-      margin-left: 10px;
-      padding: 5px;
-    }
-    canvas {
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #ccc;
-    }
+    body { margin: 0; font-family: Arial; background-color: #f4f4f4; }
+    .login-page, .main-page { display: none; height: 100vh; }
+    .login-page { display: flex; justify-content: center; align-items: center; background: #222; color: white; }
+    .login-box { background: #333; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px #000; }
+    .login-box input { width: 100%; margin: 10px 0; padding: 10px; }
+    .sidebar { width: 220px; background: #2c3e50; color: white; position: fixed; height: 100%; padding-top: 20px; }
+    .sidebar button { display: block; background: none; color: white; border: none; width: 100%; text-align: right; padding: 15px; cursor: pointer; }
+    .sidebar .bottom-buttons { position: absolute; bottom: 20px; width: 100%; }
+    .content { margin-right: 220px; padding: 20px; }
+    .filters { margin-bottom: 20px; }
+    canvas { background: white; border-radius: 10px; box-shadow: 0 0 10px #ccc; margin-bottom: 20px; }
+    #mainChart, #tableContainer { display: none; }
+    #dataTable_wrapper { background: white; padding: 10px; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
   </style>
 </head>
 <body>
-
 <div class="login-page" id="loginPage">
   <div class="login-box">
-    <h2>تسجيل الدخول</h2>
-    <input type="text" id="username" placeholder="اسم المستخدم" />
-    <input type="password" id="password" placeholder="كلمة المرور" />
-    <button onclick="login()">دخول</button>
+    <h2 id="login-title">تسجيل الدخول</h2>
+    <input type="text" id="username" placeholder="اسم المستخدم">
+    <input type="password" id="password" placeholder="كلمة المرور">
+    <button onclick="login()" id="login-button">دخول</button>
   </div>
 </div>
-
 <div class="main-page" id="mainPage">
   <div class="sidebar">
-    <button onclick="showChart('temp')">درجة الحرارة</button>
-    <button onclick="showChart('humidity')">الرطوبة</button>
-    <button onclick="showChart('accel')">التسارع</button>
-    <button onclick="showChart('gyro')">الجيروسكوب</button>
-    <button onclick="showChart('vibration')">الاهتزاز</button>
+    <button onclick="navigateChart('temp')">📈 <span data-key="temp">درجة الحرارة</span></button>
+    <button onclick="navigateChart('humidity')">💧 <span data-key="humidity">الرطوبة</span></button>
+    <button onclick="navigateChart('accel')">🧭 <span data-key="accel">التسارع</span></button>
+    <button onclick="navigateChart('gyro')">🌀 <span data-key="gyro">الجيروسكوب</span></button>
+    <button onclick="navigateChart('vibration')">📳 <span data-key="vibration">الاهتزاز</span></button>
+    <button onclick="showTable()">📋 <span data-key="table">عرض الجدول الكامل</span></button>
+    <div class="bottom-buttons">
+      <button onclick="changeLang('ar')">🇲🇦 العربية</button>
+      <button onclick="changeLang('fr')">🇫🇷 Français</button>
+      <button onclick="changeLang('en')">🇬🇧 English</button>
+      <button onclick="logout()" style="color: red;">🚪 <span data-key="logout">خروج</span></button>
+    </div>
   </div>
   <div class="content">
     <div class="filters">
-      <label>التاريخ:</label>
+      <label data-key="date">التاريخ:</label>
       <input type="date" id="dateFilter">
-      <label>من:</label>
+      <label data-key="from">من:</label>
       <input type="time" id="timeFrom">
-      <label>إلى:</label>
+      <label data-key="to">إلى:</label>
       <input type="time" id="timeTo">
-      <button onclick="showChart(currentChart)">تحديث</button>
+      <button onclick="refreshData()" data-key="refresh">تحديث</button>
     </div>
     <canvas id="mainChart" width="1000" height="400"></canvas>
+    <div id="tableContainer">
+      <table id="dataTable" class="display"></table>
+    </div>
   </div>
 </div>
-
 <script>
-  const correctUser = "admin";
-  const correctPass = "1234";
-  let currentChart = "temp";
-  let chartInstance;
-  let globalData = [];
+const translations = {
+  ar: { login: "تسجيل الدخول", temp: "درجة الحرارة", humidity: "الرطوبة", accel: "التسارع", gyro: "الجيروسكوب", vibration: "الاهتزاز", table: "عرض الجدول الكامل", logout: "خروج", date: "التاريخ:", from: "من:", to: "إلى:", refresh: "تحديث" },
+  fr: { login: "Connexion", temp: "Température", humidity: "Humidité", accel: "Accélération", gyro: "Gyroscope", vibration: "Vibration", table: "Table complète", logout: "Déconnexion", date: "Date:", from: "De:", to: "À:", refresh: "Rafraîchir" },
+  en: { login: "Login", temp: "Temperature", humidity: "Humidity", accel: "Acceleration", gyro: "Gyroscope", vibration: "Vibration", table: "Full Table", logout: "Logout", date: "Date:", from: "From:", to: "To:", refresh: "Refresh" }
+};
 
-  function login() {
-    const u = document.getElementById('username').value;
-    const p = document.getElementById('password').value;
-    if (u === correctUser && p === correctPass) {
-      document.getElementById('loginPage').style.display = 'none';
-      document.getElementById('mainPage').style.display = 'block';
-      showChart('temp');
-    } else {
-      alert("بيانات خاطئة!");
-    }
+function changeLang(lang) {
+  document.querySelectorAll('[data-key]').forEach(el => {
+    const key = el.getAttribute('data-key');
+    el.innerText = translations[lang][key];
+  });
+  document.getElementById("login-title").innerText = translations[lang].login;
+  document.getElementById("login-button").innerText = translations[lang].login;
+}
+function logout() {
+  document.getElementById("mainPage").style.display = "none";
+  document.getElementById("loginPage").style.display = "flex";
+}
+function login() {
+  const user = document.getElementById("username").value;
+  const pass = document.getElementById("password").value;
+  if (user === "admin" && pass === "admin") {
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("mainPage").style.display = "block";
+    loadData();
+  } else {
+    alert("معلومات الدخول خاطئة");
   }
-
-  async function fetchData() {
-    const url = "https://script.google.com/macros/s/AKfycbyyOjiF-mX-oC2AeYB2antb3GMRKsMLfzegN6DRx5Q_XsceQMNOjAipsAMyxPI3Ca2NDA/exec";
-    const response = await fetch(url);
-    const json = await response.json();
-    return json.map(row => ({
-      time: row["Horodatage"],
-      temp: parseFloat(row["Température (°C)"]),
-      humidity: parseFloat(row["Humidité (%)"]),
-      ax: parseFloat(row["Accélération X"]),
-      ay: parseFloat(row["Accélération Y"]),
-      az: parseFloat(row["Accélération Z"]),
-      gx: parseFloat(row["Gyroscope X"]),
-      gy: parseFloat(row["Gyroscope Y"]),
-      gz: parseFloat(row["Gyroscope Z"]),
-      vibration: parseFloat(row["Vibration"]),
-      ntc: parseFloat(row["Temp. NTC (°C)"]),
-      current: parseFloat(row["Courant (V Bruts)"]),
-      battery: parseFloat(row["Batterie (V)"]),
-    }));
-  }
-
-  async function showChart(type) {
-    currentChart = type;
-    if (globalData.length === 0) globalData = await fetchData();
-
-    const date = document.getElementById('dateFilter').value;
-    const timeFrom = document.getElementById('timeFrom').value;
-    const timeTo = document.getElementById('timeTo').value;
-
-    const filtered = globalData.filter(r => {
-      const dt = new Date(r.time);
-      if (date && dt.toISOString().slice(0, 10) !== date) return false;
-      const t = dt.toTimeString().slice(0, 5);
-      if (timeFrom && t < timeFrom) return false;
-      if (timeTo && t > timeTo) return false;
-      return true;
+}
+const scriptURL = "https://script.google.com/macros/s/AKfycbyyOjiF-mX-oC2AeYB2antb3GMRKsMLfzegN6DRx5Q_XsceQMNOjAipsAMyxPI3Ca2NDA/exec";
+let fullData = [];
+let chart;
+function refreshData() {
+  const selectedDate = document.getElementById("dateFilter").value;
+  const fromTime = document.getElementById("timeFrom").value;
+  const toTime = document.getElementById("timeTo").value;
+  const filtered = fullData.filter(row => {
+    const rowDate = row.Date;
+    const rowTime = row.Time;
+    return (!selectedDate || rowDate === selectedDate) &&
+           (!fromTime || rowTime >= fromTime) &&
+           (!toTime || rowTime <= toTime);
+  });
+  updateChart(filtered);
+  updateTable(filtered);
+}
+function loadData() {
+  fetch(scriptURL)
+    .then(res => res.json())
+    .then(data => {
+      fullData = data;
+      refreshData();
     });
-
-    const labels = filtered.map(r => new Date(r.time).toLocaleTimeString());
-    let datasets = [];
-
-    switch (type) {
-      case 'temp':
-        datasets = [{ label: "درجة الحرارة °C", data: filtered.map(r => r.temp), borderColor: "red" }];
-        break;
-      case 'humidity':
-        datasets = [{ label: "الرطوبة %", data: filtered.map(r => r.humidity), borderColor: "blue" }];
-        break;
-      case 'accel':
-        datasets = [
-          { label: "X", data: filtered.map(r => r.ax), borderColor: "green" },
-          { label: "Y", data: filtered.map(r => r.ay), borderColor: "orange" },
-          { label: "Z", data: filtered.map(r => r.az), borderColor: "purple" }
-        ];
-        break;
-      case 'gyro':
-        datasets = [
-          { label: "X", data: filtered.map(r => r.gx), borderColor: "green" },
-          { label: "Y", data: filtered.map(r => r.gy), borderColor: "orange" },
-          { label: "Z", data: filtered.map(r => r.gz), borderColor: "purple" }
-        ];
-        break;
-      case 'vibration':
-        datasets = [{ label: "الاهتزاز", data: filtered.map(r => r.vibration), borderColor: "black" }];
-        break;
+}
+function updateChart(data) {
+  if (chart) chart.destroy();
+  const ctx = document.getElementById("mainChart").getContext("2d");
+  chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: data.map(r => r.Time),
+      datasets: [{ label: "Temperature", data: data.map(r => parseFloat(r["Température (°C)"])), borderColor: "#f00", fill: false }]
     }
-
-    if (chartInstance) chartInstance.destroy();
-    const ctx = document.getElementById('mainChart').getContext('2d');
-    chartInstance = new Chart(ctx, {
-      type: 'line',
-      data: { labels: labels, datasets: datasets },
-      options: {
-        responsive: true,
-        scales: { y: { beginAtZero: true } }
-      }
-    });
+  });
+}
+function updateTable(data) {
+  if ($.fn.DataTable.isDataTable("#dataTable")) {
+    $('#dataTable').DataTable().clear().rows.add(data).draw();
+  } else {
+    $('#dataTable').DataTable({ data, columns: Object.keys(data[0] || {}).map(key => ({ title: key, data: key })) });
   }
+  document.getElementById("mainChart").style.display = "none";
+  document.getElementById("tableContainer").style.display = "block";
+}
+function showTable() {
+  refreshData();
+  document.getElementById("mainChart").style.display = "none";
+  document.getElementById("tableContainer").style.display = "block";
+}
+function navigateChart(type) {
+  document.getElementById("mainChart").style.display = "block";
+  document.getElementById("tableContainer").style.display = "none";
+  if (!fullData.length) return;
+  const selectedDate = document.getElementById("dateFilter").value;
+  const fromTime = document.getElementById("timeFrom").value;
+  const toTime = document.getElementById("timeTo").value;
+  const filtered = fullData.filter(row => {
+    const rowDate = row.Date;
+    const rowTime = row.Time;
+    return (!selectedDate || rowDate === selectedDate) &&
+           (!fromTime || rowTime >= fromTime) &&
+           (!toTime || rowTime <= toTime);
+  });
+  let label = "";
+  let color = "#00f";
+  if (type === "temp") { label = "Température (°C)"; color = "#f00"; }
+  else if (type === "humidity") { label = "Humidité (%)"; color = "#00f"; }
+  else if (type === "accel") { label = "Accélération X"; color = "#0f0"; }
+  else if (type === "gyro") { label = "Gyroscope X"; color = "#ff0"; }
+  else if (type === "vibration") { label = "Vibration"; color = "#f0f"; }
+
+  if (chart) chart.destroy();
+  const ctx = document.getElementById("mainChart").getContext("2d");
+  chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: filtered.map(r => r.Time),
+      datasets: [{ label, data: filtered.map(r => parseFloat(r[label])), borderColor: color, fill: false }]
+    }
+  });
+}
 </script>
-
 </body>
 </html>
