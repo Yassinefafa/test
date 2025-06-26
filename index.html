@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>عرض بيانات جدول جوجل مع فلاتر احترافية</title>
+    <title>عرض بيانات جدول جوجل مع فلاتر</title>
     <!-- تضمين Tailwind CSS لتصميم عصري ومتجاوب -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -12,18 +12,37 @@
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6; /* لون خلفية خفيف */
         }
-        /* تصميم مخصص لأزرار الفلاتر لجعلها تبدو احترافية أكثر */
-        button {
-            transition: all 0.2s ease-in-out;
-            transform: translateY(0);
+        /* تصميم أساسي للجدول */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background-color: #fff;
+            border-radius: 0.5rem; /* حواف مستديرة للجدول */
+            overflow: hidden; /* لإخفاء المحتوى الزائد الذي يتجاوز الحواف المستديرة */
         }
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: right; /* محاذاة النص لليمين */
         }
-        button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        th {
+            background-color: #4CAF50;
+            color: white;
+            text-transform: uppercase;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+        #loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2em;
+            color: #555;
         }
     </style>
 </head>
@@ -70,22 +89,24 @@
     </div>
 
     <!-- حاوية الجدول حيث سيتم عرض البيانات -->
-    <div id="table-container" class="w-full max-w-5xl bg-white shadow-lg rounded-lg overflow-hidden">
+    <div id="table-container" class="w-full max-w-5xl bg-white shadow-lg rounded-lg overflow-x-auto">
         <!-- سيتم إدراج الجدول هنا بواسطة JavaScript -->
     </div>
 
     <script>
-        // رابط Google Apps Script الخاص بك
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyyOjiF-mX-oC2AeYB2antb3GMRKsMLfzegN6DRx5Q_XsceQMNOjAipsAMyxPI3Ca2NDA/exec";
+        // رابط Google Apps Script الخاص بك (تم التحديث)
+        const SCRIPT_URL = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLiU-W7n7T4VpfLUNKsQwjCH1smHhHPTfZgRnZ8izioCny4R0S36aNMmQQwfdlM98DWwVgcE4KkMiohRixcODrNym0uRriEbIkwJxdtJIsV5w71W4MGb2j4-S4nQf27YXavHO-RqjX1S69aSy5V2bJtFOoknjjyl-r3Npdu0eFwmi85UecADqup3-CmtfXIkeIGy0uLRmnSXzZyr4fFr1v1gXnCZPDro1cUL21MBEcByO5r47j9-7izvX2H0vtqHKc6oSKnvVync9TeLvCWnBk99i9A5J2dMROS7Lycj&lib=M4KMr7SB6nroV6p0oLzbJNWtZyck6V9xg";
 
         // متغير لتخزين جميع البيانات التي تم جلبها من جدول جوجل
         let allSheetData = [];
 
         // ******** إعدادات الأعمدة (يرجى تعديلها حسب أسماء الأعمدة في جدولك) ********
-        // اسم عمود التاريخ في جدول جوجل (مثال: "Date", "التاريخ")
-        const DATE_COLUMN_NAME = "Date"; // غيّر هذا إذا كان اسم عمود التاريخ مختلفاً
-        // اسم عمود التوقيت في جدول جوجل (مثال: "Time", "التوقيت")
-        const TIME_COLUMN_NAME = "Time"; // غيّر هذا إذا كان اسم عمود التوقيت مختلفاً
+        // اسم عمود التاريخ في جدول جوجل (مثال: "DATE")
+        // تأكد من مطابقة حالة الأحرف تمامًا (أحرف كبيرة)
+        const DATE_COLUMN_NAME = "DATE"; 
+        // اسم عمود التوقيت في جدول جوجل (مثال: "HEURE")
+        // تأكد من مطابقة حالة الأحرف تمامًا (أحرف كبيرة)
+        const TIME_COLUMN_NAME = "HEURE"; 
         // *******************************************************************
 
         /**
@@ -109,20 +130,6 @@
             const hours = String(date.getHours()).padStart(2, '0');
             const minutes = String(date.getMinutes()).padStart(2, '0');
             return `${hours}:${minutes}`;
-        }
-
-        /**
-         * دالة لتهيئة حقول الفلاتر بالتاريخ والتوقيت الحالي.
-         */
-        function initializeFilterInputs() {
-            const today = new Date();
-            const todayFormattedDate = formatDate(today);
-            const currentTimeFormatted = formatTime(today);
-
-            document.getElementById("filterDateFrom").value = todayFormattedDate;
-            document.getElementById("filterDateTo").value = todayFormattedDate;
-            document.getElementById("filterTimeFrom").value = currentTimeFormatted;
-            document.getElementById("filterTimeTo").value = currentTimeFormatted;
         }
 
         /**
@@ -185,10 +192,9 @@
                     // تخطي الصفوف التي لا تحتوي على عمود التاريخ المحدد
                     if (!rowDateStr) return false;
 
-                    // تحويل تاريخ الصف إلى كائن Date
-                    // يجب أن يكون التنسيق متوافقًا مع Date constructor، يفضل YYYY-MM-DD
-                    const rowDate = new Date(rowDateStr);
-                    rowDate.setHours(0, 0, 0, 0); // لضمان مقارنة صحيحة لليوم بأكمله، يتم تعيين الوقت إلى بداية اليوم
+                    const rowDate = new Date(rowDateStr); // تحويل تاريخ الصف إلى كائن Date
+                    // لضمان مقارنة صحيحة لليوم بأكمله، يتم تعيين الوقت إلى بداية اليوم
+                    rowDate.setHours(0, 0, 0, 0);
 
                     let dateMatch = true;
 
@@ -220,8 +226,7 @@
                     if (!rowTimeStr) return false;
 
                     // لإنشاء كائن Date من التوقيت فقط، نستخدم تاريخ وهمي
-                    // هذا ضروري لمقارنة التوقيتات بدون تأثير التاريخ
-                    const dummyDate = "2000-01-01T";
+                    const dummyDate = "2000-01-01T"; // أي تاريخ ثابت
 
                     // التأكد من أن التوقيت يحتوي على ثوانٍ لتجنب مشاكل التحويل
                     let fullRowTimeStr = rowTimeStr;
@@ -248,9 +253,6 @@
                         let fullFilterTimeTo = filterTimeToValue;
                         if (filterTimeToValue.split(':').length === 2) {
                             fullFilterTimeTo += ':59'; // لتضمين الدقيقة كاملة
-                        } else if (filterTimeToValue.split(':').length === 3) {
-                             // If it's HH:MM:SS, ensure it includes the full second
-                            fullFilterTimeTo = filterTimeToValue.substring(0,6) + '59';
                         }
                         const toDateTime = new Date(dummyDate + fullFilterTimeTo);
                         if (rowDateTime > toDateTime) {
@@ -275,6 +277,71 @@
             document.getElementById("filterTimeTo").value = "";
             displayData(allSheetData); // عرض جميع البيانات الأصلية مرة أخرى
         }
+
+        /**
+         * دالة لتحويل سلسلة ISO Date/Time إلى تنسيق تاريخ فقط (YYYY-MM-DD).
+         * @param {string} isoString - سلسلة تاريخ ISO (مثل "2025-06-22T23:00:00.000Z").
+         * @returns {string} التاريخ المنسق (YYYY-MM-DD).
+         */
+        function formatIsoDateOnly(isoString) {
+            if (!isoString) return '';
+            try {
+                const date = new Date(isoString);
+                // تحقق مما إذا كان التاريخ صالحًا
+                if (isNaN(date.getTime())) {
+                    // إذا لم يكن التاريخ صالحًا، حاول استخراج التاريخ من الجزء الأول من السلسلة
+                    const datePart = isoString.split('T')[0];
+                    const recheckedDate = new Date(datePart);
+                    if (!isNaN(recheckedDate.getTime())) {
+                        return datePart; // إذا كان الجزء الأول تاريخًا صالحًا، أرجعه
+                    }
+                    return isoString; // إرجاع السلسلة الأصلية إذا فشل التحويل تمامًا
+                }
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            } catch (e) {
+                console.error("Error parsing ISO date string:", isoString, e);
+                return isoString; // Return original if parsing fails
+            }
+        }
+
+        /**
+         * دالة لتحويل سلسلة ISO Date/Time إلى تنسيق وقت فقط (HH:MM:SS).
+         * @param {string} isoString - سلسلة تاريخ ISO (مثل "1899-12-30T17:27:03.000Z").
+         * @returns {string} التوقيت المنسق (HH:MM:SS).
+         */
+        function formatIsoTimeOnly(isoString) {
+            if (!isoString) return '';
+            try {
+                const date = new Date(isoString);
+                 // تحقق مما إذا كان التاريخ صالحًا
+                if (isNaN(date.getTime())) {
+                    // إذا لم يكن التاريخ صالحًا، حاول استخراج الوقت من الجزء الثاني من السلسلة
+                    const timePart = isoString.split('T')[1];
+                    if (timePart) {
+                        const timeSegments = timePart.split(':');
+                        if (timeSegments.length >= 2) {
+                            const hours = timeSegments[0].padStart(2, '0');
+                            const minutes = timeSegments[1].padStart(2, '0');
+                            // اقتطع الثواني لتجنب أجزاء المللي ثانية إذا كانت موجودة
+                            const seconds = timeSegments.length > 2 ? timeSegments[2].substring(0,2).padStart(2, '0') : '00';
+                             return `${hours}:${minutes}:${seconds}`;
+                        }
+                    }
+                    return isoString; // إرجاع السلسلة الأصلية إذا فشل التحويل تمامًا
+                }
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const seconds = String(date.getSeconds()).padStart(2, '0');
+                return `${hours}:${minutes}:${seconds}`;
+            } catch (e) {
+                console.error("Error parsing ISO time string:", isoString, e);
+                return isoString; // Return original if parsing fails
+            }
+        }
+
 
         /**
          * دالة لعرض البيانات المُستلمة في جدول HTML.
@@ -324,8 +391,25 @@
 
                 headers.forEach(headerText => {
                     const td = document.createElement("td");
+                    let cellContent = rowData[headerText];
+
+                    // ************ رسائل تصحيح للمطور ************
+                    console.log(`Processing column: ${headerText}, Original content: ${cellContent}`);
+                    // ********************************************
+
+                    // تطبيق التنسيق للتاريخ والتوقيت إذا كانت الأعمدة مطابقة
+                    if (headerText === DATE_COLUMN_NAME) {
+                        const formattedDate = formatIsoDateOnly(cellContent);
+                        console.log(`  Formatted DATE: ${formattedDate}`); // رسالة تصحيح
+                        cellContent = formattedDate;
+                    } else if (headerText === TIME_COLUMN_NAME) {
+                        const formattedTime = formatIsoTimeOnly(cellContent);
+                        console.log(`  Formatted HEURE: ${formattedTime}`); // رسالة تصحيح
+                        cellContent = formattedTime;
+                    }
+                    
                     // استخدام textContent لضمان التعامل الآمن مع النصوص
-                    td.textContent = rowData[headerText];
+                    td.textContent = cellContent;
                     // تطبيق فئات Tailwind CSS على خلايا البيانات
                     td.className = "px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right";
                     tr.appendChild(td);
@@ -341,7 +425,6 @@
 
         // استدعاء دالة جلب البيانات عند تحميل محتوى DOM بالكامل
         document.addEventListener("DOMContentLoaded", () => {
-            initializeFilterInputs(); // تهيئة حقول الفلاتر بالتاريخ والتوقيت الحالي
             fetchData(); // جلب البيانات أولاً
             // إضافة مستمعي الأحداث لأزرار الفلاتر
             document.getElementById("applyFilterBtn").addEventListener("click", applyFilters);
