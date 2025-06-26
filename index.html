@@ -1,760 +1,818 @@
-import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs } from 'firebase/firestore';
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة البيانات</title>
+  <!-- CSS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #3498db;
+      --secondary-color: #2c3e50;
+      --accent-color: #e74c3c;
+      --light-color: #ecf0f1;
+      --dark-color: #2c3e50;
+      --success-color: #2ecc71;
+      --warning-color: #f39c12;
+      --danger-color: #e74c3c;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fa;
+      color: #333;
+      direction: rtl;
+      line-height: 1.6;
+    }
+    
+    .page {
+      display: none;
+      height: 100vh;
+      transition: all 0.3s ease;
+    }
+    
+    /* صفحة تسجيل الدخول */
+    .login-page {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, var(--secondary-color), var(--dark-color));
+      color: white;
+    }
+    
+    .login-box {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2.5rem;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 400px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .login-box h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: white;
+      font-weight: 600;
+    }
+    
+    .input-group {
+      margin-bottom: 1.2rem;
+      position: relative;
+    }
+    
+    .input-group input {
+      width: 100%;
+      padding: 12px 15px;
+      border: none;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.9);
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+    
+    .input-group input:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+    }
+    
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 0.5rem;
+    }
+    
+    .login-btn:hover {
+      background-color: #2980b9;
+      transform: translateY(-2px);
+    }
+    
+    /* الصفحة الرئيسية */
+    .main-page {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      min-height: 100vh;
+    }
+    
+    /* الشريط الجانبي */
+    .sidebar {
+      background: var(--secondary-color);
+      color: white;
+      padding-top: 1.5rem;
+      position: relative;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .nav-item {
+      display: flex;
+      align-items: center;
+      padding: 0.8rem 1.2rem;
+      margin: 0.2rem 0;
+      color: white;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border-right: 3px solid transparent;
+    }
+    
+    .nav-item:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      border-right: 3px solid var(--primary-color);
+    }
+    
+    .nav-item.active {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-right: 3px solid var(--primary-color);
+    }
+    
+    .nav-item i {
+      margin-left: 0.5rem;
+      font-size: 1.1rem;
+    }
+    
+    .bottom-buttons {
+      position: absolute;
+      bottom: 1rem;
+      width: 100%;
+      padding: 0 1rem;
+    }
+    
+    .lang-btn {
+      display: block;
+      width: 100%;
+      padding: 0.5rem;
+      margin: 0.3rem 0;
+      background: none;
+      border: none;
+      color: white;
+      text-align: right;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-radius: 3px;
+    }
+    
+    .lang-btn:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .logout-btn {
+      color: var(--danger-color);
+      font-weight: 600;
+      margin-top: 1rem;
+    }
+    
+    /* المحتوى الرئيسي */
+    .content {
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+    
+    /* فلترات البيانات */
+    .filters {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+    }
+    
+    .filter-group {
+      display: flex;
+      align-items: center;
+    }
+    
+    .filter-group label {
+      margin-left: 0.5rem;
+      font-weight: 500;
+    }
+    
+    .filter-group input {
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    
+    .filter-group input:focus {
+      border-color: var(--primary-color);
+      outline: none;
+    }
+    
+    .refresh-btn {
+      padding: 0.5rem 1rem;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+    
+    .refresh-btn:hover {
+      background-color: #2980b9;
+      transform: translateY(-1px);
+    }
+    
+    /* الرسوم البيانية */
+    .chart-container {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      margin-bottom: 1.5rem;
+      position: relative;
+      height: 400px;
+    }
+    
+    #mainChart {
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* الجدول */
+    .table-container {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* رسائل التنبيه */
+    .alert {
+      padding: 0.8rem 1rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    
+    .alert-success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    
+    .alert-error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    
+    /* التكيف مع الشاشات الصغيرة */
+    @media (max-width: 768px) {
+      .main-page {
+        grid-template-columns: 1fr;
+      }
+      
+      .sidebar {
+        display: none;
+      }
+      
+      .content {
+        margin-right: 0;
+        padding: 1rem;
+      }
+      
+      .filters {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .filter-group {
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- صفحة تسجيل الدخول -->
+  <div class="page login-page" id="loginPage">
+    <div class="login-box">
+      <h2 id="login-title">تسجيل الدخول</h2>
+      <div class="alert alert-error" id="loginError"></div>
+      <div class="input-group">
+        <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="username">
+      </div>
+      <div class="input-group">
+        <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password">
+      </div>
+      <button class="login-btn" onclick="login()" id="login-button">دخول</button>
+    </div>
+  </div>
 
-// Lucide React Icons (replacing simple emojis for a professional look)
-import {
-    LineChart, Droplet, Compass, Target, Waves, Table,
-    LogOut, Globe, CheckCircle, XCircle, User, Lock, Calendar, Clock
-} from 'lucide-react';
+  <!-- الصفحة الرئيسية -->
+  <div class="page main-page" id="mainPage">
+    <!-- الشريط الجانبي -->
+    <div class="sidebar">
+      <div class="nav-item active" onclick="showChart('temp')">
+        <i class="fas fa-temperature-high"></i>
+        <span data-key="temp">درجة الحرارة</span>
+      </div>
+      <div class="nav-item" onclick="showChart('humidity')">
+        <i class="fas fa-tint"></i>
+        <span data-key="humidity">الرطوبة</span>
+      </div>
+      <div class="nav-item" onclick="showChart('accel')">
+        <i class="fas fa-compass"></i>
+        <span data-key="accel">التسارع</span>
+      </div>
+      <div class="nav-item" onclick="showChart('gyro')">
+        <i class="fas fa-sync-alt"></i>
+        <span data-key="gyro">الجيروسكوب</span>
+      </div>
+      <div class="nav-item" onclick="showChart('vibration')">
+        <i class="fas fa-vibration"></i>
+        <span data-key="vibration">الاهتزاز</span>
+      </div>
+      <div class="nav-item" onclick="showTable()">
+        <i class="fas fa-table"></i>
+        <span data-key="table">عرض الجدول الكامل</span>
+      </div>
+      
+      <div class="bottom-buttons">
+        <button class="lang-btn" onclick="changeLang('ar')">
+          <i class="fas fa-language"></i> العربية
+        </button>
+        <button class="lang-btn" onclick="changeLang('fr')">
+          <i class="fas fa-language"></i> Français
+        </button>
+        <button class="lang-btn" onclick="changeLang('en')">
+          <i class="fas fa-language"></i> English
+        </button>
+        <button class="lang-btn logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> <span data-key="logout">خروج</span>
+        </button>
+      </div>
+    </div>
 
-// Create a context for locale (language)
-const LocaleContext = createContext();
+    <!-- المحتوى الرئيسي -->
+    <div class="content">
+      <div class="alert alert-success" id="successAlert"></div>
+      <div class="alert alert-error" id="errorAlert"></div>
+      
+      <!-- فلترات البيانات -->
+      <div class="filters">
+        <div class="filter-group">
+          <input type="date" id="dateFilter">
+          <label data-key="date">التاريخ:</label>
+        </div>
+        <div class="filter-group">
+          <input type="time" id="timeTo">
+          <label data-key="to">إلى:</label>
+        </div>
+        <div class="filter-group">
+          <input type="time" id="timeFrom">
+          <label data-key="from">من:</label>
+        </div>
+        <button class="refresh-btn" onclick="refreshData()">
+          <i class="fas fa-sync-alt"></i> <span data-key="refresh">تحديث</span>
+        </button>
+      </div>
+      
+      <!-- الرسوم البيانية -->
+      <div class="chart-container" id="chartContainer">
+        <canvas id="mainChart"></canvas>
+      </div>
+      
+      <!-- الجدول -->
+      <div class="table-container" id="tableContainer">
+        <table id="dataTable" class="display" style="width:100%"></table>
+      </div>
+    </div>
+  </div>
 
-// Mock Data Source (as per original request, not fetching from external source)
-// This data will be filtered and displayed
-const mockData = [
-    { timestamp: "2023-10-26T10:00:00", temp: 25, humidity: 60, accelX: 0.1, accelY: 0.2, accelZ: 9.8, gyroX: 1, gyroY: 2, gyroZ: 3, vibration: 10 },
-    { timestamp: "2023-10-26T10:30:00", temp: 25.5, humidity: 61, accelX: 0.15, accelY: 0.25, accelZ: 9.81, gyroX: 1.1, gyroY: 2.1, gyroZ: 3.1, vibration: 12 },
-    { timestamp: "2023-10-26T11:00:00", temp: 26, humidity: 62, accelX: 0.2, accelY: 0.3, accelZ: 9.82, gyroX: 1.2, gyroY: 2.2, gyroZ: 3.2, vibration: 15 },
-    { timestamp: "2023-10-26T11:30:00", temp: 25.8, humidity: 61.5, accelX: 0.18, accelY: 0.28, accelZ: 9.79, gyroX: 1.15, gyroY: 2.15, gyroZ: 3.15, vibration: 11 },
-    { timestamp: "2023-10-27T09:00:00", temp: 24, humidity: 58, accelX: 0.05, accelY: 0.1, accelZ: 9.8, gyroX: 0.8, gyroY: 1.8, gyroZ: 2.8, vibration: 8 },
-    { timestamp: "2023-10-27T09:30:00", temp: 24.2, humidity: 58.5, accelX: 0.07, accelY: 0.12, accelZ: 9.81, gyroX: 0.85, gyroY: 1.85, gyroZ: 2.85, vibration: 9 },
-    { timestamp: "2023-10-27T10:00:00", temp: 24.5, humidity: 59, accelX: 0.1, accelY: 0.15, accelZ: 9.82, gyroX: 0.9, gyroY: 1.9, gyroZ: 2.9, vibration: 10 },
-    { timestamp: "2023-10-28T08:00:00", temp: 23, humidity: 55, accelX: 0.02, accelY: 0.05, accelZ: 9.78, gyroX: 0.6, gyroY: 1.6, gyroZ: 2.6, vibration: 7 },
-    { timestamp: "2023-10-28T08:30:00", temp: 23.5, humidity: 56, accelX: 0.04, accelY: 0.07, accelZ: 9.79, gyroX: 0.65, gyroY: 1.65, gyroZ: 2.65, vibration: 7.5 },
-];
+  <!-- المكتبات المطلوبة -->
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 
-// Translations object
-const translations = {
-    ar: {
-        loginTitle: "تسجيل الدخول",
-        usernamePlaceholder: "اسم المستخدم",
-        passwordPlaceholder: "كلمة المرور",
-        loginButton: "دخول",
+  <script>
+    // بيانات الترجمة
+    const translations = {
+      ar: {
         temp: "درجة الحرارة",
         humidity: "الرطوبة",
         accel: "التسارع",
         gyro: "الجيروسكوب",
         vibration: "الاهتزاز",
         table: "عرض الجدول الكامل",
+        logout: "خروج",
         date: "التاريخ:",
         from: "من:",
         to: "إلى:",
         refresh: "تحديث",
-        logout: "خروج",
-        loginSuccess: "تم تسجيل الدخول بنجاح!",
-        loginFailed: "فشل تسجيل الدخول. يرجى التحقق من اسم المستخدم وكلمة المرور.",
-        selectChart: "الرجاء اختيار نوع الرسم البياني لعرض البيانات.",
-        timestamp: "الطابع الزمني",
-        tempColumn: "درجة الحرارة",
-        humidityColumn: "الرطوبة",
-        accelXColumn: "التسارع X",
-        accelYColumn: "التسارع Y",
-        accelZColumn: "التسارع Z",
-        gyroXColumn: "الجيروسكوب X",
-        gyroYColumn: "الجيروسكوب Y",
-        gyroZColumn: "الجيروسكوب Z",
-        vibrationColumn: "الاهتزاز",
-        selectLanguage: "اختر اللغة"
-    },
-    fr: {
-        loginTitle: "Connexion",
-        usernamePlaceholder: "Nom d'utilisateur",
-        passwordPlaceholder: "Mot de passe",
-        loginButton: "Entrer",
+        loginTitle: "تسجيل الدخول",
+        loginButton: "دخول",
+        usernamePlaceholder: "اسم المستخدم",
+        passwordPlaceholder: "كلمة المرور",
+        noData: "لا توجد بيانات متاحة",
+        loading: "جاري تحميل البيانات...",
+        dataUpdated: "تم تحديث البيانات بنجاح",
+        loginError: "خطأ في اسم المستخدم أو كلمة المرور"
+      },
+      fr: {
         temp: "Température",
         humidity: "Humidité",
         accel: "Accélération",
         gyro: "Gyroscope",
         vibration: "Vibration",
         table: "Afficher le tableau complet",
+        logout: "Déconnexion",
         date: "Date:",
         from: "De:",
         to: "À:",
         refresh: "Actualiser",
-        logout: "Déconnexion",
-        loginSuccess: "Connexion réussie !",
-        loginFailed: "Échec de la connexion. Veuillez vérifier votre nom d'utilisateur et votre mot de passe.",
-        selectChart: "Veuillez sélectionner un type de graphique pour afficher les données.",
-        timestamp: "Horodatage",
-        tempColumn: "Température",
-        humidityColumn: "Humidité",
-        accelXColumn: "Accélération X",
-        accelYColumn: "Accélération Y",
-        accelZColumn: "Accélération Z",
-        gyroXColumn: "Gyroscope X",
-        gyroYColumn: "Gyroscope Y",
-        gyroZColumn: "Gyroscope Z",
-        vibrationColumn: "Vibration",
-        selectLanguage: "Sélectionnez la langue"
-    },
-    en: {
-        loginTitle: "Login",
-        usernamePlaceholder: "Username",
-        passwordPlaceholder: "Password",
-        loginButton: "Enter",
+        loginTitle: "Connexion",
+        loginButton: "Connexion",
+        usernamePlaceholder: "Nom d'utilisateur",
+        passwordPlaceholder: "Mot de passe",
+        noData: "Aucune donnée disponible",
+        loading: "Chargement des données...",
+        dataUpdated: "Données mises à jour avec succès",
+        loginError: "Nom d'utilisateur ou mot de passe incorrect"
+      },
+      en: {
         temp: "Temperature",
         humidity: "Humidity",
         accel: "Acceleration",
         gyro: "Gyroscope",
         vibration: "Vibration",
-        table: "View Full Table",
+        table: "Show Full Table",
+        logout: "Logout",
         date: "Date:",
         from: "From:",
         to: "To:",
         refresh: "Refresh",
-        logout: "Logout",
-        loginSuccess: "Login successful!",
-        loginFailed: "Login failed. Please check your username and password.",
-        selectChart: "Please select a chart type to display data.",
-        timestamp: "Timestamp",
-        tempColumn: "Temperature",
-        humidityColumn: "Humidity",
-        accelXColumn: "Acceleration X",
-        accelYColumn: "Acceleration Y",
-        accelZColumn: "Acceleration Z",
-        gyroXColumn: "Gyroscope X",
-        gyroYColumn: "Gyroscope Y",
-        gyroZColumn: "Gyroscope Z",
-        vibrationColumn: "Vibration",
-        selectLanguage: "Select Language"
+        loginTitle: "Login",
+        loginButton: "Login",
+        usernamePlaceholder: "Username",
+        passwordPlaceholder: "Password",
+        noData: "No data available",
+        loading: "Loading data...",
+        dataUpdated: "Data updated successfully",
+        loginError: "Invalid username or password"
+      }
+    };
+
+    // المتغيرات العامة
+    let currentLang = 'ar';
+    let currentView = 'temp';
+    let chart = null;
+    let dataTable = null;
+    let allData = [];
+    let filteredData = [];
+    
+    // عند تحميل الصفحة
+    $(document).ready(function() {
+      // تعيين التاريخ الحالي كقيمة افتراضية
+      const today = new Date().toISOString().split('T')[0];
+      $('#dateFilter').val(today);
+      
+      // تحميل اللغة الافتراضية
+      changeLang(currentLang);
+      
+      // إخفاء الجدول وإظهار الرسم البياني افتراضيًا
+      $('#tableContainer').hide();
+      $('#chartContainer').show();
+      
+      // محاكاة بيانات للعرض (يجب استبدالها ببيانات حقيقية)
+      mockData();
+    });
+    
+    // تغيير اللغة
+    function changeLang(lang) {
+      currentLang = lang;
+      
+      // تحديث نص العناصر
+      $('[data-key]').each(function() {
+        const key = $(this).data('key');
+        $(this).text(translations[lang][key]);
+      });
+      
+      // تحديث عناصر واجهة المستخدم الأخرى
+      $('#login-title').text(translations[lang].loginTitle);
+      $('#login-button').text(translations[lang].loginButton);
+      $('#username').attr('placeholder', translations[lang].usernamePlaceholder);
+      $('#password').attr('placeholder', translations[lang].passwordPlaceholder);
+      
+      // تحديث الجدول إذا كان مرئيًا
+      if (dataTable) {
+        updateTable();
+      }
+      
+      // تحديث الرسم البياني إذا كان مرئيًا
+      if (chart) {
+        updateChart();
+      }
     }
-};
-
-/**
- * LoginPage Component
- * Handles user login with a simple username/password check.
- * Displays success/failure messages.
- * @param {object} props - Component props.
- * @param {function} props.onLogin - Callback function to execute on successful login.
- */
-const LoginPage = ({ onLogin }) => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [message, setMessage] = useState('');
-    const [messageType, setMessageType] = useState(''); // 'success' or 'error'
-    const { t, currentLang } = useContext(LocaleContext);
-
-    /**
-     * Handles the login attempt.
-     * For demonstration, uses a hardcoded username and password.
-     */
-    const handleLogin = () => {
-        // Basic hardcoded authentication for demonstration
-        if (username === 'user' && password === 'password') {
-            setMessage(t('loginSuccess'));
-            setMessageType('success');
-            setTimeout(() => {
-                onLogin(); // Call the parent's login handler
-            }, 1000);
-        } else {
-            setMessage(t('loginFailed'));
-            setMessageType('error');
+    
+    // تسجيل الدخول
+    function login() {
+      const username = $('#username').val();
+      const password = $('#password').val();
+      
+      // هنا يجب إضافة التحقق من صحة بيانات الدخول
+      // هذا مثال بسيط للتوضيح فقط
+      if (username === 'admin' && password === 'admin') {
+        $('#loginPage').hide();
+        $('#mainPage').show();
+        showSuccessMessage(translations[currentLang].dataUpdated);
+      } else {
+        showLoginError(translations[currentLang].loginError);
+      }
+    }
+    
+    // تسجيل الخروج
+    function logout() {
+      $('#mainPage').hide();
+      $('#loginPage').show();
+      $('#username').val('');
+      $('#password').val('');
+      $('#loginError').hide();
+    }
+    
+    // عرض رسم بياني
+    function showChart(type) {
+      currentView = type;
+      
+      // تحديث العنصر النشط في القائمة الجانبية
+      $('.nav-item').removeClass('active');
+      $(`.nav-item:contains('${translations[currentLang][type]}')`).addClass('active');
+      
+      $('#tableContainer').hide();
+      $('#chartContainer').show();
+      
+      updateChart();
+    }
+    
+    // عرض الجدول
+    function showTable() {
+      currentView = 'table';
+      
+      // تحديث العنصر النشط في القائمة الجانبية
+      $('.nav-item').removeClass('active');
+      $(`.nav-item:contains('${translations[currentLang].table}')`).addClass('active');
+      
+      $('#chartContainer').hide();
+      $('#tableContainer').show();
+      
+      updateTable();
+    }
+    
+    // تحديث الرسم البياني
+    function updateChart() {
+      if (!filteredData.length) {
+        showErrorMessage(translations[currentLang].noData);
+        return;
+      }
+      
+      const ctx = document.getElementById('mainChart').getContext('2d');
+      
+      // تدمير الرسم البياني القديم إذا كان موجودًا
+      if (chart) {
+        chart.destroy();
+      }
+      
+      // تحضير البيانات للرسم البياني حسب النوع المحدد
+      let labels = [];
+      let data = [];
+      let label = '';
+      let unit = '';
+      
+      switch(currentView) {
+        case 'temp':
+          label = translations[currentLang].temp;
+          unit = '°C';
+          filteredData.forEach(item => {
+            labels.push(item.timestamp);
+            data.push(item.temperature);
+          });
+          break;
+        case 'humidity':
+          label = translations[currentLang].humidity;
+          unit = '%';
+          filteredData.forEach(item => {
+            labels.push(item.timestamp);
+            data.push(item.humidity);
+          });
+          break;
+        case 'accel':
+          label = translations[currentLang].accel;
+          unit = 'm/s²';
+          filteredData.forEach(item => {
+            labels.push(item.timestamp);
+            data.push(item.acceleration);
+          });
+          break;
+        case 'gyro':
+          label = translations[currentLang].gyro;
+          unit = 'rad/s';
+          filteredData.forEach(item => {
+            labels.push(item.timestamp);
+            data.push(item.gyroscope);
+          });
+          break;
+        case 'vibration':
+          label = translations[currentLang].vibration;
+          unit = 'Hz';
+          filteredData.forEach(item => {
+            labels.push(item.timestamp);
+            data.push(item.vibration);
+          });
+          break;
+      }
+      
+      // إنشاء الرسم البياني
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: `${label} (${unit})`,
+            data: data,
+            borderColor: '#3498db',
+            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: false
+            }
+          },
+          plugins: {
+            tooltip: {
+              mode: 'index',
+              intersect: false
+            },
+            legend: {
+              position: 'top',
+              rtl: currentLang === 'ar'
+            }
+          }
         }
-    };
-
-    // Set dir attribute based on language
-    useEffect(() => {
-        document.documentElement.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
-    }, [currentLang]);
-
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white font-sans p-4">
-            <div className="bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-sm border border-gray-700">
-                <h2 className="text-3xl font-bold mb-6 text-center text-blue-400">{t('loginTitle')}</h2>
-                {message && (
-                    <div className={`mb-4 p-3 rounded-lg text-sm text-center ${messageType === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
-                        {message}
-                    </div>
-                )}
-                <div className="space-y-4">
-                    <div>
-                        <label htmlFor="username" className="sr-only">{t('usernamePlaceholder')}</label>
-                        <div className="relative">
-                            <User className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                            <input
-                                type="text"
-                                id="username"
-                                placeholder={t('usernamePlaceholder')}
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                className="w-full p-3 pr-10 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <label htmlFor="password" className="sr-only">{t('passwordPlaceholder')}</label>
-                        <div className="relative">
-                            <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                            <input
-                                type="password"
-                                id="password"
-                                placeholder={t('passwordPlaceholder')}
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full p-3 pr-10 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                            />
-                        </div>
-                    </div>
-                    <button
-                        onClick={handleLogin}
-                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75"
-                    >
-                        {t('loginButton')}
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-/**
- * Sidebar Component
- * Provides navigation buttons and language/logout options.
- * @param {object} props - Component props.
- * @param {function} props.showChart - Callback to display a specific chart.
- * @param {function} props.showTable - Callback to display the full table.
- * @param {function} props.changeLang - Callback to change the application language.
- * @param {function} props.logout - Callback to log out the user.
- * @param {string} props.activeChart - The currently active chart/view.
- */
-const Sidebar = ({ showChart, showTable, changeLang, logout, activeChart }) => {
-    const { t, currentLang } = useContext(LocaleContext);
-    const isRTL = currentLang === 'ar';
-
-    const baseButtonClasses = `flex items-center w-full py-3 px-4 text-white text-base font-medium rounded-lg transition-colors duration-200 ease-in-out hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 ${isRTL ? 'justify-end pr-2' : 'justify-start pl-2'}`;
-    const activeButtonClasses = `bg-blue-600 text-white shadow-lg`;
-    const iconClasses = `ml-3 ${isRTL ? 'mr-0' : 'ml-0'}`;
-
-    return (
-        <div className={`fixed top-0 ${isRTL ? 'left-0' : 'right-0'} h-full w-60 bg-gray-900 text-white flex flex-col p-4 shadow-xl z-20`}>
-            <nav className="flex-grow space-y-2">
-                <button
-                    onClick={() => showChart('temp')}
-                    className={`${baseButtonClasses} ${activeChart === 'temp' ? activeButtonClasses : 'bg-gray-800'}`}
-                >
-                    <LineChart size={20} className={iconClasses} />
-                    <span>{t('temp')}</span>
-                </button>
-                <button
-                    onClick={() => showChart('humidity')}
-                    className={`${baseButtonClasses} ${activeChart === 'humidity' ? activeButtonClasses : 'bg-gray-800'}`}
-                >
-                    <Droplet size={20} className={iconClasses} />
-                    <span>{t('humidity')}</span>
-                </button>
-                <button
-                    onClick={() => showChart('accel')}
-                    className={`${baseButtonClasses} ${activeChart === 'accel' ? activeButtonClasses : 'bg-gray-800'}`}
-                >
-                    <Compass size={20} className={iconClasses} />
-                    <span>{t('accel')}</span>
-                </button>
-                <button
-                    onClick={() => showChart('gyro')}
-                    className={`${baseButtonClasses} ${activeChart === 'gyro' ? activeButtonClasses : 'bg-gray-800'}`}
-                >
-                    <Target size={20} className={iconClasses} />
-                    <span>{t('gyro')}</span>
-                </button>
-                <button
-                    onClick={() => showChart('vibration')}
-                    className={`${baseButtonClasses} ${activeChart === 'vibration' ? activeButtonClasses : 'bg-gray-800'}`}
-                >
-                    <Waves size={20} className={iconClasses} />
-                    <span>{t('vibration')}</span>
-                </button>
-                <button
-                    onClick={showTable}
-                    className={`${baseButtonClasses} ${activeChart === 'table' ? activeButtonClasses : 'bg-gray-800'}`}
-                >
-                    <Table size={20} className={iconClasses} />
-                    <span>{t('table')}</span>
-                </button>
-            </nav>
-            <div className="mt-auto pt-4 border-t border-gray-700 space-y-2">
-                <div className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} items-center w-full px-4 text-white text-base font-medium rounded-lg`}>
-                    <Globe size={20} className={iconClasses} />
-                    <span className={` ${isRTL ? 'ml-2' : 'mr-2'}`}>{t('selectLanguage')}</span>
-                    <select
-                        onChange={(e) => changeLang(e.target.value)}
-                        value={currentLang}
-                        className="flex-grow py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                    >
-                        <option value="ar">العربية</option>
-                        <option value="fr">Français</option>
-                        <option value="en">English</option>
-                    </select>
-                </div>
-                <button
-                    onClick={logout}
-                    className={`${baseButtonClasses} bg-red-600 hover:bg-red-700 text-white`}
-                >
-                    <LogOut size={20} className={iconClasses} />
-                    <span>{t('logout')}</span>
-                </button>
-            </div>
-        </div>
-    );
-};
-
-/**
- * ChartComponent
- * Renders a Chart.js line chart based on provided data and chart type.
- * @param {object} props - Component props.
- * @param {Array<object>} props.data - The data array for the chart.
- * @param {string} props.chartType - The type of data to display (e.g., 'temp', 'humidity').
- * @param {string} props.labelKey - The key for x-axis labels (e.g., 'timestamp').
- * @param {string} props.valueKey - The key for y-axis values (e.g., 'temp').
- * @param {string} props.titleKey - The translation key for the chart title.
- */
-const ChartComponent = ({ data, chartType, labelKey, valueKey, titleKey }) => {
-    const chartRef = useRef(null);
-    const chartInstance = useRef(null);
-    const { t } = useContext(LocaleContext);
-
-    useEffect(() => {
-        if (chartRef.current && data.length > 0) {
-            // Destroy existing chart instance if it exists
-            if (chartInstance.current) {
-                chartInstance.current.destroy();
-            }
-
-            const ctx = chartRef.current.getContext('2d');
-            const labels = data.map(d => new Date(d[labelKey]).toLocaleTimeString());
-            const values = data.map(d => d[valueKey]);
-
-            // Define colors and options based on chartType
-            let borderColor, backgroundColor;
-            switch (chartType) {
-                case 'temp':
-                    borderColor = 'rgba(255, 99, 132, 1)'; // Red
-                    backgroundColor = 'rgba(255, 99, 132, 0.2)';
-                    break;
-                case 'humidity':
-                    borderColor = 'rgba(54, 162, 235, 1)'; // Blue
-                    backgroundColor = 'rgba(54, 162, 235, 0.2)';
-                    break;
-                case 'accel':
-                    borderColor = 'rgba(75, 192, 192, 1)'; // Green
-                    backgroundColor = 'rgba(75, 192, 192, 0.2)';
-                    break;
-                case 'gyro':
-                    borderColor = 'rgba(153, 102, 255, 1)'; // Purple
-                    backgroundColor = 'rgba(153, 102, 255, 0.2)';
-                    break;
-                case 'vibration':
-                    borderColor = 'rgba(255, 159, 64, 1)'; // Orange
-                    backgroundColor = 'rgba(255, 159, 64, 0.2)';
-                    break;
-                default:
-                    borderColor = 'rgba(0, 0, 0, 1)';
-                    backgroundColor = 'rgba(0, 0, 0, 0.2)';
-            }
-
-            chartInstance.current = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: t(titleKey),
-                        data: values,
-                        borderColor: borderColor,
-                        backgroundColor: backgroundColor,
-                        tension: 0.3, // Smooth the lines
-                        fill: true, // Fill area under the line
-                        pointRadius: 4,
-                        pointBackgroundColor: borderColor,
-                        pointBorderColor: '#fff',
-                        pointHoverRadius: 6,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false, // Allows canvas to fill container
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: t(titleKey),
-                            font: {
-                                size: 20,
-                                weight: 'bold',
-                            },
-                            color: '#333'
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0,0,0,0.7)',
-                            titleFont: { size: 16 },
-                            bodyFont: { size: 14 },
-                            padding: 10,
-                            displayColors: false,
-                        },
-                        legend: {
-                            display: false, // Hide legend if only one dataset
-                        }
-                    },
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: t('timestamp'),
-                                color: '#555',
-                                font: { size: 14 }
-                            },
-                            ticks: {
-                                color: '#666'
-                            },
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
-                            }
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: t(titleKey),
-                                color: '#555',
-                                font: { size: 14 }
-                            },
-                            ticks: {
-                                color: '#666'
-                            },
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // Cleanup on component unmount
-        return () => {
-            if (chartInstance.current) {
-                chartInstance.current.destroy();
-            }
+      });
+    }
+    
+    // تحديث الجدول
+    function updateTable() {
+      if (!filteredData.length) {
+        showErrorMessage(translations[currentLang].noData);
+        return;
+      }
+      
+      // تدمير الجدول القديم إذا كان موجودًا
+      if (dataTable) {
+        dataTable.destroy();
+      }
+      
+      // تحضير بيانات الجدول
+      const tableData = filteredData.map(item => {
+        return {
+          timestamp: item.timestamp,
+          temperature: item.temperature + ' °C',
+          humidity: item.humidity + ' %',
+          acceleration: item.acceleration + ' m/s²',
+          gyroscope: item.gyroscope + ' rad/s',
+          vibration: item.vibration + ' Hz'
         };
-    }, [data, chartType, labelKey, valueKey, titleKey, t]); // Re-run effect if data or type changes
-
-    return (
-        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 mt-6 md:mt-0 h-96 w-full flex items-center justify-center">
-            {data.length > 0 ? (
-                <canvas ref={chartRef} className="max-h-full max-w-full"></canvas>
-            ) : (
-                <p className="text-gray-500 text-lg">{t('selectChart')}</p>
-            )}
-        </div>
-    );
-};
-
-/**
- * TableComponent
- * Renders a simple HTML table with provided data.
- * @param {object} props - Component props.
- * @param {Array<object>} props.data - The data array for the table.
- */
-const TableComponent = ({ data }) => {
-    const { t } = useContext(LocaleContext);
-
-    // Columns definitions for dynamic table headers
-    const columns = [
-        { key: 'timestamp', label: t('timestamp') },
-        { key: 'temp', label: t('tempColumn') },
-        { key: 'humidity', label: t('humidityColumn') },
-        { key: 'accelX', label: t('accelXColumn') },
-        { key: 'accelY', label: t('accelYColumn') },
-        { key: 'accelZ', label: t('accelZColumn') },
-        { key: 'gyroX', label: t('gyroXColumn') },
-        { key: 'gyroY', label: t('gyroYColumn') },
-        { key: 'gyroZ', label: t('gyroZColumn') },
-        { key: 'vibration', label: t('vibrationColumn') },
-    ];
-
-    return (
-        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 mt-6 overflow-x-auto">
-            <h3 className="text-2xl font-semibold mb-4 text-gray-800">{t('table')}</h3>
-            {data.length > 0 ? (
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            {columns.map((col) => (
-                                <th
-                                    key={col.key}
-                                    className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-center"
-                                >
-                                    {col.label}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {data.map((row, rowIndex) => (
-                            <tr key={rowIndex} className="hover:bg-gray-50">
-                                {columns.map((col) => (
-                                    <td key={`${rowIndex}-${col.key}`} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                        {col.key === 'timestamp' ? new Date(row[col.key]).toLocaleString() : row[col.key]}
-                                    </td>
-                                ))}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            ) : (
-                <p className="text-gray-500 text-lg">{t('selectChart')}</p>
-            )}
-        </div>
-    );
-};
-
-/**
- * Dashboard Component
- * Main component displaying charts, tables, and filters.
- * @param {object} props - Component props.
- * @param {function} props.logout - Callback to log out the user.
- * @param {function} props.changeLang - Callback to change the application language.
- */
-const Dashboard = ({ logout, changeLang }) => {
-    const [activeChart, setActiveChart] = useState(null); // 'temp', 'humidity', 'accel', 'gyro', 'vibration', or 'table'
-    const [filteredData, setFilteredData] = useState([]);
-    const [dateFilter, setDateFilter] = useState('');
-    const [timeFrom, setTimeFrom] = useState('00:00');
-    const [timeTo, setTimeTo] = useState('23:59');
-    const { t, currentLang } = useContext(LocaleContext);
-    const isRTL = currentLang === 'ar';
-
-    /**
-     * Filters the mock data based on selected date and time range.
-     */
-    const filterData = () => {
-        let currentFilteredData = mockData;
-
-        if (dateFilter) {
-            currentFilteredData = currentFilteredData.filter(item => {
-                const itemDate = new Date(item.timestamp).toISOString().split('T')[0];
-                return itemDate === dateFilter;
-            });
+      });
+      
+      // إنشاء الجدول
+      dataTable = $('#dataTable').DataTable({
+        data: tableData,
+        columns: [
+          { title: translations[currentLang].date, data: 'timestamp' },
+          { title: translations[currentLang].temp, data: 'temperature' },
+          { title: translations[currentLang].humidity, data: 'humidity' },
+          { title: translations[currentLang].accel, data: 'acceleration' },
+          { title: translations[currentLang].gyro, data: 'gyroscope' },
+          { title: translations[currentLang].vibration, data: 'vibration' }
+        ],
+        language: {
+          url: currentLang === 'ar' ? 
+            'https://cdn.datatables.net/plug-ins/1.13.6/i18n/ar.json' :
+            currentLang === 'fr' ? 
+            'https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json' :
+            'https://cdn.datatables.net/plug-ins/1.13.6/i18n/en-GB.json'
+        },
+        dom: '<"top"f>rt<"bottom"lip><"clear">',
+        responsive: true,
+        pageLength: 10,
+        order: [[0, 'desc']]
+      });
+    }
+    
+    // تحديث البيانات حسب الفلتر
+    function refreshData() {
+      showLoadingMessage(translations[currentLang].loading);
+      
+      const date = $('#dateFilter').val();
+      const fromTime = $('#timeFrom').val();
+      const toTime = $('#timeTo').val();
+      
+      // هنا يجب إضافة استدعاء API أو تصفية البيانات المحلية
+      // هذا مثال بسيط للتوضيح فقط
+      setTimeout(() => {
+        if (date) {
+          filteredData = allData.filter(item => {
+            const itemDate = item.timestamp.split(' ')[0];
+            return itemDate === date;
+          });
+        } else {
+          filteredData = [...allData];
         }
-
-        if (timeFrom && timeTo) {
-            currentFilteredData = currentFilteredData.filter(item => {
-                const itemTime = new Date(item.timestamp).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                return itemTime >= timeFrom && itemTime <= timeTo;
-            });
+        
+        // تطبيق فلتر الوقت إذا كان محددًا
+        if (fromTime && toTime) {
+          filteredData = filteredData.filter(item => {
+            const itemTime = item.timestamp.split(' ')[1];
+            return itemTime >= fromTime && itemTime <= toTime;
+          });
         }
-        setFilteredData(currentFilteredData);
-    };
-
-    // Initial data filter on component mount
-    useEffect(() => {
-        // Set today's date as default filter
-        const today = new Date().toISOString().split('T')[0];
-        setDateFilter(today);
-        // Then filter
-        filterData();
-    }, []); // Run once on mount
-
-    // Re-filter data when date/time filters change
-    useEffect(() => {
-        filterData();
-    }, [dateFilter, timeFrom, timeTo]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    const handleRefreshData = () => {
-        filterData();
-    };
-
-    /**
-     * Determines which chart to show based on user selection.
-     * @param {string} chartKey - The key identifying the chart type.
-     */
-    const showChart = (chartKey) => {
-        setActiveChart(chartKey);
-    };
-
-    /**
-     * Sets the active view to display the full data table.
-     */
-    const showTable = () => {
-        setActiveChart('table');
-    };
-
-    const getContent = () => {
-        if (!activeChart) {
-            return (
-                <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 mt-6 md:mt-0 h-96 w-full flex items-center justify-center">
-                    <p className="text-gray-500 text-lg">{t('selectChart')}</p>
-                </div>
-            );
+        
+        // تحديث العرض حسب النوع الحالي
+        if (currentView === 'table') {
+          updateTable();
+        } else {
+          updateChart();
         }
-
-        const chartProps = { data: filteredData, labelKey: 'timestamp' };
-
-        switch (activeChart) {
-            case 'temp':
-                return <ChartComponent {...chartProps} chartType="temp" valueKey="temp" titleKey="temp" />;
-            case 'humidity':
-                return <ChartComponent {...chartProps} chartType="humidity" valueKey="humidity" titleKey="humidity" />;
-            case 'accel':
-                // For acceleration, we might want to plot magnitude or individual axes
-                // For simplicity, let's plot accelZ, or just one for now.
-                // A multi-line chart would be better for X,Y,Z
-                return <ChartComponent {...chartProps} chartType="accel" valueKey="accelZ" titleKey="accel" />;
-            case 'gyro':
-                return <ChartComponent {...chartProps} chartType="gyro" valueKey="gyroZ" titleKey="gyro" />;
-            case 'vibration':
-                return <ChartComponent {...chartProps} chartType="vibration" valueKey="vibration" titleKey="vibration" />;
-            case 'table':
-                return <TableComponent data={filteredData} />;
-            default:
-                return null;
-        }
-    };
-
-    return (
-        <div className="flex min-h-screen bg-gray-100 font-sans">
-            <Sidebar
-                showChart={showChart}
-                showTable={showTable}
-                changeLang={changeLang}
-                logout={logout}
-                activeChart={activeChart}
-            />
-            <div className={`flex-grow p-6 md:p-8 transition-all duration-300 ${isRTL ? 'mr-60' : 'ml-60'}`}>
-                {/* Filters Section */}
-                <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 mb-6 flex flex-wrap items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <Calendar size={20} className="text-gray-600" />
-                        <label htmlFor="dateFilter" className="text-gray-700 font-medium">{t('date')}</label>
-                        <input
-                            type="date"
-                            id="dateFilter"
-                            value={dateFilter}
-                            onChange={(e) => setDateFilter(e.target.value)}
-                            className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
-                        />
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Clock size={20} className="text-gray-600" />
-                        <label htmlFor="timeFrom" className="text-gray-700 font-medium">{t('from')}</label>
-                        <input
-                            type="time"
-                            id="timeFrom"
-                            value={timeFrom}
-                            onChange={(e) => setTimeFrom(e.target.value)}
-                            className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
-                        />
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Clock size={20} className="text-gray-600" />
-                        <label htmlFor="timeTo" className="text-gray-700 font-medium">{t('to')}</label>
-                        <input
-                            type="time"
-                            id="timeTo"
-                            value={timeTo}
-                            onChange={(e) => setTimeTo(e.target.value)}
-                            className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
-                        />
-                    </div>
-                    <button
-                        onClick={handleRefreshData}
-                        className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75"
-                    >
-                        <CheckCircle size={20} />
-                        <span>{t('refresh')}</span>
-                    </button>
-                </div>
-
-                {/* Content Area (Chart or Table) */}
-                {getContent()}
-            </div>
-        </div>
-    );
-};
-
-/**
- * App Component (Main Application Wrapper)
- * Manages authentication state and language context.
- */
-const App = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [currentLang, setCurrentLang] = useState('ar'); // Default to Arabic
-    const [db, setDb] = useState(null);
-    const [auth, setAuth] = useState(null);
-    const [userId, setUserId] = useState(null);
-    const [isAuthReady, setIsAuthReady] = useState(false);
-
-    // Initialize Firebase
-    useEffect(() => {
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-
-        try {
-            const app = initializeApp(firebaseConfig);
-            const firestoreDb = getFirestore(app);
-            const firebaseAuth = getAuth(app);
-            setDb(firestoreDb);
-            setAuth(firebaseAuth);
-
-            // Handle authentication
-            const authenticate = async () => {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(firebaseAuth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(firebaseAuth);
-                }
-            };
-            authenticate();
-
-            // Set up auth state listener
-            const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
-                if (user) {
-                    setUserId(user.uid);
-                    setIsAuthReady(true);
-                } else {
-                    setUserId(null);
-                    setIsAuthReady(true); // Still ready even if not logged in
-                }
-            });
-
-            return () => unsubscribe(); // Cleanup auth listener on unmount
-        } catch (error) {
-            console.error("Firebase initialization failed:", error);
-            // Handle Firebase init failure (e.g., display error message)
-        }
-    }, []);
-
-    // Effect to set the HTML dir attribute based on language
-    useEffect(() => {
-        document.documentElement.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
-    }, [currentLang]);
-
-    const handleLoginSuccess = () => {
-        setIsLoggedIn(true);
-    };
-
-    const handleLogout = () => {
-        setIsLoggedIn(false);
-        // Optionally, sign out from Firebase if auth is active
-        if (auth) {
-            auth.signOut().catch(error => console.error("Error signing out:", error));
-        }
-    };
-
-    const handleLangChange = (lang) => {
-        setCurrentLang(lang);
-    };
-
-    const t = (key) => translations[currentLang][key] || key;
-
-    return (
-        <LocaleContext.Provider value={{ currentLang, changeLang: handleLangChange, t }}>
-            {isLoggedIn ? (
-                <Dashboard logout={handleLogout} changeLang={handleLangChange} />
-            ) : (
-                <LoginPage onLogin={handleLoginSuccess} />
-            )}
-        </LocaleContext.Provider>
-    );
-};
-
-export default App;
+        
+        showSuccessMessage(translations[currentLang].dataUpdated);
+      }, 500);
+    }
+    
+    // عرض رسالة نجاح
+    function showSuccessMessage(message) {
+      $('#successAlert').text(message).show().delay(3000).fadeOut();
+      $('#errorAlert').hide();
+    }
+    
+    // عرض رسالة خطأ
+    function showErrorMessage(message) {
+      $('#errorAlert').text(message).show();
+      $('#successAlert').hide();
+    }
+    
+    // عرض رسالة تحميل
+    function showLoadingMessage(message) {
+      $('#successAlert').text(message).show();
+      $('#errorAlert').hide();
+    }
+    
+    // عرض خطأ تسجيل الدخول
+    function showLoginError(message) {
+      $('#loginError').text(message).show().delay(3000).fadeOut();
+    }
+    
+    // محاكاة بيانات للعرض (يجب استبدالها ببيانات حقيقية)
+    function mockData() {
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+      
+      // إنشاء بيانات عشوائية
+      for (let i = 0; i < 24; i++) {
+        const hour = i.toString().padStart(2, '0');
+        allData.push({
+          timestamp: `${today} ${hour}:00:00`,
+          temperature: (20 + Math.random() * 10).toFixed(1),
+          humidity: (40 + Math.random() * 30).toFixed(1),
+          acceleration: (0.5 + Math.random() * 1.5).toFixed(2),
+          gyroscope: (0.1 + Math.random() * 0.5).toFixed(3),
+          vibration: (50 + Math.random() * 100).toFixed(1)
+        });
+      }
+      
+      filteredData = [...allData];
+    }
+  </script>
+</body>
+</html>
