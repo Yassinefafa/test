@@ -104,13 +104,14 @@
         .line {
             fill: none;
             stroke: #4f46e5; /* لون الخط الأزرق */
-            stroke-width: 2px;
+            stroke-width: 3px; /* خط أثخن قليلاً */
         }
 
         .dot {
             fill: #4f46e5;
             stroke: #fff;
-            stroke-width: 1.5px;
+            stroke-width: 2px; /* حدود النقطة أثخن قليلاً */
+            r: 5px; /* نقاط أكبر قليلاً */
         }
 
         .tooltip {
@@ -126,6 +127,16 @@
             pointer-events: none;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             z-index: 100; /* لضمان ظهور التلميح فوق كل شيء */
+        }
+
+        /* أنماط لخطوط الشبكة */
+        .grid line {
+            stroke: #e0e7ff; /* لون خفيف لخطوط الشبكة */
+            stroke-opacity: 0.7;
+            shape-rendering: crispEdges;
+        }
+        .grid path {
+            stroke-width: 0;
         }
 
         /* تصميم القائمة الجانبية */
@@ -255,7 +266,7 @@
                 </div>
                 <div>
                     <label for="filterDateTo" class="block text-sm font-medium text-gray-700 text-right">تاريخ إلى:</label>
-                    <input type="date" id="filterDateTo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 text-right dir-rtl">
+                    <input type="date" id="filterDateTo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-ring-indigo-200 focus:ring-opacity-50 p-2 text-right dir-rtl">
                 </div>
                 <div>
                     <label for="filterTimeFrom" class="block text-sm font-medium text-gray-700 text-right">توقيت من:</label>
@@ -311,7 +322,7 @@
         // *******************************************************************
 
         /**
-         * دالة مساعدة لتنسيق التاريخ إلى YYYY-MM-DD
+         * دالة مساعدة لتنسيق التاريخ إلىYYYY-MM-DD
          * @param {Date} date - كائن التاريخ.
          * @returns {string} التاريخ المنسق.
          */
@@ -395,7 +406,7 @@
         /**
          * دالة لتحويل سلسلة التاريخ والوقت من جدول بيانات Google إلى كائن Date صالح.
          * تحاول التعامل مع التنسيقات المختلفة التي قد تأتي بها البيانات.
-         * @param {string} dateStr - سلسلة التاريخ (قد تكون ISO أو YYYY-MM-DD أو DD/MM/YYYY).
+         * @param {string} dateStr - سلسلة التاريخ (قد تكون ISO أو నేపథ్యంలో-MM-DD أو DD/MM/YYYY).
          * @param {string} timeStr - سلسلة الوقت (مثل "HH:MM" أو "HH:MM:SS").
          * @returns {Date | null} كائن Date أو null إذا فشل التحويل.
          */
@@ -459,18 +470,31 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
+                console.log("Fetched raw data:", data); // Log raw data
+                
                 allSheetData = data.map(d => {
                     // معالجة البيانات الخام لتحويلها إلى تنسيقات صالحة للاستخدام
                     const dateTime = parseDateTime(d[DATE_COLUMN_NAME], d[TIME_COLUMN_NAME]);
-                    const temperature = +d[TEMPERATURE_COLUMN_NAME]; // تحويل إلى رقم، + لتجنب مشاكل التنسيق
+                    const temperature = parseFloat(d[TEMPERATURE_COLUMN_NAME]); // استخدم parseFloat
+
+                    if (isNaN(temperature)) { // Check if temperature is NaN *after* parsing
+                         console.warn(`Invalid temperature value found for row: ${JSON.stringify(d)}. Original: '${d[TEMPERATURE_COLUMN_NAME]}'`);
+                    }
                     
                     return {
                         ...d, // الاحتفاظ بجميع البيانات الأصلية
                         parsedDateTime: dateTime,
-                        parsedTemperature: isNaN(temperature) ? null : temperature
+                        parsedTemperature: isNaN(temperature) ? null : temperature // تعيين null إذا كانت غير صالحة
                     };
-                }).filter(d => d.parsedDateTime !== null && d.parsedTemperature !== null); // تصفية البيانات غير الصالحة
+                }).filter(d => {
+                    const isValid = d.parsedDateTime !== null && d.parsedTemperature !== null;
+                    if (!isValid) {
+                        console.warn("Filtering out invalid row:", d); // Log filtered out rows
+                    }
+                    return isValid;
+                });
 
+                console.log("Parsed and filtered initial data (allSheetData.length):", allSheetData.length, allSheetData); // Log parsed data
                 showPage(currentPage); // عرض الصفحة الافتراضية بعد جلب البيانات
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -504,67 +528,68 @@
 
             if (allSheetData.length === 0) {
                 console.warn("No data to filter. Please wait for data to load.");
-                showPage(currentPage); // محاولة إعادة عرض الصفحة حتى لو كانت البيانات فارغة
+                showPage(currentPage);
                 return;
             }
 
             let filteredData = [...allSheetData];
 
-            if (filterDateFromValue || filterDateToValue || filterTimeFromValue || filterTimeToValue) {
-                filteredData = filteredData.filter(d => {
-                    const rowDateTime = d.parsedDateTime;
-                    if (!rowDateTime) return false;
+            filteredData = filteredData.filter(d => {
+                const rowDateTime = d.parsedDateTime;
+                if (!rowDateTime) return false; // تجاوز الصفوف إذا كان التاريخ غير صالح
 
-                    let dateMatch = true;
-                    let timeMatch = true;
+                let dateMatch = true;
+                let timeMatch = true;
 
-                    // فلترة حسب التاريخ
-                    if (filterDateFromValue) {
-                        const fromDateObj = new Date(filterDateFromValue);
-                        fromDateObj.setHours(0, 0, 0, 0);
-                        if (rowDateTime < fromDateObj) {
-                            dateMatch = false;
-                        }
+                // فلترة حسب التاريخ
+                if (filterDateFromValue) {
+                    const fromDateObj = new Date(filterDateFromValue);
+                    fromDateObj.setHours(0, 0, 0, 0); // بداية اليوم
+                    if (rowDateTime < fromDateObj) {
+                        dateMatch = false;
                     }
-                    if (filterDateToValue) {
-                        const toDateObj = new Date(filterDateToValue);
-                        toDateObj.setHours(23, 59, 59, 999);
-                        if (rowDateTime > toDateObj) {
-                            dateMatch = false;
-                        }
+                }
+                if (filterDateToValue) {
+                    const toDateObj = new Date(filterDateToValue);
+                    toDateObj.setHours(23, 59, 59, 999); // نهاية اليوم
+                    if (rowDateTime > toDateObj) {
+                        dateMatch = false;
                     }
+                }
 
-                    // فلترة حسب التوقيت (فقط إذا كان التاريخ ضمن النطاق أو لم يتم تطبيق فلترة التاريخ)
-                    if (dateMatch && (filterTimeFromValue || filterTimeToValue)) {
-                        const rowTimeHours = rowDateTime.getHours();
-                        const rowTimeMinutes = rowDateTime.getMinutes();
-                        const rowTimeSeconds = rowDateTime.getSeconds(); // للحصول على دقة أكبر
+                // فلترة حسب التوقيت، فقط إذا كان التاريخ ضمن النطاق
+                if (dateMatch && (filterTimeFromValue || filterTimeToValue)) {
+                    // إنشاء تاريخ وهمي للمقارنة الزمنية لعزل مكون الوقت
+                    const dummyTimeCompareDate = new Date('2000-01-01T00:00:00'); // تاريخ/وقت وهمي ثابت
 
-                        if (filterTimeFromValue) {
-                            const [fromHours, fromMinutes] = filterTimeFromValue.split(':').map(Number);
-                            // المقارنة بالثواني لضمان الدقة
-                            if (rowTimeHours < fromHours || (rowTimeHours === fromHours && rowTimeMinutes < fromMinutes)) {
-                                timeMatch = false;
-                            } else if (rowTimeHours === fromHours && rowTimeMinutes === fromMinutes && rowTimeSeconds < 0) { // وقت البدء غالباً 00 ثانية
-                                timeMatch = false;
-                            }
-                        }
-                        if (filterTimeToValue) {
-                            const [toHours, toMinutes] = filterTimeToValue.split(':').map(Number);
-                            // المقارنة بالثواني لضمان الدقة (نهاية الدقيقة / الثانية)
-                            if (rowTimeHours > toHours || (rowTimeHours === toHours && rowTimeMinutes > toMinutes)) {
-                                timeMatch = false;
-                            } else if (rowTimeHours === toHours && rowTimeMinutes === toMinutes && rowTimeSeconds > 59) { // وقت الانتهاء غالباً 59 ثانية
-                                timeMatch = false;
-                            }
+                    const rowTimeOnly = new Date(dummyTimeCompareDate);
+                    rowTimeOnly.setHours(rowDateTime.getHours(), rowDateTime.getMinutes(), rowDateTime.getSeconds(), rowDateTime.getMilliseconds());
+
+                    if (filterTimeFromValue) {
+                        const [fromHours, fromMinutes] = filterTimeFromValue.split(':').map(Number);
+                        const fromTimeOnly = new Date(dummyTimeCompareDate);
+                        fromTimeOnly.setHours(fromHours, fromMinutes, 0, 0); // من الساعة:الدقيقة:00.000
+
+                        if (rowTimeOnly < fromTimeOnly) {
+                            timeMatch = false;
                         }
                     }
 
-                    return dateMatch && timeMatch;
-                });
-            }
+                    if (filterTimeToValue && timeMatch) { // تحقق فقط إذا كان فلتر "من" الوقت لا يزال يسمح
+                        const [toHours, toMinutes] = filterTimeToValue.split(':').map(Number);
+                        const toTimeOnly = new Date(dummyTimeCompareDate);
+                        toTimeOnly.setHours(toHours, toMinutes, 59, 999); // إلى الساعة:الدقيقة:59.999 (نهاية الدقيقة)
 
-            showPage(currentPage, filteredData); // عرض الصفحة الحالية بالبيانات المصفاة
+                        if (rowTimeOnly > toTimeOnly) {
+                            timeMatch = false;
+                        }
+                    }
+                }
+
+                return dateMatch && timeMatch;
+            });
+            console.log("Data after filtering in applyFilters (filteredData.length):", filteredData.length, filteredData); // Log filtered data
+            showPage(currentPage, filteredData);
         }
 
         /**
@@ -575,6 +600,7 @@
             document.getElementById("filterDateTo").value = "";
             document.getElementById("filterTimeFrom").value = "";
             document.getElementById("filterTimeTo").value = "";
+            console.log("Clearing filters. Displaying all original data (allSheetData.length):", allSheetData.length); // Log clear filters
             showPage(currentPage, allSheetData); // عرض الصفحة الحالية بجميع البيانات الأصلية
         }
 
@@ -651,9 +677,10 @@
          */
         function renderChart(data) {
             const chartContainer = document.getElementById("chart-view");
-            chartContainer.innerHTML = '<svg class="chart"></svg>'; // مسح أي رسم بياني سابق
+            chartContainer.innerHTML = ''; // مسح أي محتوى سابق
 
             const filteredChartData = data.filter(d => d.parsedDateTime && d.parsedTemperature !== null);
+            console.log("Data provided to renderChart (filteredChartData.length):", filteredChartData.length, filteredChartData); // Log data for chart
 
             if (!filteredChartData || filteredChartData.length === 0) {
                 chartContainer.innerHTML = `
@@ -671,7 +698,9 @@
             const width = containerWidth - margin.left - margin.right;
             const height = containerHeight - margin.top - margin.bottom;
 
-            const svg = d3.select(chartContainer).select(".chart")
+            // مسح أي SVG موجودة وإعادة إنشائها
+            const svg = d3.select(chartContainer).append("svg")
+                .attr("class", "chart")
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
                 .append("g")
@@ -683,15 +712,33 @@
                 .range([0, width]);
 
             const yScale = d3.scaleLinear()
-                .domain([d3.min(filteredChartData, d => d.parsedTemperature) * 0.95, d3.max(filteredChartData, d => d.parsedTemperature) * 1.05]) // توسيع النطاق قليلاً
+                .domain([d3.min(filteredChartData, d => d.parsedTemperature) * 0.9, d3.max(filteredChartData, d => d.parsedTemperature) * 1.1]) // توسيع النطاق أكثر قليلاً
                 .range([height, 0]);
+
+            // إضافة خطوط الشبكة الأفقية
+            svg.append("g")
+                .attr("class", "grid")
+                .call(d3.axisLeft(yScale)
+                    .tickSize(-width)
+                    .tickFormat("")
+                );
+
+            // إضافة خطوط الشبكة العمودية
+            svg.append("g")
+                .attr("class", "grid")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(xScale)
+                    .tickSize(-height)
+                    .tickFormat("")
+                );
 
             // إضافة المحاور (Axes)
             const xAxis = svg.append("g")
                 .attr("class", "axis x-axis")
                 .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(xScale).tickFormat(d3.timeFormat("%Y-%m-%d %H:%M")));
+                .call(d3.axisBottom(xScale).tickFormat(d3.timeFormat("%Y-%m-%d %H:%M"))); // تنسيق التاريخ والوقت
             
+            // تدوير تسميات المحور X إذا كانت متداخلة
             xAxis.selectAll("text")
                 .attr("transform", "rotate(-45)")
                 .style("text-anchor", "end");
@@ -732,7 +779,7 @@
                 .attr("class", "dot")
                 .attr("cx", d => xScale(d.parsedDateTime))
                 .attr("cy", d => yScale(d.parsedTemperature))
-                .attr("r", 4)
+                /* تم تعديل نصف قطر النقطة وحافة النقطة في CSS */
                 .on("mouseover", function(event, d) {
                     tooltip.transition()
                         .duration(200)
@@ -746,15 +793,7 @@
                         .duration(500)
                         .style("opacity", 0);
                 });
-            
-            // التعامل مع تغيير حجم النافذة لرسم الرسم البياني مرة أخرى
-            window.addEventListener('resize', () => {
-                // إعادة جلب البيانات المصفاة الحالية (أو الأصلية) وإعادة رسم الرسم البياني
-                // يمكن تحسين ذلك بتخزين البيانات المصفاة بدلاً من إعادة تصفيتها
-                applyFilters(); // لتطبيق الفلاتر على البيانات الحالية وإعادة الرسم
-            });
         }
-
 
         /**
          * دالة لتبديل عرض الصفحة بين الجدول والرسم البياني.
@@ -775,8 +814,10 @@
             }
 
             // تحديث حالة الأزرار في القائمة الجانبية
+            // إزالة الفئات النشطة أولاً
             showTableBtn.classList.remove('bg-indigo-700', 'lg:bg-indigo-100', 'text-white', 'lg:text-indigo-600');
             showChartBtn.classList.remove('bg-indigo-700', 'lg:bg-indigo-100', 'text-white', 'lg:text-indigo-600');
+            // إضافة الفئات غير النشطة
             showTableBtn.classList.add('bg-transparent', 'lg:bg-transparent', 'text-gray-300', 'lg:text-gray-700');
             showChartBtn.classList.add('bg-transparent', 'lg:bg-transparent', 'text-gray-300', 'lg:text-gray-700');
 
@@ -784,6 +825,7 @@
             if (page === 'table') {
                 tableView.classList.remove('hidden');
                 chartView.classList.add('hidden');
+                // إضافة الفئات النشطة لزر الجدول
                 showTableBtn.classList.add('bg-indigo-700', 'lg:bg-indigo-100', 'text-white', 'lg:text-indigo-600');
                 showTableBtn.classList.remove('bg-transparent', 'lg:bg-transparent', 'text-gray-300', 'lg:text-gray-700');
 
@@ -791,6 +833,7 @@
             } else if (page === 'chart') {
                 tableView.classList.add('hidden');
                 chartView.classList.remove('hidden');
+                // إضافة الفئات النشطة لزر الرسم البياني
                 showChartBtn.classList.add('bg-indigo-700', 'lg:bg-indigo-100', 'text-white', 'lg:text-indigo-600');
                 showChartBtn.classList.remove('bg-transparent', 'lg:bg-transparent', 'text-gray-300', 'lg:text-gray-700');
                 
@@ -838,9 +881,9 @@
             });
             
             // إعادة رسم الرسم البياني عند تغيير حجم الشاشة لضمان تجاوبه
+            // أزلت المستمع من renderChart ووضعته هنا للتحكم المركزي
             window.addEventListener('resize', () => {
                 if (currentPage === 'chart') {
-                    // إذا كانت صفحة الرسم البياني معروضة، أعد رسمها
                     applyFilters(); // لإعادة تطبيق الفلاتر وإعادة الرسم بناءً على الحجم الجديد
                 }
             });
