@@ -102,17 +102,32 @@
     const url = "https://script.google.com/macros/s/AKfycbyyOjiF-mX-oC2AeYB2antb3GMRKsMLfzegN6DRx5Q_XsceQMNOjAipsAMyxPI3Ca2NDA/exec";
     const response = await fetch(url);
     const data = await response.json();
-    const filtered = data.filter(row => Object.keys(row).length === Object.keys(data[0]).length);
-    buildTable(filtered);
-    buildChart(filtered);
+    buildTable(data);
+    buildChart(data);
   }
 
   function buildTable(data) {
     if (!data || data.length === 0) return;
-    const columns = Object.keys(data[0]).map(key => ({ title: key, data: key }));
+
+    let allKeys = new Set();
+    data.forEach(row => {
+      Object.keys(row).forEach(k => allKeys.add(k));
+    });
+    const headers = Array.from(allKeys);
+
+    const completedData = data.map(row => {
+      let filled = {};
+      headers.forEach(key => {
+        filled[key] = row[key] !== undefined ? row[key] : "N/A";
+      });
+      return filled;
+    });
+
+    const columns = headers.map(key => ({ title: key, data: key }));
+
     $('#dataTable').DataTable({
       destroy: true,
-      data: data,
+      data: completedData,
       columns: columns,
       language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/ar.json' }
     });
@@ -123,7 +138,7 @@
   function buildChart(data) {
     const labels = data.map(row => row["Heure"]);
     const values = data.map(row => {
-      const temp = parseFloat((row["Temp. NTC (°C)"] || '').toString().replace(/[^0-9.-]+/g, ''));
+      const temp = parseFloat((row["Température (°C)"] || '').match(/[\d.]+/));
       return isNaN(temp) ? null : temp;
     });
 
@@ -133,9 +148,9 @@
       data: {
         labels: labels,
         datasets: [{
-          label: "Temp. NTC (°C)",
+          label: "Température (°C)",
           data: values,
-          borderColor: 'blue',
+          borderColor: 'red',
           borderWidth: 2,
           fill: false
         }]
@@ -147,15 +162,6 @@
     });
     document.getElementById('mainChart').style.display = "block";
     document.getElementById('tableContainer').style.display = "none";
-  }
-
-  function showTable() {
-    document.getElementById('mainChart').style.display = "none";
-    document.getElementById('tableContainer').style.display = "block";
-  }
-
-  function showChart(type) {
-    refreshData();
   }
 </script>
 </body>
