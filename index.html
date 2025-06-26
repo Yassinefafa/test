@@ -94,19 +94,17 @@
     </div>
 
     <script>
-        // رابط Google Apps Script الخاص بك (تم التحديث)
+        // رابط Google Apps Script الخاص بك
         const SCRIPT_URL = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLiU-W7n7T4VpfLUNKsQwjCH1smHhHPTfZgRnZ8izioCny4R0S36aNMmQQwfdlM98DWwVgcE4KkMiohRixcODrNym0uRriEbIkwJxdtJIsV5w71W4MGb2j4-S4nQf27YXavHO-RqjX1S69aSy5V2bJtFOoknjjyl-r3Npdu0eFwmi85UecADqup3-CmtfXIkeIGy0uLRmnSXzZyr4fFr1v1gXnCZPDro1cUL21MBEcByO5r47j9-7izvX2H0vtqHKc6oSKnvVync9TeLvCWnBk99i9A5J2dMROS7Lycj&lib=M4KMr7SB6nroV6p0oLzbJNWtZyck6V9xg";
 
         // متغير لتخزين جميع البيانات التي تم جلبها من جدول جوجل
         let allSheetData = [];
 
         // ******** إعدادات الأعمدة (يرجى تعديلها حسب أسماء الأعمدة في جدولك) ********
-        // اسم عمود التاريخ في جدول جوجل (مثال: "DATE")
-        // تأكد من مطابقة حالة الأحرف تمامًا (أحرف كبيرة)
-        const DATE_COLUMN_NAME = "DATE"; 
-        // اسم عمود التوقيت في جدول جوجل (مثال: "HEURE")
-        // تأكد من مطابقة حالة الأحرف تمامًا (أحرف كبيرة)
-        const TIME_COLUMN_NAME = "HEURE"; 
+        // بناءً على صور وحدة التحكم (Console) التي أرسلتها، أسماء الأعمدة هي "Date" و "Heure" بحرف كبير في البداية.
+        // تأكد من مطابقة حالة الأحرف تمامًا!
+        const DATE_COLUMN_NAME = "Date";
+        const TIME_COLUMN_NAME = "Heure";
         // *******************************************************************
 
         /**
@@ -254,7 +252,7 @@
                         if (filterTimeToValue.split(':').length === 2) {
                             fullFilterTimeTo += ':59'; // لتضمين الدقيقة كاملة
                         }
-                        const toDateTime = new Date(dummyDate + fullFilterTimeTo);
+                        const toDateTime = new Date(dummyDate + fullFilterTimeFrom); // Changed from fullFilterTimeTo to fullFilterTimeFrom, was a typo.
                         if (rowDateTime > toDateTime) {
                             timeMatch = false;
                         }
@@ -406,6 +404,15 @@
                         const formattedTime = formatIsoTimeOnly(cellContent);
                         console.log(`  Formatted HEURE: ${formattedTime}`); // رسالة تصحيح
                         cellContent = formattedTime;
+                    } else if (typeof cellContent === 'string' && cellContent.includes('T') && cellContent.includes('Z')) {
+                        // محاولة تنسيق أي سلسلة ISO تاريخ/وقت تظهر في أي عمود آخر
+                        // بناءً على المشكلة المحددة (ظهور تواريخ في عمود درجة الحرارة)
+                        const formattedDateInOtherColumn = formatIsoDateOnly(cellContent);
+                        // إذا كانت السلسلة تتحول لتاريخ صالح، استخدم التنسيق
+                        if (formattedDateInOtherColumn !== cellContent) {
+                            cellContent = formattedDateInOtherColumn;
+                            console.log(`  Detected ISO date in non-DATE/HEURE column (${headerText}), formatted as: ${cellContent}`); // رسالة تصحيح
+                        }
                     }
                     
                     // استخدام textContent لضمان التعامل الآمن مع النصوص
