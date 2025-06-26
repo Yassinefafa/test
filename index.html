@@ -1,76 +1,153 @@
-
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="ar">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Monitoring Dashboard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مراقبة البيانات</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100">
+  <div class="container mx-auto p-4">
+    <h1 class="text-3xl text-center font-semibold mb-6">📊 مراقبة البيانات البيئية والكهربائية</h1>
 
-  <!-- Login Page -->
-  <div id="loginPage" class="h-screen flex items-center justify-center">
-    <div class="bg-white p-8 rounded shadow-md w-96">
-      <h2 class="text-2xl font-bold mb-4">Connexion</h2>
-      <input id="username" type="text" placeholder="Nom d'utilisateur" class="border p-2 w-full mb-3">
-      <input id="password" type="password" placeholder="Mot de passe" class="border p-2 w-full mb-4">
-      <button onclick="login()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded w-full">Se connecter</button>
-      <p id="loginError" class="text-red-500 mt-2 hidden">Identifiants incorrects</p>
+    <!-- فلترة البيانات -->
+    <div class="p-4 bg-gray-100 rounded-lg shadow mb-6">
+      <h2 class="text-lg font-semibold mb-2">🔍 فلترة البيانات</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div>
+          <label for="startDate" class="block text-sm font-medium text-gray-700">📅 التاريخ من:</label>
+          <input type="date" id="startDate" class="mt-1 block w-full p-2 border rounded" />
+        </div>
+        <div>
+          <label for="endDate" class="block text-sm font-medium text-gray-700">📅 التاريخ إلى:</label>
+          <input type="date" id="endDate" class="mt-1 block w-full p-2 border rounded" />
+        </div>
+        <div>
+          <label for="startTime" class="block text-sm font-medium text-gray-700">⏰ الوقت من:</label>
+          <input type="time" id="startTime" class="mt-1 block w-full p-2 border rounded" />
+        </div>
+        <div>
+          <label for="endTime" class="block text-sm font-medium text-gray-700">⏰ الوقت إلى:</label>
+          <input type="time" id="endTime" class="mt-1 block w-full p-2 border rounded" />
+        </div>
+      </div>
     </div>
-  </div>
 
-  <!-- Dashboard -->
-  <div id="dashboard" class="hidden">
-    <!-- Menu -->
-    <nav class="bg-blue-600 p-4 text-white flex justify-between">
-      <h1 class="text-xl font-bold">IoT Dashboard</h1>
-      <button onclick="logout()" class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded">Déconnexion</button>
-    </nav>
+    <!-- الجدول لعرض البيانات -->
+    <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+      <table class="min-w-full text-sm text-center">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="px-4 py-2">التاريخ</th>
+            <th class="px-4 py-2">الوقت</th>
+            <th class="px-4 py-2">درجة الحرارة (°C)</th>
+            <th class="px-4 py-2">الرطوبة (%)</th>
+            <th class="px-4 py-2">التسارع X</th>
+            <th class="px-4 py-2">التسارع Y</th>
+            <th class="px-4 py-2">التسارع Z</th>
+            <th class="px-4 py-2">الجهد</th>
+          </tr>
+        </thead>
+        <tbody id="dataTable">
+          <!-- سيتم ملء الجدول بالبيانات هنا عبر JavaScript -->
+        </tbody>
+      </table>
+    </div>
 
-    <!-- Table -->
-    <div class="p-6">
-      <h2 class="text-2xl font-semibold mb-4">Données des capteurs</h2>
-      <div id="sheetData" class="bg-white p-4 rounded shadow overflow-auto"></div>
+    <!-- رسم بياني -->
+    <div class="mt-6">
+      <canvas id="dataChart"></canvas>
     </div>
   </div>
 
   <script>
-    const validUser = "admin";
-    const validPass = "1234";
+    // نموذج البيانات (على سبيل المثال)
+    const data = [
+      { date: "2025-06-23", time: "16:43:43", temp: 28.9, humidity: 48, accelX: 0.96, accelY: -0.00, accelZ: 0.28, voltage: 1.52 },
+      { date: "2025-06-23", time: "16:44:02", temp: 28.9, humidity: 48, accelX: 0.96, accelY: -0.00, accelZ: 0.28, voltage: 1.53 },
+      { date: "2025-06-23", time: "16:44:19", temp: 29.0, humidity: 47, accelX: 0.97, accelY: -0.01, accelZ: 0.28, voltage: 1.54 },
+      { date: "2025-06-23", time: "16:44:39", temp: 29.1, humidity: 47, accelX: 0.97, accelY: -0.01, accelZ: 0.28, voltage: 1.55 },
+      // أضف المزيد من البيانات هنا حسب الحاجة
+    ];
 
-    function login() {
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
-      if (user === validUser && pass === validPass) {
-        document.getElementById("loginPage").classList.add("hidden");
-        document.getElementById("dashboard").classList.remove("hidden");
-        loadSheet();
-      } else {
-        document.getElementById("loginError").classList.remove("hidden");
-      }
-    }
-
-    function logout() {
-      location.reload();
-    }
-
-    function loadSheet() {
-      google.charts.load('current', { packages: ['table'] });
-      google.charts.setOnLoadCallback(drawTable);
-    }
-
-    function drawTable() {
-      const query = new google.visualization.Query(
-        'https://docs.google.com/spreadsheets/d/13nLogAoZ_yo0u5o9r8Xv302AhAO4Em-4JtCgjAbIeEE/gviz/tq?sheet=Feuille1'
-      );
-      query.send(response => {
-        const data = response.getDataTable();
-        const table = new google.visualization.Table(document.getElementById('sheetData'));
-        table.draw(data, { showRowNumber: false, width: '100%', height: 'auto' });
+    // تحديث الجدول بالبيانات
+    function updateTable(filteredData) {
+      const tableBody = document.getElementById("dataTable");
+      tableBody.innerHTML = "";
+      filteredData.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="px-4 py-2">${row.date}</td>
+          <td class="px-4 py-2">${row.time}</td>
+          <td class="px-4 py-2">${row.temp} °C</td>
+          <td class="px-4 py-2">${row.humidity} %</td>
+          <td class="px-4 py-2">${row.accelX}</td>
+          <td class="px-4 py-2">${row.accelY}</td>
+          <td class="px-4 py-2">${row.accelZ}</td>
+          <td class="px-4 py-2">${row.voltage} V</td>
+        `;
+        tableBody.appendChild(tr);
       });
     }
+
+    // الفلترة حسب التاريخ والوقت
+    function filterData() {
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      const startTime = document.getElementById('startTime').value;
+      const endTime = document.getElementById('endTime').value;
+
+      const filteredData = data.filter(row => {
+        const rowDate = row.date;
+        const rowTime = row.time;
+
+        const dateCondition = (!startDate || rowDate >= startDate) && (!endDate || rowDate <= endDate);
+        const timeCondition = (!startTime || rowTime >= startTime) && (!endTime || rowTime <= endTime);
+
+        return dateCondition && timeCondition;
+      });
+
+      updateTable(filteredData);
+    }
+
+    // إعداد الرسم البياني
+    const ctx = document.getElementById('dataChart').getContext('2d');
+    const dataChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: data.map(row => row.time),  // وضع الأوقات على المحور الأفقي
+        datasets: [
+          {
+            label: 'درجة الحرارة (°C)',
+            data: data.map(row => row.temp),
+            borderColor: 'rgba(255, 99, 132, 1)',
+            fill: false,
+          },
+          {
+            label: 'الرطوبة (%)',
+            data: data.map(row => row.humidity),
+            borderColor: 'rgba(54, 162, 235, 1)',
+            fill: false,
+          },
+          {
+            label: 'الجهد (V)',
+            data: data.map(row => row.voltage),
+            borderColor: 'rgba(75, 192, 192, 1)',
+            fill: false,
+          },
+        ],
+      },
+    });
+
+    // الاستماع لتغييرات الفلاتر
+    document.getElementById('startDate').addEventListener('change', filterData);
+    document.getElementById('endDate').addEventListener('change', filterData);
+    document.getElementById('startTime').addEventListener('change', filterData);
+    document.getElementById('endTime').addEventListener('change', filterData);
+
+    // تحميل البيانات الأولية
+    updateTable(data);
   </script>
 </body>
 </html>
