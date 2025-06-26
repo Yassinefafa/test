@@ -1,95 +1,164 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>لوحة المراقبة الذكية</title>
+  <title>لوحة البيانات</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background-color: #f4f4f4;
+    }
+    .login-page, .main-page {
+      display: none;
+      height: 100vh;
+    }
+    .login-page {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #222;
+      color: white;
+    }
+    .login-box {
+      background: #333;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #000;
+    }
+    .login-box input {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+    }
+    .sidebar {
+      width: 200px;
+      background: #2c3e50;
+      color: white;
+      position: fixed;
+      height: 100%;
+      padding-top: 20px;
+    }
+    .sidebar button {
+      display: block;
+      background: none;
+      color: white;
+      border: none;
+      width: 100%;
+      text-align: right;
+      padding: 15px;
+      cursor: pointer;
+    }
+    .content {
+      margin-right: 200px;
+      padding: 20px;
+    }
+    .filters {
+      margin-bottom: 20px;
+    }
+    input[type="date"], input[type="time"] {
+      margin-left: 10px;
+      padding: 5px;
+    }
+    canvas {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ccc;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 text-right font-sans">
+<body>
 
-<!-- صفحة تسجيل الدخول -->
-<div id="loginPage" class="h-screen flex items-center justify-center">
-  <div class="bg-white p-8 rounded shadow-md w-full max-w-sm">
-    <h2 class="text-2xl font-bold mb-4 text-center">تسجيل الدخول</h2>
-    <input id="username" class="border w-full p-2 mb-4 rounded" type="text" placeholder="اسم المستخدم" />
-    <input id="password" class="border w-full p-2 mb-4 rounded" type="password" placeholder="كلمة المرور" />
-    <button onclick="login()" class="bg-blue-500 text-white w-full py-2 rounded hover:bg-blue-600">دخول</button>
+<div class="login-page" id="loginPage">
+  <div class="login-box">
+    <h2>تسجيل الدخول</h2>
+    <input type="text" id="username" placeholder="اسم المستخدم" />
+    <input type="password" id="password" placeholder="كلمة المرور" />
+    <button onclick="login()">دخول</button>
   </div>
 </div>
 
-<!-- لوحة البيانات -->
-<div id="dashboard" class="hidden h-screen">
-  <div class="flex h-full">
-    
-    <!-- القائمة الجانبية -->
-    <aside class="w-64 bg-white shadow-md p-4 space-y-4">
-      <h2 class="text-xl font-bold mb-4 text-center">📊 القائمة</h2>
-      <button onclick="showChart('temp')" class="w-full text-right hover:bg-blue-100 p-2 rounded">درجة الحرارة</button>
-      <button onclick="showChart('humidity')" class="w-full text-right hover:bg-blue-100 p-2 rounded">الرطوبة</button>
-      <button onclick="showChart('accel')" class="w-full text-right hover:bg-blue-100 p-2 rounded">التسارع XYZ</button>
-      <button onclick="showChart('gyro')" class="w-full text-right hover:bg-blue-100 p-2 rounded">الجايروسكوب XYZ</button>
-      <button onclick="showChart('vibration')" class="w-full text-right hover:bg-blue-100 p-2 rounded">الاهتزاز</button>
-    </aside>
-
-    <!-- المحتوى الرئيسي -->
-    <main class="flex-1 p-6 overflow-auto">
-      <div class="flex flex-wrap gap-4 mb-4">
-        <input type="date" id="dateFilter" class="p-2 border rounded" />
-        <input type="time" id="timeFrom" class="p-2 border rounded" />
-        <input type="time" id="timeTo" class="p-2 border rounded" />
-        <button onclick="applyFilters()" class="bg-blue-500 text-white px-4 py-2 rounded">تصفية</button>
-      </div>
-
-      <div class="bg-white p-4 rounded shadow-md">
-        <canvas id="mainChart" height="100"></canvas>
-      </div>
-    </main>
+<div class="main-page" id="mainPage">
+  <div class="sidebar">
+    <button onclick="showChart('temp')">درجة الحرارة</button>
+    <button onclick="showChart('humidity')">الرطوبة</button>
+    <button onclick="showChart('accel')">التسارع</button>
+    <button onclick="showChart('gyro')">الجيروسكوب</button>
+    <button onclick="showChart('vibration')">الاهتزاز</button>
+  </div>
+  <div class="content">
+    <div class="filters">
+      <label>التاريخ:</label>
+      <input type="date" id="dateFilter">
+      <label>من:</label>
+      <input type="time" id="timeFrom">
+      <label>إلى:</label>
+      <input type="time" id="timeTo">
+      <button onclick="showChart(currentChart)">تحديث</button>
+    </div>
+    <canvas id="mainChart" width="1000" height="400"></canvas>
   </div>
 </div>
 
 <script>
-  const data = [
-    { time: "2024-06-26T10:00", temp: 28.5, humidity: 45, ax: 0.12, ay: 0.05, az: 0.96, gx: 0.01, gy: 0.03, gz: 0.02, vibration: 1 },
-    { time: "2024-06-26T10:10", temp: 29.0, humidity: 47, ax: 0.11, ay: 0.04, az: 0.97, gx: 0.02, gy: 0.01, gz: 0.03, vibration: 1 },
-    { time: "2024-06-26T10:20", temp: 29.4, humidity: 46, ax: 0.10, ay: 0.03, az: 0.95, gx: 0.01, gy: 0.04, gz: 0.02, vibration: 0 },
-    // أضف بيانات إضافية هنا حسب الحاجة
-  ];
-
+  const correctUser = "admin";
+  const correctPass = "1234";
+  let currentChart = "temp";
   let chartInstance;
+  let globalData = [];
 
   function login() {
-    const user = document.getElementById('username').value;
-    const pass = document.getElementById('password').value;
-    if (user === "admin" && pass === "1234") {
+    const u = document.getElementById('username').value;
+    const p = document.getElementById('password').value;
+    if (u === correctUser && p === correctPass) {
       document.getElementById('loginPage').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'block';
+      document.getElementById('mainPage').style.display = 'block';
       showChart('temp');
     } else {
-      alert("بيانات الدخول غير صحيحة!");
+      alert("بيانات خاطئة!");
     }
   }
 
-  function applyFilters() {
+  async function fetchData() {
+    const url = "https://script.google.com/macros/s/AKfycbyyOjiF-mX-oC2AeYB2antb3GMRKsMLfzegN6DRx5Q_XsceQMNOjAipsAMyxPI3Ca2NDA/exec";
+    const response = await fetch(url);
+    const json = await response.json();
+    return json.map(row => ({
+      time: row["Horodatage"],
+      temp: parseFloat(row["Température (°C)"]),
+      humidity: parseFloat(row["Humidité (%)"]),
+      ax: parseFloat(row["Accélération X"]),
+      ay: parseFloat(row["Accélération Y"]),
+      az: parseFloat(row["Accélération Z"]),
+      gx: parseFloat(row["Gyroscope X"]),
+      gy: parseFloat(row["Gyroscope Y"]),
+      gz: parseFloat(row["Gyroscope Z"]),
+      vibration: parseFloat(row["Vibration"]),
+      ntc: parseFloat(row["Temp. NTC (°C)"]),
+      current: parseFloat(row["Courant (V Bruts)"]),
+      battery: parseFloat(row["Batterie (V)"]),
+    }));
+  }
+
+  async function showChart(type) {
+    currentChart = type;
+    if (globalData.length === 0) globalData = await fetchData();
+
     const date = document.getElementById('dateFilter').value;
     const timeFrom = document.getElementById('timeFrom').value;
     const timeTo = document.getElementById('timeTo').value;
 
-    return data.filter(row => {
-      const dt = new Date(row.time);
+    const filtered = globalData.filter(r => {
+      const dt = new Date(r.time);
       if (date && dt.toISOString().slice(0, 10) !== date) return false;
       const t = dt.toTimeString().slice(0, 5);
       if (timeFrom && t < timeFrom) return false;
       if (timeTo && t > timeTo) return false;
       return true;
     });
-  }
 
-  function showChart(type) {
-    const filtered = applyFilters();
     const labels = filtered.map(r => new Date(r.time).toLocaleTimeString());
-
     let datasets = [];
 
     switch (type) {
@@ -122,10 +191,7 @@
     const ctx = document.getElementById('mainChart').getContext('2d');
     chartInstance = new Chart(ctx, {
       type: 'line',
-      data: {
-        labels: labels,
-        datasets: datasets
-      },
+      data: { labels: labels, datasets: datasets },
       options: {
         responsive: true,
         scales: { y: { beginAtZero: true } }
