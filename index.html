@@ -18,7 +18,7 @@
     .sidebar .bottom-buttons { position: absolute; bottom: 20px; width: 100%; }
     .content { margin-right: 220px; padding: 20px; }
     .filters { margin-bottom: 20px; }
-    canvas { background: white; border-radius: 10px; box-shadow: 0 0 10px #ccc; margin-bottom: 20px; }
+    canvas { background: white; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
     #mainChart, #tableContainer { display: none; }
     #dataTable_wrapper { background: white; padding: 10px; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
   </style>
@@ -32,13 +32,14 @@
     <button onclick="login()" id="login-button">دخول</button>
   </div>
 </div>
+
 <div class="main-page" id="mainPage">
   <div class="sidebar">
-    <button onclick="navigateChart('temp')">📈 <span data-key="temp">درجة الحرارة</span></button>
-    <button onclick="navigateChart('humidity')">💧 <span data-key="humidity">الرطوبة</span></button>
-    <button onclick="navigateChart('accel')">🧭 <span data-key="accel">التسارع</span></button>
-    <button onclick="navigateChart('gyro')">🌀 <span data-key="gyro">الجيروسكوب</span></button>
-    <button onclick="navigateChart('vibration')">📳 <span data-key="vibration">الاهتزاز</span></button>
+    <button onclick="showChart('Température (°C)')">📈 <span data-key="temp">درجة الحرارة</span></button>
+    <button onclick="showChart('Humidité (%)')">💧 <span data-key="humidity">الرطوبة</span></button>
+    <button onclick="showChart('Accélération X')">🧭 <span data-key="accel">التسارع</span></button>
+    <button onclick="showChart('Gyroscope X')">🌀 <span data-key="gyro">الجيروسكوب</span></button>
+    <button onclick="showChart('Vibration')">📳 <span data-key="vibration">الاهتزاز</span></button>
     <button onclick="showTable()">📋 <span data-key="table">عرض الجدول الكامل</span></button>
     <div class="bottom-buttons">
       <button onclick="changeLang('ar')">🇲🇦 العربية</button>
@@ -63,118 +64,93 @@
     </div>
   </div>
 </div>
+
 <script>
-const translations = {
-  ar: { login: "تسجيل الدخول", temp: "درجة الحرارة", humidity: "الرطوبة", accel: "التسارع", gyro: "الجيروسكوب", vibration: "الاهتزاز", table: "عرض الجدول الكامل", logout: "خروج", date: "التاريخ:", from: "من:", to: "إلى:", refresh: "تحديث" },
-  fr: { login: "Connexion", temp: "Température", humidity: "Humidité", accel: "Accélération", gyro: "Gyroscope", vibration: "Vibration", table: "Table complète", logout: "Déconnexion", date: "Date:", from: "De:", to: "À:", refresh: "Rafraîchir" },
-  en: { login: "Login", temp: "Temperature", humidity: "Humidity", accel: "Acceleration", gyro: "Gyroscope", vibration: "Vibration", table: "Full Table", logout: "Logout", date: "Date:", from: "From:", to: "To:", refresh: "Refresh" }
-};
+  const translations = {
+    ar: { login: "تسجيل الدخول", temp: "درجة الحرارة", humidity: "الرطوبة", accel: "التسارع", gyro: "الجيروسكوب", vibration: "الاهتزاز", table: "عرض الجدول الكامل", logout: "خروج", date: "التاريخ:", from: "من:", to: "إلى:", refresh: "تحديث" },
+    fr: { login: "Connexion", temp: "Température", humidity: "Humidité", accel: "Accélération", gyro: "Gyroscope", vibration: "Vibration", table: "Table complète", logout: "Déconnexion", date: "Date:", from: "De:", to: "À:", refresh: "Rafraîchir" },
+    en: { login: "Login", temp: "Temperature", humidity: "Humidity", accel: "Acceleration", gyro: "Gyroscope", vibration: "Vibration", table: "Full Table", logout: "Logout", date: "Date:", from: "From:", to: "To:", refresh: "Refresh" }
+  };
 
-function changeLang(lang) {
-  document.querySelectorAll('[data-key]').forEach(el => {
-    const key = el.getAttribute('data-key');
-    el.innerText = translations[lang][key];
-  });
-  document.getElementById("login-title").innerText = translations[lang].login;
-  document.getElementById("login-button").innerText = translations[lang].login;
-}
-function logout() {
-  document.getElementById("mainPage").style.display = "none";
-  document.getElementById("loginPage").style.display = "flex";
-}
-function login() {
-  const user = document.getElementById("username").value;
-  const pass = document.getElementById("password").value;
-  if (user === "admin" && pass === "admin") {
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("mainPage").style.display = "block";
-    loadData();
-  } else {
-    alert("معلومات الدخول خاطئة");
-  }
-}
-const scriptURL = "https://script.google.com/macros/s/AKfycbyyOjiF-mX-oC2AeYB2antb3GMRKsMLfzegN6DRx5Q_XsceQMNOjAipsAMyxPI3Ca2NDA/exec";
-let fullData = [];
-let chart;
-function refreshData() {
-  const selectedDate = document.getElementById("dateFilter").value;
-  const fromTime = document.getElementById("timeFrom").value;
-  const toTime = document.getElementById("timeTo").value;
-  const filtered = fullData.filter(row => {
-    const rowDate = row.Date;
-    const rowTime = row.Time;
-    return (!selectedDate || rowDate === selectedDate) &&
-           (!fromTime || rowTime >= fromTime) &&
-           (!toTime || rowTime <= toTime);
-  });
-  updateChart(filtered);
-  updateTable(filtered);
-}
-function loadData() {
-  fetch(scriptURL)
-    .then(res => res.json())
-    .then(data => {
-      fullData = data;
-      refreshData();
+  function changeLang(lang) {
+    document.querySelectorAll('[data-key]').forEach(el => {
+      const key = el.getAttribute('data-key');
+      el.innerText = translations[lang][key];
     });
-}
-function updateChart(data) {
-  if (chart) chart.destroy();
-  const ctx = document.getElementById("mainChart").getContext("2d");
-  chart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: data.map(r => r.Time),
-      datasets: [{ label: "Temperature", data: data.map(r => parseFloat(r["Température (°C)"])), borderColor: "#f00", fill: false }]
-    }
-  });
-}
-function updateTable(data) {
-  if ($.fn.DataTable.isDataTable("#dataTable")) {
-    $('#dataTable').DataTable().clear().rows.add(data).draw();
-  } else {
-    $('#dataTable').DataTable({ data, columns: Object.keys(data[0] || {}).map(key => ({ title: key, data: key })) });
+    document.getElementById("login-title").innerText = translations[lang].login;
+    document.getElementById("login-button").innerText = translations[lang].login;
   }
-  document.getElementById("mainChart").style.display = "none";
-  document.getElementById("tableContainer").style.display = "block";
-}
-function showTable() {
-  refreshData();
-  document.getElementById("mainChart").style.display = "none";
-  document.getElementById("tableContainer").style.display = "block";
-}
-function navigateChart(type) {
-  document.getElementById("mainChart").style.display = "block";
-  document.getElementById("tableContainer").style.display = "none";
-  if (!fullData.length) return;
-  const selectedDate = document.getElementById("dateFilter").value;
-  const fromTime = document.getElementById("timeFrom").value;
-  const toTime = document.getElementById("timeTo").value;
-  const filtered = fullData.filter(row => {
-    const rowDate = row.Date;
-    const rowTime = row.Time;
-    return (!selectedDate || rowDate === selectedDate) &&
-           (!fromTime || rowTime >= fromTime) &&
-           (!toTime || rowTime <= toTime);
-  });
-  let label = "";
-  let color = "#00f";
-  if (type === "temp") { label = "Température (°C)"; color = "#f00"; }
-  else if (type === "humidity") { label = "Humidité (%)"; color = "#00f"; }
-  else if (type === "accel") { label = "Accélération X"; color = "#0f0"; }
-  else if (type === "gyro") { label = "Gyroscope X"; color = "#ff0"; }
-  else if (type === "vibration") { label = "Vibration"; color = "#f0f"; }
 
-  if (chart) chart.destroy();
-  const ctx = document.getElementById("mainChart").getContext("2d");
-  chart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: filtered.map(r => r.Time),
-      datasets: [{ label, data: filtered.map(r => parseFloat(r[label])), borderColor: color, fill: false }]
+  function logout() {
+    document.getElementById("mainPage").style.display = "none";
+    document.getElementById("loginPage").style.display = "flex";
+  }
+
+  function login() {
+    const user = document.getElementById("username").value;
+    const pass = document.getElementById("password").value;
+    if (user === "admin" && pass === "admin") {
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("mainPage").style.display = "block";
+      refreshData();
+    } else {
+      alert("معلومات الدخول خاطئة");
     }
-  });
-}
+  }
+
+  let rawData = [];
+
+  async function refreshData() {
+    const url = "https://script.google.com/macros/s/AKfycbyyOjiF-mX-oC2AeYB2antb3GMRKsMLfzegN6DRx5Q_XsceQMNOjAipsAMyxPI3Ca2NDA/exec";
+    const response = await fetch(url);
+    const data = await response.json();
+    rawData = data;
+    buildTable(data);
+  }
+
+  function buildTable(data) {
+    if (!data || data.length === 0) return;
+    const columns = Object.keys(data[0]).map(key => ({ title: key, data: key }));
+    $('#dataTable').DataTable({
+      destroy: true,
+      data: data,
+      columns: columns,
+      language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/ar.json' }
+    });
+    document.getElementById('mainChart').style.display = "none";
+    document.getElementById('tableContainer').style.display = "block";
+  }
+
+  function showTable() {
+    buildTable(rawData);
+  }
+
+  function showChart(metric) {
+    if (!rawData || rawData.length === 0) return;
+    const labels = rawData.map(row => row["Heure"]);
+    const values = rawData.map(row => parseFloat(row[metric])).filter(v => !isNaN(v));
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    if (window.currentChart) window.currentChart.destroy();
+    window.currentChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: metric,
+          data: values,
+          borderColor: 'blue',
+          borderWidth: 2,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: { y: { beginAtZero: false } }
+      }
+    });
+    document.getElementById('mainChart').style.display = "block";
+    document.getElementById('tableContainer').style.display = "none";
+  }
 </script>
 </body>
 </html>
