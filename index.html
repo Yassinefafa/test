@@ -203,7 +203,8 @@
             <h2 id="chartsTitle" class="text-3xl font-bold text-gray-800 mb-6 border-b-2 pb-3 border-blue-500">
                 الرسوم البيانية لبيانات المستشعر
             </h2>
-            <div id="chartsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Changed grid-cols-2 to grid-cols-1 to force vertical stacking -->
+            <div id="chartsContainer" class="grid grid-cols-1 gap-8"> 
                 <!-- Charts will be injected here by JavaScript -->
             </div>
         </section>
@@ -273,13 +274,20 @@
 
 
         // Metrics to display as charts (including Accel & Gyro)
+        // Group Acceleration and Gyroscope to be rendered as single charts with multiple lines
         const chartMetrics = [
-            'Température (°C)', 'Humidité (%)', 'Accélération X', 'Accélération Y',
-            'Accélération Z', 'Gyroscope X', 'Gyroscope Y', 'Gyroscope Z',
-            'Vibration', 'Temp. NTC (°C)', 'Courant (V Bruts)', 'Batterie (V)'
+            'Température (°C)', 
+            'Humidité (%)', 
+            'Accélération', // Combined metric for X, Y, Z
+            'Vibration', 
+            'Temp. NTC (°C)', 
+            'Courant (V Bruts)', 
+            'Batterie (V)',
+            'Gyroscope' // Combined metric for X, Y, Z
         ];
 
         // Define a set of appealing colors for charts
+        // Expanded color palette for individual lines within combined charts
         const chartColors = [
             'rgb(75, 192, 192)', // Teal
             'rgb(255, 99, 132)', // Red
@@ -292,7 +300,11 @@
             'rgb(255, 102, 204)',// Pink
             'rgb(0, 153, 153)',  // Dark Teal
             'rgb(204, 51, 0)',   // Dark Red-Orange
-            'rgb(51, 102, 255)'  // Royal Blue
+            'rgb(51, 102, 255)', // Royal Blue
+            'rgb(255, 0, 255)',  // Magenta (new)
+            'rgb(0, 255, 255)',  // Cyan (new)
+            'rgb(128, 0, 0)',    // Maroon (new)
+            'rgb(0, 128, 0)'     // Dark Green (new)
         ];
 
         // Define a set of different point styles for charts
@@ -307,7 +319,10 @@
             'line',
             'rectRounded',
             'rectRot',
-            'triangle' // Repeat for more options if needed
+            'triangle', // Repeat for more options if needed
+            'circle', // Additional styles
+            'rect',
+            'star'
         ];
 
 
@@ -350,9 +365,11 @@
                     'Heure': 'التوقيت',
                     'Température (°C)': 'درجة الحرارة (°C)',
                     'Humidité (%)': 'الرطوبة (%)',
+                    'Accélération': 'التسارع', // Combined label
                     'Accélération X': 'التسارع X',
-                    'Accéléطة Y': 'التسارع Y',
+                    'Accélération Y': 'التسارع Y',
                     'Accélération Z': 'التسارع Z',
+                    'Gyroscope': 'الجيروسكوب', // Combined label
                     'Gyroscope X': 'جيروسكوب X',
                     'Gyroscope Y': 'جيروسكوب Y',
                     'Gyroscope Z': 'جيروسكوب Z',
@@ -399,9 +416,11 @@
                     'Heure': 'Time',
                     'Température (°C)': 'Temperature (°C)',
                     'Humidité (%)': 'Humidity (%)',
+                    'Accélération': 'Acceleration', // Combined label
                     'Accélération X': 'Acceleration X',
                     'Accélération Y': 'Acceleration Y',
                     'Accélération Z': 'Acceleration Z',
+                    'Gyroscope': 'Gyroscope', // Combined label
                     'Gyroscope X': 'Gyroscope X',
                     'Gyroscope Y': 'Gyroscope Y',
                     'Gyroscope Z': 'Gyroscope Z',
@@ -448,9 +467,11 @@
                     'Heure': 'Heure',
                     'Température (°C)': 'Température (°C)',
                     'Humidité (%)': 'Humidité (%)',
+                    'Accélération': 'Accélération', // Combined label
                     'Accélération X': 'Accélération X',
                     'Accélération Y': 'Accélération Y',
                     'Accélération Z': 'Accélération Z',
+                    'Gyroscope': 'Gyroscope', // Combined label
                     'Gyroscope X': 'Gyroscope X',
                     'Gyroscope Y': 'Gyroscope Y',
                     'Gyroscope Z': 'Gyroscope Z',
@@ -660,13 +681,21 @@
             const labels = translations[currentLanguage].chartLabels;
 
             for (const key in latestEntry) {
-                if (latestEntry.hasOwnProperty(key) && !['Accélération X', 'Accélération Y', 'Accélération Z', 'Gyroscope X', 'Gyroscope Y', 'Gyroscope Z'].includes(key)) {
+                // Exclude the individual Accel and Gyro components from this section, as they are now grouped
+                if (latestEntry.hasOwnProperty(key) && 
+                    !['Accélération X', 'Accélération Y', 'Accélération Z', 
+                       'Gyroscope X', 'Gyroscope Y', 'Gyroscope Z'].includes(key) &&
+                    !['Accélération', 'Gyroscope'].includes(key) // Also exclude the combined metrics to avoid duplicates
+                    ) {
                     let valueToDisplay = latestEntry[key];
                     if (key === 'Date') {
                         valueToDisplay = getFormattedDateForDisplay(valueToDisplay, latestEntry['Heure']);
                     } else if (key === 'Heure') {
                         valueToDisplay = getFormattedTimeForDisplay(latestEntry['Date'], valueToDisplay);
-                    } else if (chartMetrics.includes(key)) {
+                    } else if (chartMetrics.includes(key) || 
+                                (key === 'Accélération X' && chartMetrics.includes('Accélération')) ||
+                                (key === 'Gyroscope X' && chartMetrics.includes('Gyroscope')) // Check if the individual metric is part of a combined chart
+                            ) {
                         valueToDisplay = formatNumericValue(valueToDisplay);
                     }
 
@@ -704,7 +733,7 @@
             const accelCard = document.createElement('div');
             accelCard.className = 'bg-white p-6 rounded-lg shadow-md border border-gray-100';
             accelCard.innerHTML = `
-                <h3 class="text-xl font-semibold text-blue-700 mb-4">${labels['Accélération X'].replace(' X', '')}</h3>
+                <h3 class="text-xl font-semibold text-blue-700 mb-4">${labels['Accélération']}</h3>
                 <div class="space-y-2">
                     <p class="text-lg text-gray-800"><span class="font-semibold">${labels['Accélération X']}:</span> ${formatNumericValue(latestEntry['Accélération X'])}</p>
                     <p class="text-lg text-gray-800"><span class="font-semibold">${labels['Accélération Y']}:</span> ${formatNumericValue(latestEntry['Accélération Y'])}</p>
@@ -717,7 +746,7 @@
             const gyroCard = document.createElement('div');
             gyroCard.className = 'bg-white p-6 rounded-lg shadow-md border border-gray-100';
             gyroCard.innerHTML = `
-                <h3 class="text-xl font-semibold text-blue-700 mb-4">${labels['Gyroscope X'].replace(' X', '')}</h3>
+                <h3 class="text-xl font-semibold text-blue-700 mb-4">${labels['Gyroscope']}</h3>
                 <div class="space-y-2">
                     <p class="text-lg text-gray-800"><span class="font-semibold">${labels['Gyroscope X']}:</span> ${formatNumericValue(latestEntry['Gyroscope X'])}</p>
                     <p class="text-lg text-gray-800"><span class="font-semibold">${labels['Gyroscope Y']}:</span> ${formatNumericValue(latestEntry['Gyroscope Y'])}</p>
@@ -822,7 +851,10 @@
                         cellValue = getFormattedDateForDisplay(cellValue, row['Heure']);
                     } else if (header === 'Heure') {
                         cellValue = getFormattedTimeForDisplay(row['Date'], cellValue);
-                    } else if (chartMetrics.includes(header)) {
+                    } else if (chartMetrics.includes(header) || 
+                                (header.startsWith('Accélération') && chartMetrics.includes('Accélération')) ||
+                                (header.startsWith('Gyroscope') && chartMetrics.includes('Gyroscope'))
+                            ) {
                         cellValue = formatNumericValue(cellValue);
                     }
                     td.textContent = cellValue;
@@ -868,6 +900,7 @@
 
         /**
          * Renders charts for the specified metrics.
+         * Now supports rendering combined metrics (e.g., Acceleration X, Y, Z on one chart).
          * @param {Array<Object>} dataToRender - The data to use for rendering charts (already filtered).
          */
         function renderCharts(dataToRender) {
@@ -877,7 +910,7 @@
                 return;
             }
 
-            const sortedData = [...dataToRender].sort((a, b) => { // Use dataToRender here
+            const sortedData = [...dataToRender].sort((a, b) => {
                 const dateA = parseDateTimeToLocalDate(a.Date, a.Heure);
                 const dateB = parseDateTimeToLocalDate(b.Date, b.Heure);
                 if (!dateA || isNaN(dateA.getTime())) return 1;
@@ -897,47 +930,112 @@
                 return translations[currentLanguage].invalidDate + '/' + translations[currentLanguage].invalidTime;
             });
 
-            chartMetrics.forEach((metric, index) => { // Added index for cycling colors and shapes
+            let colorIndex = 0; // Keep track of global color index for unique colors
+
+            chartMetrics.forEach((metric) => {
+                let datasets = [];
+                let chartTitle = translations[currentLanguage].chartLabels[metric] || metric;
+
+                if (metric === 'Accélération') {
+                    // Acceleration X, Y, Z on one chart
+                    ['X', 'Y', 'Z'].forEach((axis) => {
+                        const componentMetric = `Accélération ${axis}`;
+                        const color = chartColors[colorIndex % chartColors.length];
+                        const pointStyle = pointStyles[colorIndex % pointStyles.length];
+                        colorIndex++; // Increment for next unique color/style
+
+                        datasets.push({
+                            label: translations[currentLanguage].chartLabels[componentMetric] || componentMetric,
+                            data: sortedData.map(entry => parseFloat(entry[componentMetric]) || 0),
+                            borderColor: color,
+                            backgroundColor: color.replace('rgb', 'rgba').replace(')', ', 0.1)'), // Lighter background for combined charts
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointRadius: 5,
+                            pointBackgroundColor: color,
+                            pointStyle: pointStyle,
+                            fill: false // Do not fill for multi-line charts unless desired
+                        });
+                    });
+                } else if (metric === 'Gyroscope') {
+                    // Gyroscope X, Y, Z on one chart
+                    ['X', 'Y', 'Z'].forEach((axis) => {
+                        const componentMetric = `Gyroscope ${axis}`;
+                        const color = chartColors[colorIndex % chartColors.length];
+                        const pointStyle = pointStyles[colorIndex % pointStyles.length];
+                        colorIndex++; // Increment for next unique color/style
+
+                        datasets.push({
+                            label: translations[currentLanguage].chartLabels[componentMetric] || componentMetric,
+                            data: sortedData.map(entry => parseFloat(entry[componentMetric]) || 0),
+                            borderColor: color,
+                            backgroundColor: color.replace('rgb', 'rgba').replace(')', ', 0.1)'),
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointRadius: 5,
+                            pointBackgroundColor: color,
+                            pointStyle: pointStyle,
+                            fill: false
+                        });
+                    });
+                } else {
+                    // Single metric charts
+                    const color = chartColors[colorIndex % chartColors.length];
+                    const pointStyle = pointStyles[colorIndex % pointStyles.length];
+                    colorIndex++; // Increment for next unique color/style
+
+                    datasets.push({
+                        label: chartTitle,
+                        data: sortedData.map(entry => parseFloat(entry[metric]) || 0),
+                        borderColor: color,
+                        backgroundColor: color.replace('rgb', 'rgba').replace(')', ', 0.2)'),
+                        borderWidth: 2,
+                        tension: 0.3,
+                        pointRadius: 5,
+                        pointBackgroundColor: color,
+                        pointStyle: pointStyle,
+                        fill: true // Fill for single line charts
+                    });
+                }
+
+                // Skip rendering if no valid datasets were created (e.g., if data is missing for a metric)
+                if (datasets.length === 0) {
+                    return; 
+                }
+
                 if (chartInstances[metric]) {
                     chartInstances[metric].destroy();
                     delete chartInstances[metric];
                 }
 
-                // Determine color and point style based on index
-                const color = chartColors[index % chartColors.length];
-                const pointStyle = pointStyles[index % pointStyles.length];
-
                 const chartDiv = document.createElement('div');
-                // Added h-80 class for a fixed height, making charts consistent
                 chartDiv.className = 'bg-white p-6 rounded-lg shadow-md border border-gray-100 flex flex-col justify-center items-center';
-                chartDiv.innerHTML = `<h3 class="text-xl font-semibold text-blue-700 mb-4 text-center">${translations[currentLanguage].chartLabels[metric] || metric}</h3><canvas id="chart-${metric.replace(/[^a-zA-Z0-9]/g, '-')}" class="w-full h-80"></canvas>`;
+                // Fixed height for consistency
+                chartDiv.innerHTML = `<h3 class="text-xl font-semibold text-blue-700 mb-4 text-center">${chartTitle}</h3><canvas id="chart-${metric.replace(/[^a-zA-Z0-9]/g, '-')}" class="w-full h-80"></canvas>`;
                 chartsContainer.appendChild(chartDiv);
 
                 const ctx = document.getElementById(`chart-${metric.replace(/[^a-zA-Z0-9]/g, '-')}`).getContext('2d');
-                const datasets = sortedData.map(entry => parseFloat(entry[metric]) || 0); 
+                
 
                 chartInstances[metric] = new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: labels,
-                        datasets: [{
-                            label: translations[currentLanguage].chartLabels[metric] || metric,
-                            data: datasets,
-                            borderColor: color, // Dynamic color
-                            backgroundColor: color.replace('rgb', 'rgba').replace(')', ', 0.2)'), // Transparent version for fill
-                            borderWidth: 2,
-                            tension: 0.3,
-                            pointRadius: 5, // Slightly larger points for visibility
-                            pointBackgroundColor: color, // Point color matches line color
-                            pointStyle: pointStyle // Dynamic point style
-                        }]
+                        datasets: datasets // Use the dynamically created datasets array
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false, // Maintain aspect ratio if height is not fixed by CSS
+                        maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                display: false
+                                display: (metric === 'Accélération' || metric === 'Gyroscope'), // Only display legend for combined charts
+                                rtl: (currentLanguage === 'ar'),
+                                labels: {
+                                    font: {
+                                        size: 12
+                                    },
+                                    usePointStyle: true // Show the point style in the legend
+                                }
                             },
                             tooltip: {
                                 callbacks: {
@@ -945,7 +1043,8 @@
                                         return `${translations[currentLanguage].chartLabels['Timestamp']}: ${context[0].label}`;
                                     },
                                     label: function(context) {
-                                        return `${translations[currentLanguage].chartLabels[metric] || metric}: ${context.raw.toLocaleString(currentLanguage)}`;
+                                        // Display the dataset label (e.g., "Acceleration X") and its value
+                                        return `${context.dataset.label}: ${context.raw.toLocaleString(currentLanguage)}`;
                                     }
                                 },
                                 rtl: (currentLanguage === 'ar')
@@ -965,10 +1064,10 @@
                                 }
                             },
                             y: {
-                                beginAtZero: true,
+                                beginAtZero: true, // You might want to adjust this based on your data ranges
                                 title: {
                                     display: true,
-                                    text: translations[currentLanguage].chartLabels[metric] || metric,
+                                    text: chartTitle, // Y-axis title based on the main metric
                                     font: { size: 14, weight: 'bold' }
                                 },
                                 ticks: {
@@ -1094,7 +1193,10 @@
                         valueToDisplay = getFormattedDateForDisplay(valueToDisplay, latestEntry['Heure']);
                     } else if (key === 'Heure') {
                         valueToDisplay = getFormattedTimeForDisplay(latestEntry['Date'], valueToDisplay);
-                    } else if (chartMetrics.includes(key)) {
+                    } else if (
+                        ['Température (°C)', 'Humidité (%)', 'Vibration', 'Temp. NTC (°C)', 'Courant (V Bruts)', 'Batterie (V)'].includes(key) ||
+                        key.startsWith('Accélération') || key.startsWith('Gyroscope')
+                    ) {
                         valueToDisplay = formatNumericValue(valueToDisplay);
                     }
                     formattedData += `${labels[key] || key}: ${valueToDisplay}\n`;
