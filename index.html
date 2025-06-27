@@ -11,6 +11,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jsPDF CDN for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- html2canvas CDN for capturing HTML content -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -109,7 +113,7 @@
     </header>
 
     <!-- Main Content Area -->
-    <main class="container my-8">
+    <main class="container my-8" id="mainContentArea">
         <!-- New wrapper div for main content styling -->
         <div class="bg-white p-8 rounded-lg shadow-xl border border-gray-200">
             <!-- Loading Indicator -->
@@ -214,6 +218,9 @@
                         <button id="exportCsvBtn" class="px-8 py-3 bg-gray-600 text-white font-bold rounded-lg hover:bg-gray-700 transition duration-300 transform hover:scale-105 shadow-lg">
                             تصدير CSV
                         </button>
+                         <button id="exportPdfBtn" class="px-8 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition duration-300 transform hover:scale-105 shadow-lg">
+                            تصدير PDF
+                        </button>
                     </div>
                 </div>
 
@@ -304,8 +311,6 @@
 
     <script>
         // Google Sheets API URL - Ensure this URL is correct and published to 'Anyone' access
-        // Replace 'YOUR_GOOGLE_SHEETS_API_URL_HERE' with your actual deployed Google Apps Script URL.
-        // It should look something like: 'https://script.google.com/macros/s/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/exec'
         const GOOGLE_SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbxO7soutfxNmG1Vy6KvuZ4ZS96qWg9nJouY-vjvKt3_i-kQh4wa3hBbU0-vuqgU8jF02g/exec';
 
         // Global variables
@@ -384,6 +389,7 @@
         const nextPageBtn = document.getElementById('nextPageBtn');
         const pageInfo = document.getElementById('pageInfo');
         const exportCsvBtn = document.getElementById('exportCsvBtn');
+        const exportPdfBtn = document.getElementById('exportPdfBtn'); // New PDF export button
 
         // New elements for threshold settings page
         const thresholdSettingsBtn = document.getElementById('thresholdSettingsBtn');
@@ -394,6 +400,9 @@
         const resetThresholdsBtn = document.getElementById('resetThresholdsBtn');
         const thresholdMessage = document.getElementById('thresholdMessage');
         const thresholdMessageText = document.getElementById('thresholdMessageText');
+
+        // Element to capture for PDF export (the main content div)
+        const mainContentArea = document.getElementById('mainContentArea');
 
 
         // Metrics to display as charts (including Accel & Gyro)
@@ -474,7 +483,7 @@
                 accelGyroBtn: 'تسارع وجيروسكوب',
                 fullTableBtn: 'الجدول الكامل',
                 chartsBtn: 'الرسوم البيانية',
-                settingsBtn: 'العدادات', // New translation
+                settingsBtn: 'العدادات', 
                 loadingText: 'جارٍ تحميل البيانات...',
                 errorTitle: 'خطأ!',
                 errorText: 'تعذر تحميل البيانات. يرجى التأكد من أن مصدر البيانات متاح و Apps Script منشور بشكل صحيح.',
@@ -487,13 +496,14 @@
                 toTimeLabel: 'إلى توقيت:',
                 applyFiltersBtn: 'تطبيق التصفية',
                 resetFiltersBtn: 'إعادة تعيين',
-                exportCsvBtn: 'تصدير CSV', // New translation
+                exportCsvBtn: 'تصدير CSV', 
+                exportPdfBtn: 'تصدير PDF', // New translation
                 noDataFound: 'لا توجد بيانات لعرضها أو لا توجد بيانات مطابقة لمعايير التصفية.',
                 chartsTitle: 'الرسوم البيانية لبيانات المستشعر',
-                chartMetricLabel: 'اختر المقياس:', // New translation
-                minLabel: 'الحد الأدنى:', // New translation
-                avgLabel: 'المتوسط:', // New translation
-                maxLabel: 'الحد الأقصى:', // New translation
+                chartMetricLabel: 'اختر المقياس:', 
+                minLabel: 'الحد الأدنى:', 
+                avgLabel: 'المتوسط:', 
+                maxLabel: 'الحد الأقصى:', 
                 invalidDate: 'تاريخ غير صالح',
                 invalidTime: 'وقت غير صالح',
                 invalidValue: 'غير صالح',
@@ -505,32 +515,33 @@
                 generatingInsight: 'جارٍ توليد الرؤى...',
                 insightError: 'فشل توليد الرؤى. يرجى المحاولة مرة أخرى.',
                 insightFetchError: 'خطأ في جلب الرؤى من الذكاء الاصطناعي',
-                copyInsightBtn: 'نسخ الرؤية', // New translation
-                copiedSuccess: 'تم نسخ الرؤية بنجاح!', // New translation
-                copyFailed: 'فشل النسخ.', // New translation
-                healthNormal: 'حالة البيانات: طبيعية ✅', // New translation
-                healthWarning: 'حالة البيانات: تحذير ⚠️', // New translation
-                healthCritical: 'حالة البيانات: حرج ❌', // New translation
-                healthUnknown: 'حالة البيانات: غير معروف ❓', // New translation
-                totalEntries: 'العدد الإجمالي للإدخالات:', // New translation
-                criticalAlerts: 'تنبيهات حرجة:', // New translation
-                warningAlerts: 'تنبيهات تحذيرية:', // New translation
-                thresholdSettingsTitle: 'إعدادات حدود التنبيه', // New translation
-                minThresholdLabel: 'الحد الأدنى:', // New translation
-                maxThresholdLabel: 'الحد الأقصى:', // New translation
-                warningMinThresholdLabel: 'تحذير (أدنى):', // New translation
-                warningMaxThresholdLabel: 'تحذير (أقصى):', // New translation
-                saveThresholdsBtn: 'حفظ الحدود', // New translation
-                resetThresholdsBtn: 'إعادة تعيين الحدود', // New translation
-                thresholdsSavedSuccess: 'تم حفظ الحدود بنجاح!', // New translation
-                thresholdsSaveError: 'خطأ في حفظ الحدود. يرجى التحقق من القيم.', // New translation
+                copyInsightBtn: 'نسخ الرؤية', 
+                copiedSuccess: 'تم نسخ الرؤية بنجاح!', 
+                copyFailed: 'فشل النسخ.', 
+                healthNormal: 'حالة البيانات: طبيعية ✅', 
+                healthWarning: 'حالة البيانات: تحذير ⚠️', 
+                healthCritical: 'حالة البيانات: حرج ❌', 
+                healthUnknown: 'حالة البيانات: غير معروف ❓', 
+                totalEntries: 'العدد الإجمالي للإدخالات:', 
+                criticalAlerts: 'تنبيهات حرجة:', 
+                warningAlerts: 'تنبيهات تحذيرية:', 
+                thresholdSettingsTitle: 'إعدادات حدود التنبيه', 
+                minThresholdLabel: 'الحد الأدنى:', 
+                maxThresholdLabel: 'الحد الأقصى:', 
+                warningMinThresholdLabel: 'تحذير (أدنى):', 
+                warningMaxThresholdLabel: 'تحذير (أقصى):', 
+                saveThresholdsBtn: 'حفظ الحدود', 
+                resetThresholdsBtn: 'إعادة تعيين الحدود', 
+                thresholdsSavedSuccess: 'تم حفظ الحدود بنجاح!', 
+                thresholdsSaveError: 'خطأ في حفظ الحدود. يرجى التحقق من القيم.', 
+                exportPdfError: 'فشل تصدير PDF.', // New translation
                 chartLabels: {
                     'Timestamp': 'الختم الزمني',
                     'Date': 'التاريخ',
                     'Heure': 'التوقيت',
                     'Température (°C)': 'درجة الحرارة (°C)',
                     'Humidité (%)': 'الرطوبة (%)',
-                    'Accélération': 'التسارع', // Combined label
+                    'Accélération': 'التسارع', 
                     'Accélération X': 'التسارع X',
                     'Accélération Y': 'التسارع Y',
                     'Accélération Z': 'التسارع Z',
@@ -538,7 +549,7 @@
                     'Temp. NTC (°C)': 'درجة حرارة NTC (°C)',
                     'Courant (V Bruts)': 'التيار (فولت خام)',
                     'Batterie (V)': 'البطارية (فولت)',
-                    'Gyroscope': 'الجيروسكوب', // Combined label
+                    'Gyroscope': 'الجيروسكوب', 
                     'Gyroscope X': 'جيروسكوب X',
                     'Gyroscope Y': 'جيروسكوب Y',
                     'Gyroscope Z': 'جيروسكوب Z'
@@ -553,7 +564,7 @@
                 accelGyroBtn: 'Acceleration & Gyro',
                 fullTableBtn: 'Full Table',
                 chartsBtn: 'Charts',
-                settingsBtn: 'Settings', // New translation
+                settingsBtn: 'Settings', 
                 loadingText: 'Loading data...',
                 errorTitle: 'Error!',
                 errorText: 'Failed to load data. Please ensure the data source is available and Apps Script is correctly deployed.',
@@ -566,13 +577,14 @@
                 toTimeLabel: 'To Time:',
                 applyFiltersBtn: 'Apply Filter',
                 resetFiltersBtn: 'Reset',
-                exportCsvBtn: 'Export CSV', // New translation
+                exportCsvBtn: 'Export CSV', 
+                exportPdfBtn: 'Export PDF', // New translation
                 noDataFound: 'No data to display or no data matching filter criteria.',
                 chartsTitle: 'Sensor Data Charts',
-                chartMetricLabel: 'Select Metric:', // New translation
-                minLabel: 'Min:', // New translation
-                avgLabel: 'Avg:', // New translation
-                maxLabel: 'Max:', // New translation
+                chartMetricLabel: 'Select Metric:', 
+                minLabel: 'Min:', 
+                avgLabel: 'Avg:', 
+                maxLabel: 'Max:', 
                 invalidDate: 'Invalid Date',
                 invalidTime: 'Invalid Time',
                 invalidValue: 'Invalid',
@@ -584,32 +596,33 @@
                 generatingInsight: 'Generating insight...',
                 insightError: 'Failed to generate insight. Please try again.',
                 insightFetchError: 'Error fetching insight from AI',
-                copyInsightBtn: 'Copy Insight', // New translation
-                copiedSuccess: 'Insight copied successfully!', // New translation
-                copyFailed: 'Failed to copy.', // New translation
-                healthNormal: 'Data Health: Normal ✅', // New translation
-                healthWarning: 'Data Health: Warning ⚠️', // New translation
-                healthCritical: 'Data Health: Critical ❌', // New translation
-                healthUnknown: 'Data Health: Unknown ❓', // New translation
-                totalEntries: 'Total Entries:', // New translation
-                criticalAlerts: 'Critical Alerts:', // New translation
-                warningAlerts: 'Warning Alerts:', // New translation
-                thresholdSettingsTitle: 'Alert Threshold Settings', // New translation
-                minThresholdLabel: 'Min Threshold:', // New translation
-                maxThresholdLabel: 'Max Threshold:', // New translation
-                warningMinThresholdLabel: 'Warning (Min):', // New translation
-                warningMaxThresholdLabel: 'Warning (Max):', // New translation
-                saveThresholdsBtn: 'Save Thresholds', // New translation
-                resetThresholdsBtn: 'Reset Thresholds', // New translation
-                thresholdsSavedSuccess: 'Thresholds saved successfully!', // New translation
-                thresholdsSaveError: 'Error saving thresholds. Please check values.', // New translation
+                copyInsightBtn: 'Copy Insight', 
+                copiedSuccess: 'Insight copied successfully!', 
+                copyFailed: 'Failed to copy.', 
+                healthNormal: 'Data Health: Normal ✅', 
+                healthWarning: 'Data Health: Warning ⚠️', 
+                healthCritical: 'Data Health: Critical ❌', 
+                healthUnknown: 'Data Health: Unknown ❓', 
+                totalEntries: 'Total Entries:', 
+                criticalAlerts: 'Critical Alerts:', 
+                warningAlerts: 'Warning Alerts:', 
+                thresholdSettingsTitle: 'Alert Threshold Settings', 
+                minThresholdLabel: 'Min Threshold:', 
+                maxThresholdLabel: 'Max Threshold:', 
+                warningMinThresholdLabel: 'Warning (Min):', 
+                warningMaxThresholdLabel: 'Warning (Max):', 
+                saveThresholdsBtn: 'Save Thresholds', 
+                resetThresholdsBtn: 'Reset Thresholds', 
+                thresholdsSavedSuccess: 'Thresholds saved successfully!', 
+                thresholdsSaveError: 'Error saving thresholds. Please check values.', 
+                exportPdfError: 'Failed to export PDF.', // New translation
                 chartLabels: {
                     'Timestamp': 'Timestamp',
                     'Date': 'Date',
                     'Heure': 'Time',
                     'Température (°C)': 'Temperature (°C)',
                     'Humidité (%)': 'Humidity (%)',
-                    'Accélération': 'Acceleration', // Combined label
+                    'Accélération': 'Acceleration', 
                     'Accélération X': 'Acceleration X',
                     'Accélération Y': 'Acceleration Y',
                     'Accélération Z': 'Acceleration Z',
@@ -617,7 +630,7 @@
                     'Temp. NTC (°C)': 'NTC Temp (°C)',
                     'Courant (V Bruts)': 'Current (Raw V)',
                     'Batterie (V)': 'Battery (V)',
-                    'Gyroscope': 'Gyroscope', // Combined label
+                    'Gyroscope': 'Gyroscope', 
                     'Gyroscope X': 'Gyroscope X',
                     'Gyroscope Y': 'Gyroscope Y',
                     'Gyroscope Z': 'Gyroscope Z'
@@ -632,10 +645,10 @@
                 accelGyroBtn: 'Accélération & Gyro',
                 fullTableBtn: 'Tableau Complet',
                 chartsBtn: 'Graphiques',
-                settingsBtn: 'Paramètres', // New translation
+                settingsBtn: 'Paramètres', 
                 loadingText: 'Chargement des données...',
                 errorTitle: 'Erreur!',
-                errorText: 'Échec du chargement des données. Veuillez vous assurer que la source de données est disponible et que le script Apps Script est correctement déployé.',
+                errorText: 'Échec du chargement des données. Veuillez vous assurer que la source de données est disponible et que le script Apps Script est correctement déploye.',
                 latestDataTitle: 'Dernières Données des Capteurs',
                 accelGyroTitle: 'Données d\'Accélération et de Gyroscope',
                 fullTableTitle: 'Tableau Complet des Données avec Filtres',
@@ -645,13 +658,14 @@
                 toTimeLabel: 'Au Temps:',
                 applyFiltersBtn: 'Appliquer le Filtre',
                 resetFiltersBtn: 'Réinitialiser',
-                exportCsvBtn: 'Exporter CSV', // New translation
+                exportCsvBtn: 'Exporter CSV', 
+                exportPdfBtn: 'Exporter PDF', // New translation
                 noDataFound: 'Aucune donnée à afficher ou aucune donnée ne correspond aux critères de filtre.',
                 chartsTitle: 'Graphiques des Données des Capteurs',
-                chartMetricLabel: 'Sélectionner une métrique:', // New translation
-                minLabel: 'Min:', // New translation
-                avgLabel: 'Moy:', // New translation
-                maxLabel: 'Max:', // New translation
+                chartMetricLabel: 'Sélectionner une métrique:', 
+                minLabel: 'Min:', 
+                avgLabel: 'Moy:', 
+                maxLabel: 'Max:', 
                 invalidDate: 'Date Invalide',
                 invalidTime: 'Heure Invalide',
                 invalidValue: 'Invalide',
@@ -662,33 +676,34 @@
                 noDataForInsight: 'Aucune donnée disponible pour générer des perspicacités.',
                 generatingInsight: 'Génération de la perspicacité...',
                 insightError: 'Échec de la génération de la perspicacité. Veuillez réessayer.',
-                insightFetchError: 'Erreur lors de la récupération de la perspicacité de l\'IA',
-                copyInsightBtn: 'Copier la perspicacité', // New translation
-                copiedSuccess: 'Perspicacité copiée avec succès!', // New translation
-                copyFailed: 'Échec de la copie.', // New translation
-                healthNormal: 'État des données: Normal ✅', // New translation
-                healthWarning: 'État des données: Avertissement ⚠️', // New translation
-                healthCritical: 'État des données: Critique ❌', // New translation
-                healthUnknown: 'État des données: Inconnu ❓', // New translation
-                totalEntries: 'Total des entrées:', // New translation
-                criticalAlerts: 'Alertes critiques:', // New translation
-                warningAlerts: 'Alertes d\'avertissement:', // New translation
-                thresholdSettingsTitle: 'Paramètres des seuils d\'alerte', // New translation
-                minThresholdLabel: 'Seuil Min:', // New translation
-                maxThresholdLabel: 'Seuil Max:', // New translation
-                warningMinThresholdLabel: 'Avertissement (Min):', // New translation
-                warningMaxThresholdLabel: 'Avertissement (Max):', // New translation
-                saveThresholdsBtn: 'Enregistrer les seuils', // New translation
-                resetThresholdsBtn: 'Réinitialiser les seuils', // New translation
-                thresholdsSavedSuccess: 'Seuils enregistrés avec succès!', // New translation
-                thresholdsSaveError: 'Erreur lors de l\'enregistrement des seuils. Veuillez vérifier les valeurs.', // New translation
+                insightFetchError: 'Erreur lors de la récupération de la perspicacité من الذكاء الاصطناعي',
+                copyInsightBtn: 'Copier la perspicacité', 
+                copiedSuccess: 'Perspicacité copiée بنجاح!', 
+                copyFailed: 'Échec de la copie.', 
+                healthNormal: 'État des données: Normal ✅', 
+                healthWarning: 'État des données: Avertissement ⚠️', 
+                healthCritical: 'État des données: Critique ❌', 
+                healthUnknown: 'État des données: Inconnu ❓', 
+                totalEntries: 'Total des entrées:', 
+                criticalAlerts: 'Alertes critiques:', 
+                warningAlerts: 'Alertes d\'avertissement:', 
+                thresholdSettingsTitle: 'Paramètres des seuils d\'alerte', 
+                minThresholdLabel: 'Seuil Min:', 
+                maxThresholdLabel: 'Seuil Max:', 
+                warningMinThresholdLabel: 'Avertissement (Min):', 
+                warningMaxThresholdLabel: 'Avertissement (Max):', 
+                saveThresholdsBtn: 'Enregistrer les seuils', 
+                resetThresholdsBtn: 'Réinitialiser les seuils', 
+                thresholdsSavedSuccess: 'Seuils enregistrés avec succès!', 
+                thresholdsSaveError: 'Erreur lors de l\'enregistrement des seuils. Veuillez vérifier les valeurs.', 
+                exportPdfError: 'Échec de l\'exportation PDF.', // New translation
                 chartLabels: {
                     'Timestamp': 'Horodatage',
                     'Date': 'Date',
                     'Heure': 'Heure',
                     'Température (°C)': 'Température (°C)',
                     'Humidité (%)': 'Humidité (%)',
-                    'Accélération': 'Accélération', // Combined label
+                    'Accélération': 'Accélération', 
                     'Accélération X': 'Accélération X',
                     'Accélération Y': 'Accélération Y',
                     'Accélération Z': 'Accélération Z',
@@ -696,7 +711,7 @@
                     'Temp. NTC (°C)': 'Temp. NTC (°C)',
                     'Courant (V Bruts)': 'Courant (V bruts)',
                     'Batterie (V)': 'Batterie (V)',
-                    'Gyroscope': 'Gyroscope', // Combined label
+                    'Gyroscope': 'Gyroscope', 
                     'Gyroscope X': 'Gyroscope X',
                     'Gyroscope Y': 'Gyroscope Y',
                     'Gyroscope Z': 'Gyroscope Z'
@@ -836,16 +851,6 @@
         async function fetchData() {
             loadingIndicator.classList.remove('hidden');
             errorMessageDiv.classList.add('hidden');
-
-            // Check if the API URL is still the placeholder
-            if (GOOGLE_SHEETS_API_URL === 'YOUR_GOOGLE_SHEETS_API_URL_HERE') {
-                const errorMsg = 'Error: GOOGLE_SHEETS_API_URL is still the placeholder. Please replace it with your actual Google Apps Script URL.';
-                console.error(errorMsg);
-                errorTextSpan.textContent = translations[currentLanguage].errorText + ` (${errorMsg})`;
-                errorMessageDiv.classList.remove('hidden');
-                loadingIndicator.classList.add('hidden');
-                return; // Stop execution if URL is not set
-            }
 
             try {
                 const response = await fetch(GOOGLE_SHEETS_API_URL); // Fetch all data
@@ -1705,280 +1710,379 @@
             }, 5000);
         }
 
+        /**
+         * Exports the current active content section to a PDF file.
+         */
+        async function exportToPDF() {
+            try {
+                // Determine which section is currently visible
+                const activeSection = document.querySelector('.page-content:not(.hidden)');
+                if (!activeSection) {
+                    alert('No content to export to PDF.');
+                    return;
+                }
+
+                // If the active section is 'charts', we need to capture the canvas directly
+                // to ensure high-quality chart image in the PDF.
+                if (activeSection.id === 'charts' && chartInstance) {
+                    const chartCanvas = document.getElementById('mainChartCanvas');
+                    if (chartCanvas) {
+                        const imgData = chartCanvas.toDataURL('image/png');
+                        const { jsPDF } = window.jspdf;
+                        const pdf = new jsPDF('p', 'mm', 'a4'); // 'p' for portrait, 'mm' for millimeters, 'a4' for A4 size
+
+                        const imgWidth = 200; // A4 width approx 210mm, leave some margin
+                        const pageHeight = pdf.internal.pageSize.height;
+                        const imgHeight = (chartCanvas.height * imgWidth) / chartCanvas.width;
+                        let heightLeft = imgHeight;
+
+                        let position = 10; // Initial Y position for image
+
+                        pdf.addImage(imgData, 'PNG', 5, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+
+                        while (heightLeft >= 0) {
+                            position = heightLeft - imgHeight + 10;
+                            pdf.addPage();
+                            pdf.addImage(imgData, 'PNG', 5, position, imgWidth, imgHeight);
+                            heightLeft -= pageHeight;
+                        }
+                        pdf.save('sensor_chart.pdf');
+                        return;
+                    }
+                }
+
+                // For other sections, use html2canvas to capture the active section
+                // and then add it to PDF.
+                const canvas = await html2canvas(activeSection, {
+                    scale: 2, // Increase scale for better resolution
+                    logging: false, // Disable logging
+                    useCORS: true // Enable CORS for images if any
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4'); // 'p' for portrait, 'mm' for millimeters, 'a4' for A4 size
+
+                const imgWidth = 200; // A4 width approx 210mm, leave some margin
+                const pageHeight = pdf.internal.pageSize.height;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+
+                let position = 10; // Initial Y position for image
+
+                pdf.addImage(imgData, 'PNG', 5, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight + 10;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 5, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                const filename = `${activeSection.id}_report.pdf`;
+                pdf.save(filename);
+
+            } catch (error) {
+                console.error('Error exporting to PDF:', error);
+                alert(translations[currentLanguage].exportPdfError + `\n${error.message}`);
+            }
+        }
+
 
         /**
-         * Updates all UI elements based on the selected language.
+         * Toggles auto-refresh functionality.
+         */
+        function toggleAutoRefresh() {
+            if (autoRefreshIntervalId) {
+                // If auto-refresh is active, stop it
+                clearInterval(autoRefreshIntervalId);
+                autoRefreshIntervalId = null;
+                autoRefreshToggleBtn.textContent = translations[currentLanguage].autoRefreshOff;
+                autoRefreshToggleBtn.classList.remove('bg-green-500');
+                autoRefreshToggleBtn.classList.add('bg-red-500');
+            } else {
+                // If auto-refresh is inactive, start it
+                // Fetch data every 15 seconds
+                autoRefreshIntervalId = setInterval(fetchData, 15000); 
+                autoRefreshToggleBtn.textContent = translations[currentLanguage].autoRefreshOn;
+                autoRefreshToggleBtn.classList.remove('bg-red-500');
+                autoRefreshToggleBtn.classList.add('bg-green-500');
+            }
+        }
+        
+        /**
+         * Translates all text content in the UI based on the selected language.
          * @param {string} lang - The language code ('ar', 'en', 'fr').
          */
         function updateUIForLanguage(lang) {
             currentLanguage = lang;
             const t = translations[currentLanguage];
 
-            document.body.style.direction = (lang === 'ar') ? 'rtl' : 'ltr';
-            document.body.style.textAlign = (lang === 'ar') ? 'right' : 'left';
-
+            // Update header and navigation buttons
             dashboardTitle.textContent = t.dashboardTitle;
-            document.title = t.dashboardTitle;
+            document.getElementById('latestDataBtn').textContent = t.latestDataBtn;
+            document.getElementById('accelGyroBtn').textContent = t.accelGyroBtn;
+            document.getElementById('fullTableBtn').textContent = t.fullTableBtn;
+            document.getElementById('chartsBtn').textContent = t.chartsBtn;
+            document.getElementById('thresholdSettingsBtn').textContent = t.settingsBtn;
 
-            latestDataBtn.textContent = t.latestDataBtn;
-            accelGyroBtn.textContent = t.accelGyroBtn;
-            fullTableBtn.textContent = t.fullTableBtn;
-            chartsBtn.textContent = t.chartsBtn;
-            thresholdSettingsBtn.textContent = t.settingsBtn; // Update new settings button
-
-            loadingText.textContent = t.loadingText;
-            errorTitle.textContent = t.errorTitle;
-            errorTextSpan.textContent = t.errorText;
-
+            // Update main content titles
             latestDataTitle.textContent = t.latestDataTitle;
             accelGyroTitle.textContent = t.accelGyroTitle;
             fullTableTitle.textContent = t.fullTableTitle;
             chartsTitle.textContent = t.chartsTitle;
-            thresholdSettingsTitle.textContent = t.thresholdSettingsTitle; // Update new settings page title
+            thresholdSettingsTitle.textContent = t.thresholdSettingsTitle;
 
+            // Update filter labels and buttons
             fromDateLabel.textContent = t.fromDateLabel;
             toDateLabel.textContent = t.toDateLabel;
             fromTimeLabel.textContent = t.fromTimeLabel;
             toTimeLabel.textContent = t.toTimeLabel;
             applyFiltersBtn.textContent = t.applyFiltersBtn;
             resetFiltersBtn.textContent = t.resetFiltersBtn;
-            exportCsvBtn.textContent = t.exportCsvBtn; // Update CSV button text
-            
-            noDataFoundDiv.textContent = t.noDataFound;
-            
-            autoRefreshToggleBtn.textContent = autoRefreshIntervalId ? t.autoRefreshOn : t.autoRefreshOff;
+            exportCsvBtn.textContent = t.exportCsvBtn;
+            exportPdfBtn.textContent = t.exportPdfBtn;
 
+            // Update loading and error messages
+            loadingText.textContent = t.loadingText;
+            errorTitle.textContent = t.errorTitle;
+            errorTextSpan.textContent = t.errorText;
+            noDataFoundDiv.textContent = t.noDataFound;
+
+            // Update chart labels and stats
+            chartMetricSelect.labels = t.chartMetricLabel; // This might not work directly, adjust if needed
+            minVal.textContent = `${t.minLabel} N/A`; // Reset and update on renderChart
+            avgVal.textContent = `${t.avgLabel} N/A`;
+            maxVal.textContent = `${t.maxLabel} N/A`;
+            chartMetricSelect.labels[0] = t.chartMetricLabel;
+
+
+            // Update auto-refresh button text
+            if (autoRefreshIntervalId) {
+                autoRefreshToggleBtn.textContent = t.autoRefreshOn;
+            } else {
+                autoRefreshToggleBtn.textContent = t.autoRefreshOff;
+            }
+
+            // Update LLM insight elements
             generateInsightBtn.textContent = t.generateInsightBtn;
             insightCardTitle.textContent = t.insightCardTitle;
             insightLoadingText.textContent = t.generatingInsight;
-            copyInsightBtn.textContent = t.copyInsightBtn; // Update copy button text
+            copyInsightBtn.textContent = t.copyInsightBtn;
 
-            saveThresholdsBtn.textContent = t.saveThresholdsBtn; // Update new save button
-            resetThresholdsBtn.textContent = t.resetThresholdsBtn; // Update new reset button
+            // Update threshold settings buttons
+            saveThresholdsBtn.textContent = t.saveThresholdsBtn;
+            resetThresholdsBtn.textContent = t.resetThresholdsBtn;
 
-            // Update pagination button texts
-            prevPageBtn.textContent = t.prevPage;
-            nextPageBtn.textContent = t.nextPage;
-            
-            // Update chart labels and dropdown
-            populateChartMetricSelect(); // Re-populate with translated labels
-            chartMetricSelect.dataset.selected = chartMetricSelect.value; // Store current selection
-            chartMetricLabel.textContent = t.chartMetricLabel; // Update dropdown label
+            // Adjust text alignment and direction based on language
+            const body = document.body;
+            if (lang === 'ar') {
+                body.style.direction = 'rtl';
+                body.style.textAlign = 'right';
+                document.querySelectorAll('th').forEach(th => th.style.textAlign = 'right');
+            } else {
+                body.style.direction = 'ltr';
+                body.style.textAlign = 'left';
+                document.querySelectorAll('th').forEach(th => th.style.textAlign = 'left');
+            }
 
-            // Re-render relevant sections to apply new language formatting and filters
+            // Re-render current page to apply language changes to dynamic content
             const activePageId = document.querySelector('.page-content:not(.hidden)').id;
-            const filteredData = getFilteredSensorData(); // Get filtered data based on current UI state
+            const filteredData = getFilteredSensorData(); // Get filtered data for active page if needed
+
             if (activePageId === 'latestData') {
-                renderLatestData(sensorData); // Latest data always uses full data to find last entry
+                renderLatestData(sensorData);
             } else if (activePageId === 'fullTable') {
-                renderFullTable(filteredData); // Re-render table with filtered data (maintaining page)
+                // Re-render table headers and content
+                tableHeaderRow.innerHTML = ''; // Clear existing headers before re-rendering
+                const headers = Object.keys(sensorData.length > 0 ? sensorData[0] : {});
+                headers.forEach(header => {
+                    const th = document.createElement('th');
+                    th.className = 'px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right'; // Assume RTL initially for header, then adjust with body style
+                    th.textContent = t.chartLabels[header] || header;
+                    tableHeaderRow.appendChild(th);
+                });
+                renderFullTable(filteredData);
             } else if (activePageId === 'charts') {
-                // Ensure the selected metric in dropdown is preserved, then render that chart
+                populateChartMetricSelect(); // Re-populate dropdown with translated options
                 const selectedMetric = chartMetricSelect.value || chartMetrics[0];
                 renderChart(selectedMetric, filteredData);
             } else if (activePageId === 'accelGyroData') {
-                renderAccelGyroData(sensorData); // Accel/Gyro also uses full data to find last entry
+                renderAccelGyroData(sensorData);
             } else if (activePageId === 'thresholdSettings') {
-                renderThresholdSettings(); // Re-render settings to show updated values
+                renderThresholdSettings();
             }
 
-            // Update min/avg/max labels
-            // Check if minVal.textContent has a numerical value before parsing
-            if (minVal.textContent && minVal.textContent.split(': ')[1]) {
-                minVal.textContent = `${t.minLabel} ${formatNumericValue(parseFloat(minVal.textContent.split(': ')[1]))}`;
-            } else {
-                minVal.textContent = `${t.minLabel} N/A`;
-            }
-            if (avgVal.textContent && avgVal.textContent.split(': ')[1]) {
-                avgVal.textContent = `${t.avgLabel} ${formatNumericValue(parseFloat(avgVal.textContent.split(': ')[1]))}`;
-            } else {
-                avgVal.textContent = `${t.avgLabel} N/A`;
-            }
-            if (maxVal.textContent && maxVal.textContent.split(': ')[1]) {
-                maxVal.textContent = `${t.maxLabel} ${formatNumericValue(parseFloat(maxVal.textContent.split(': ')[1]))}`;
-            } else {
-                maxVal.textContent = `${t.maxLabel} N/A`;
-            }
-
-
-            updateCurrentDateTimeDisplay();
+            // Update pagination text
+            const totalPages = Math.ceil(getFilteredSensorData().length / itemsPerPage);
+            pageInfo.textContent = t.pageInfo(currentPage, totalPages);
         }
 
-        /**
-         * Toggles the auto-refresh functionality.
-         */
-        function toggleAutoRefresh() {
-            if (autoRefreshIntervalId) {
-                clearInterval(autoRefreshIntervalId);
-                autoRefreshIntervalId = null;
-                autoRefreshToggleBtn.textContent = translations[currentLanguage].autoRefreshOff;
-                autoRefreshToggleBtn.classList.remove('bg-green-500', 'hover:bg-green-400');
-                autoRefreshToggleBtn.classList.add('bg-red-500', 'hover:bg-red-400');
-            } else {
-                autoRefreshIntervalId = setInterval(() => {
-                    fetchData(); // Fetch new data
-                }, 30000); // 30 seconds
-                autoRefreshToggleBtn.textContent = translations[currentLanguage].autoRefreshOn;
-                autoRefreshToggleBtn.classList.remove('bg-red-500', 'hover:bg-red-400');
-                autoRefreshToggleBtn.classList.add('bg-green-500', 'hover:bg-green-400');
-                fetchData(); // Fetch data immediately when starting
-            }
-        }
-
-        /**
-         * Generates an insight from the latest sensor data using the Gemini API.
-         */
+        // Functions for LLM insight
         async function generateInsight() {
             if (sensorData.length === 0) {
-                insightCard.classList.remove('hidden');
                 insightContent.textContent = translations[currentLanguage].noDataForInsight;
+                insightCard.classList.remove('hidden');
                 return;
             }
 
-            insightContent.textContent = '';
-            insightLoadingText.textContent = translations[currentLanguage].generatingInsight;
             insightLoading.classList.remove('hidden');
-            insightCard.classList.remove('hidden');
-            generateInsightBtn.disabled = true;
-            generateInsightBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            insightLoadingText.textContent = translations[currentLanguage].generatingInsight;
+            insightContent.textContent = '';
+            insightCard.classList.remove('hidden'); // Show card during loading
 
-            const latestEntry = sensorData[sensorData.length - 1];
-            let formattedData = "";
-            const labels = translations[currentLanguage].chartLabels;
+            const latestData = sensorData[sensorData.length - 1];
+            const dataToAnalyze = {
+                temperature: latestData['Température (°C)'],
+                humidity: latestData['Humidité (%)'],
+                vibration: latestData['Vibration'],
+                ntcTemp: latestData['Temp. NTC (°C)'],
+                current: latestData['Courant (V Bruts)'],
+                battery: latestData['Batterie (V)'],
+                accelX: latestData['Accélération X'],
+                accelY: latestData['Accélération Y'],
+                accelZ: latestData['Accélération Z'],
+                gyroX: latestData['Gyroscope X'],
+                gyroY: latestData['Gyroscope Y'],
+                gyroZ: latestData['Gyroscope Z'],
+                timestamp: `${latestData['Date']} ${latestData['Heure']}`
+            };
 
-            for (const key in latestEntry) {
-                if (latestEntry.hasOwnProperty(key)) {
-                    let valueToDisplay = latestEntry[key];
-                    if (key === 'Date') {
-                        valueToDisplay = getFormattedDateForDisplay(valueToDisplay, latestEntry['Heure']);
-                    } else if (key === 'Heure') {
-                        valueToDisplay = getFormattedTimeForDisplay(latestEntry['Date'], valueToDisplay);
-                    } else if (
-                        ['Température (°C)', 'Humidité (%)', 'Vibration', 'Temp. NTC (°C)', 'Courant (V Bruts)', 'Batterie (V)'].includes(key) ||
-                        key.startsWith('Accélération') || key.startsWith('Gyroscope')
-                    ) {
-                        valueToDisplay = formatNumericValue(valueToDisplay);
-                    }
-                    formattedData += `${labels[key] || key}: ${valueToDisplay}\n`;
-                }
-            }
-
-            const prompt = `Analyze the following sensor data and provide a concise summary of the latest readings. Highlight any unusual values or noticeable trends. Ensure the response is in ${currentLanguage === 'ar' ? 'Arabic' : (currentLanguage === 'en' ? 'English' : 'French')}.
-
-Latest Sensor Data:
-${formattedData}
-
-Provide insights in a clear, easy-to-understand paragraph.`;
-
-            let chatHistory = [];
-            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-            const payload = { contents: chatHistory };
-            const apiKey = ""; // If you want to use models other than gemini-2.0-flash or imagen-3.0-generate-002, provide an API key here. Otherwise, leave this as-is.
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+            const prompt = `Based on the following sensor data, provide a concise and insightful summary of the current status of the system. Highlight any anomalies, trends, or critical readings. Also, mention the overall health of the system based on these readings. Data: ${JSON.stringify(dataToAnalyze)}.
+            Use a helpful and professional tone. Keep it within 3-4 sentences.`;
 
             try {
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                const result = await response.json();
+                
+                if (!response.ok) {
+                    const errorResponse = await response.json();
+                    throw new Error(`API error: ${response.status} - ${JSON.stringify(errorResponse)}`);
+                }
 
+                const result = await response.json();
+                
                 if (result.candidates && result.candidates.length > 0 &&
                     result.candidates[0].content && result.candidates[0].content.parts &&
                     result.candidates[0].content.parts.length > 0) {
-                    const text = result.candidates[0].content.parts[0].text;
-                    insightContent.textContent = text;
+                    const insightText = result.candidates[0].content.parts[0].text;
+                    insightContent.textContent = insightText;
                 } else {
                     insightContent.textContent = translations[currentLanguage].insightError;
-                    console.error("Gemini API response structure unexpected:", result);
+                    console.error('Unexpected API response structure:', result);
                 }
             } catch (error) {
-                insightContent.textContent = translations[currentLanguage].insightFetchError + `: ${error.message}`;
-                console.error("Error calling Gemini API:", error);
+                console.error('Error fetching insight from AI:', error);
+                insightContent.textContent = translations[currentLanguage].insightFetchError;
             } finally {
                 insightLoading.classList.add('hidden');
-                generateInsightBtn.disabled = false;
-                generateInsightBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
         }
 
-        /**
-         * Copies the insight text to the clipboard.
-         */
-        function copyInsight() {
-            const textToCopy = insightContent.textContent;
-            if (textToCopy) {
-                // Use the older document.execCommand('copy') for broader iframe compatibility
-                const textArea = document.createElement('textarea');
-                textArea.value = textToCopy;
-                document.body.appendChild(textArea);
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                    alert(translations[currentLanguage].copiedSuccess); // Use alert for simplicity, could be custom modal
-                } catch (err) {
-                    console.error('Failed to copy text: ', err);
-                    alert(translations[currentLanguage].copyFailed); // Use alert for simplicity
-                }
-                document.body.removeChild(textArea);
-            }
-        }
-
-        /**
-         * Exports the current filtered data from the table to a CSV file.
-         */
         function exportToCSV() {
-            const dataToExport = getFilteredSensorData(); // Get data based on current filters
-
-            if (dataToExport.length === 0) {
+            if (sensorData.length === 0) {
                 alert(translations[currentLanguage].noDataFound);
                 return;
             }
 
-            const headers = Object.keys(dataToExport[0]);
+            const filteredData = getFilteredSensorData(); // Use filtered data for CSV export
+            if (filteredData.length === 0) {
+                alert(translations[currentLanguage].noDataFound);
+                return;
+            }
+
+            // Get headers from the first object, and map them to translated headers
+            const headers = Object.keys(filteredData[0]);
             const translatedHeaders = headers.map(header => translations[currentLanguage].chartLabels[header] || header);
+            
+            let csvContent = translatedHeaders.join(',') + '\n';
 
-            let csv = translatedHeaders.join(',') + '\n'; // CSV header
-
-            dataToExport.forEach(row => {
+            filteredData.forEach(row => {
                 const rowValues = headers.map(header => {
-                    let cellValue = row[header];
+                    let value = row[header];
                     if (header === 'Date') {
-                        cellValue = getFormattedDateForDisplay(cellValue, row['Heure']);
+                        value = getFormattedDateForDisplay(value, row['Heure']);
                     } else if (header === 'Heure') {
-                        cellValue = getFormattedTimeForDisplay(row['Date'], cellValue);
-                    } else if (chartMetrics.includes(header) || 
-                                (header.startsWith('Accélération') && chartMetrics.includes('Accélération')) ||
-                                (header.startsWith('Gyroscope') && chartMetrics.includes('Gyroscope'))
-                            ) {
-                        cellValue = formatNumericValue(cellValue);
+                        value = getFormattedTimeForDisplay(row['Date'], value);
+                    } else if (typeof value === 'number' || (typeof value === 'string' && !isNaN(parseFloat(value)))) {
+                        value = formatNumericValue(value);
                     }
-                    // Escape commas and double quotes for CSV format
-                    return `"${String(cellValue).replace(/"/g, '""')}"`;
+                    // Handle commas within values by enclosing them in double quotes
+                    if (typeof value === 'string' && value.includes(',')) {
+                        value = `"${value.replace(/"/g, '""')}"`; // Escape double quotes and enclose
+                    }
+                    return value;
                 });
-                csv += rowValues.join(',') + '\n';
+                csvContent += rowValues.join(',') + '\n';
             });
 
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.setAttribute('download', 'sensor_data_filtered.csv');
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            if (link.download !== undefined) { // Feature detection
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'sensor_data.csv');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
         }
 
+        // Function to copy insight to clipboard
+        function copyInsight() {
+            const insightText = insightContent.textContent;
+            if (!insightText) {
+                return;
+            }
+
+            // Use document.execCommand('copy') as navigator.clipboard.writeText() might not work in some iframe environments
+            const textArea = document.createElement('textarea');
+            textArea.value = insightText;
+            textArea.style.position = 'fixed'; // Prevents scrolling to bottom
+            textArea.style.opacity = '0'; // Make it invisible
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showThresholdMessage(translations[currentLanguage].copiedSuccess, 'success');
+                } else {
+                    showThresholdMessage(translations[currentLanguage].copyFailed, 'error');
+                }
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                showThresholdMessage(translations[currentLanguage].copyFailed, 'error');
+            } finally {
+                document.body.removeChild(textArea);
+            }
+        }
 
         // Event Listeners
         document.addEventListener('DOMContentLoaded', () => {
+            // Initial UI update before anything else, so translations are applied early
+            updateUIForLanguage(currentLanguage);
+
             fetchData(); // Fetch all data on page load
             showPage('latestData'); // Show the latest data page by default
 
             populateChartMetricSelect(); // Populate chart dropdown on load
 
-            updateUIForLanguage(currentLanguage); // Initial call to update UI for default language
-            toggleAutoRefresh(); // Start auto-refresh by default
+            // Start auto-refresh by default AFTER toggleAutoRefresh is defined
+            toggleAutoRefresh();
 
             setInterval(updateCurrentDateTimeDisplay, 1000); // Update current date and time every second 
 
@@ -2003,6 +2107,7 @@ Provide insights in a clear, easy-to-understand paragraph.`;
             applyFiltersBtn.addEventListener('click', applyFilters); // Client-side filter application
             resetFiltersBtn.addEventListener('click', resetFilters); // Client-side filter reset
             exportCsvBtn.addEventListener('click', exportToCSV); // New event listener for CSV export
+            exportPdfBtn.addEventListener('click', exportToPDF); // New event listener for PDF export
 
             // Pagination event listeners
             prevPageBtn.addEventListener('click', () => {
