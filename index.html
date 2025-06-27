@@ -13,8 +13,6 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6; /* لون خلفية خفيف */
-            display: flex; /* استخدام فليكس بوكس لتحديد تخطيط الشريط الجانبي والمحتوى الرئيسي */
-            flex-direction: row; /* الشريط الجانبي والمحتوى في صف واحد */
         }
         /* تصميم مخصص لأزرار الفلاتر والأزرار العامة */
         button {
@@ -141,24 +139,24 @@
             stroke-width: 0;
         }
 
-        /* تصميم القائمة الجانبية (الآن على اليسار) */
+        /* تصميم القائمة الجانبية */
         .sidebar {
             width: 250px;
             background-color: #374151; /* لون رمادي داكن للخلفية */
             color: #fff;
             position: fixed;
             top: 0;
-            left: -250px; /* مخفية في البداية على اليسار */
+            right: -250px; /* مخفية في البداية */
             height: 100%;
             padding-top: 4rem; /* مسافة للرأس */
-            transition: left 0.3s ease-in-out; /* انتقال للجانب الأيسر */
+            transition: right 0.3s ease-in-out;
             z-index: 50; /* فوق المحتوى ولكن تحت التلميح */
-            box-shadow: 2px 0 5px rgba(0,0,0,0.2); /* ظل لليمين */
+            box-shadow: -2px 0 5px rgba(0,0,0,0.2);
             display: flex;
             flex-direction: column;
         }
         .sidebar.open {
-            left: 0; /* تظهر عند الفتح على اليسار */
+            right: 0; /* تظهر عند الفتح */
         }
         .sidebar ul {
             list-style: none;
@@ -179,7 +177,7 @@
         .sidebar .close-btn {
             position: absolute;
             top: 1rem;
-            right: 1rem; /* زر الإغلاق على اليمين في القائمة الجانبية اليسرى */
+            left: 1rem;
             background: none;
             border: none;
             color: #fff;
@@ -188,11 +186,11 @@
             display: none; /* مخفي افتراضياً، يظهر على الجوال */
         }
 
-        /* زر الهامبرغر (الآن على اليسار) */
+        /* زر الهامبرغر */
         .hamburger-btn {
             position: fixed;
             top: 1rem;
-            left: 1rem; /* زر الهامبرغر على اليسار */
+            right: 1rem;
             z-index: 60; /* فوق الشريط الجانبي */
             background-color: #4f46e5;
             color: white;
@@ -206,7 +204,7 @@
         }
 
         /* إخفاء زر الهامبرغر والقائمة الجانبية على الشاشات الكبيرة */
-        @media (min-width: 1024px) { /* نقطة توقف للشاشات الكبيرة */
+        @media (min-width: 1024px) { /* breakpoint for large screens */
             .sidebar {
                 position: static; /* ليست ثابتة */
                 width: 200px; /* عرض ثابت على الشاشات الكبيرة */
@@ -215,8 +213,7 @@
                 box-shadow: none;
                 background-color: transparent; /* خلفية شفافة */
                 display: block; /* مرئية دائمًا */
-                margin-right: 1.5rem; /* مسافة عن المحتوى الرئيسي على اليمين */
-                order: -1; /* لجعلها تظهر قبل المحتوى الرئيسي في تخطيط الفليكس بوكس */
+                margin-left: 1.5rem; /* مسافة عن المحتوى الرئيسي */
             }
             .sidebar ul li a {
                 color: #4b5563; /* لون نص داكن على الخلفية الفاتحة */
@@ -231,26 +228,10 @@
             .sidebar .close-btn {
                 display: none; /* إخفاء زر الإغلاق */
             }
-
-            /* Adjust main content for large screens */
-            main {
-                margin-left: 1.5rem; /* لتوفير مساحة بجانب الشريط الجانبي الأيسر */
-                flex-grow: 1; /* للسماح للمحتوى الرئيسي بالتوسع */
-            }
-        }
-
-        /* على الشاشات الصغيرة، المحتوى الرئيسي يبدأ بعد زر الهامبرغر */
-        @media (max-width: 1023px) {
-            body {
-                flex-direction: column; /* المحتوى يكون عموديًا على الشاشات الصغيرة */
-            }
-            main {
-                padding-top: 4rem; /* لتجنب تداخل المحتوى مع زر الهامبرغر */
-            }
         }
     </style>
 </head>
-<body class="p-4 bg-gray-100 min-h-screen">
+<body class="p-4 bg-gray-100 flex min-h-screen">
 
     <!-- زر الهامبرغر (يظهر على الجوال فقط) -->
     <button id="hamburgerBtn" class="hamburger-btn lg:hidden">
