@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="en"> <!-- Changed default language to English -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم بيانات المستشعر</title>
+    <title>Sensor Data Dashboard</title> <!-- Updated title for English -->
     <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
     <!-- Tailwind CSS CDN -->
@@ -18,8 +18,8 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            direction: rtl; /* Default to RTL for Arabic initially, will be changed by JS for LTR languages */
-            text-align: right; /* Default to right for Arabic, will be changed by JS for LTR languages */
+            direction: ltr; /* Default to LTR for English initially */
+            text-align: left; /* Default to left for English initially */
             background: linear-gradient(to bottom right, #e0f2fe, #eef2ff); /* from-blue-50 to-indigo-50 equivalent */
             min-height: 100vh;
             overflow-x: hidden; /* Prevent horizontal scroll when sidebar is open */
@@ -69,35 +69,40 @@
             box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
         }
 
-        /* Sidebar specific styles */
+        /* Sidebar specific styles - Now positioned on the left */
         #sidebar {
             width: 250px; /* Default width for sidebar */
             transition: transform 0.3s ease-in-out;
-            transform: translateX(250px); /* Hidden by default for RTL */
+            left: 0; /* Position sidebar on the left */
+            transform: translateX(-250px); /* Hidden by default (off-screen to the left) */
             z-index: 50; /* Above main content */
+            /* For desktop, make it relative and always visible */
+            @media (min-width: 768px) {
+                position: relative; 
+                transform: translateX(0); /* Always visible on desktop */
+                flex-shrink: 0; /* Prevent sidebar from shrinking */
+            }
         }
-        #sidebar.open-ltr {
-            transform: translateX(0); /* Visible for LTR */
-        }
-        #sidebar.open-rtl {
-            transform: translateX(0); /* Visible for RTL */
-        }
-        #mainContentWrapper {
-            margin-right: 0; /* Default for RTL */
-            transition: margin-right 0.3s ease-in-out, margin-left 0.3s ease-in-out;
-        }
-        html[dir="ltr"] #sidebar {
-            transform: translateX(-250px); /* Hidden by default for LTR */
-        }
-        html[dir="ltr"] #sidebar.open-ltr {
-            transform: translateX(0); /* Visible for LTR */
-        }
-        html[dir="ltr"] #mainContentWrapper.shifted-ltr {
-            margin-left: 250px;
+        /* Classes for sidebar being open on mobile */
+        #sidebar.open-ltr, #sidebar.open-rtl {
+            transform: translateX(0); /* Visible for both LTR and RTL when open */
         }
 
-        html[dir="rtl"] #mainContentWrapper.shifted-rtl {
-            margin-right: 250px;
+        #mainContentWrapper {
+            flex: 1; /* Take up remaining space */
+            width: 100%; /* Important for flex-1 to work well */
+            transition: margin-left 0.3s ease-in-out; /* Transition for margin shift */
+            /* No fixed margins here for desktop, flex handles it */
+        }
+
+        /* Mobile-specific shifts for main content when sidebar is open */
+        html[dir="rtl"] #mainContentWrapper.shifted-rtl-mobile-open {
+            margin-left: 250px; /* Shift content to the right for RTL when sidebar is open on mobile */
+            margin-right: 0; /* Ensure no right margin */
+        }
+        html[dir="ltr"] #mainContentWrapper.shifted-ltr-mobile-open {
+            margin-left: 250px; /* Shift content to the right for LTR when sidebar is open on mobile */
+            margin-right: 0; /* Ensure no right margin */
         }
 
         /* Overlay for mobile when sidebar is open */
@@ -109,44 +114,48 @@
             bottom: 0;
             background-color: rgba(0, 0, 0, 0.5);
             z-index: 40;
+            opacity: 0; /* Start hidden */
             transition: opacity 0.3s ease-in-out;
+        }
+        #sidebarOverlay.show {
+            opacity: 1; /* Fade in */
         }
     </style>
 </head>
 <body class="text-gray-800">
     <!-- Sidebar Overlay for mobile -->
-    <div id="sidebarOverlay" class="hidden md:hidden opacity-0"></div>
+    <div id="sidebarOverlay" class="hidden md:hidden"></div>
 
     <!-- Overall Wrapper for Sidebar and Main Content -->
     <div class="flex">
         <!-- Sidebar -->
-        <nav id="sidebar" class="fixed top-0 right-0 h-full bg-gradient-to-br from-blue-700 to-indigo-800 text-white p-6 shadow-xl space-y-4 md:relative md:translate-x-0">
+        <nav id="sidebar" class="fixed top-0 left-0 h-full bg-gradient-to-br from-blue-700 to-indigo-800 text-white p-6 shadow-xl space-y-4">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">القائمة</h2>
+                <h2 class="text-2xl font-bold">Menu</h2>
                 <button id="closeSidebarBtn" class="md:hidden text-white hover:text-gray-200 focus:outline-none">
                     <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
             </div>
-            <button id="latestDataBtn" class="nav-button block w-full text-right px-4 py-2 text-lg rounded-md font-semibold text-white bg-blue-600 hover:bg-blue-500 transition duration-300 transform hover:scale-105 shadow-md" data-target="latestData">
-                البيانات الأخيرة
+            <button id="latestDataBtn" class="nav-button block w-full text-left px-4 py-2 text-lg rounded-md font-semibold text-white bg-blue-600 hover:bg-blue-500 transition duration-300 transform hover:scale-105 shadow-md" data-target="latestData">
+                Latest Data
             </button>
-            <button id="accelGyroBtn" class="nav-button block w-full text-right px-4 py-2 text-lg rounded-md font-semibold text-white bg-blue-600 hover:bg-blue-500 transition duration-300 transform hover:scale-105 shadow-md" data-target="accelGyroData">
-                تسارع وجيروسكوب
+            <button id="accelGyroBtn" class="nav-button block w-full text-left px-4 py-2 text-lg rounded-md font-semibold text-white bg-blue-600 hover:bg-blue-500 transition duration-300 transform hover:scale-105 shadow-md" data-target="accelGyroData">
+                Acceleration & Gyro
             </button>
-            <button id="fullTableBtn" class="nav-button block w-full text-right px-4 py-2 text-lg rounded-md font-semibold text-white bg-blue-600 hover:bg-blue-500 transition duration-300 transform hover:scale-105 shadow-md" data-target="fullTable">
-                الجدول الكامل
+            <button id="fullTableBtn" class="nav-button block w-full text-left px-4 py-2 text-lg rounded-md font-semibold text-white bg-blue-600 hover:bg-blue-500 transition duration-300 transform hover:scale-105 shadow-md" data-target="fullTable">
+                Full Table
             </button>
-            <button id="chartsBtn" class="nav-button block w-full text-right px-4 py-2 text-lg rounded-md font-semibold text-white bg-blue-600 hover:bg-blue-500 transition duration-300 transform hover:scale-105 shadow-md" data-target="charts">
-                الرسوم البيانية
+            <button id="chartsBtn" class="nav-button block w-full text-left px-4 py-2 text-lg rounded-md font-semibold text-white bg-blue-600 hover:bg-blue-500 transition duration-300 transform hover:scale-105 shadow-md" data-target="charts">
+                Charts
             </button>
-            <button id="thresholdSettingsBtn" class="nav-button block w-full text-right px-4 py-2 text-lg rounded-md font-semibold text-white bg-purple-600 hover:bg-purple-500 transition duration-300 transform hover:scale-105 shadow-md" data-target="thresholdSettings">
-                العدادات
+            <button id="thresholdSettingsBtn" class="nav-button block w-full text-left px-4 py-2 text-lg rounded-md font-semibold text-white bg-purple-600 hover:bg-purple-500 transition duration-300 transform hover:scale-105 shadow-md" data-target="thresholdSettings">
+                Settings
             </button>
             <!-- Auto Refresh Toggle Button moved here to be part of sidebar functionality -->
-            <button id="autoRefreshToggleBtn" class="block w-full text-right px-4 py-2 text-lg rounded-md font-semibold text-white bg-green-600 hover:bg-green-500 transition duration-300 transform hover:scale-105 shadow-md">
-                تحديث تلقائي: تشغيل
+            <button id="autoRefreshToggleBtn" class="block w-full text-left px-4 py-2 text-lg rounded-md font-semibold text-white bg-green-600 hover:bg-green-500 transition duration-300 transform hover:scale-105 shadow-md">
+                Auto Refresh: ON
             </button>
         </nav>
 
@@ -161,11 +170,11 @@
                         </svg>
                     </button>
                     <h1 id="dashboardTitle" class="text-white text-2xl sm:text-3xl font-bold rounded-lg px-2 py-1 bg-opacity-20 bg-white">
-                        لوحة تحكم البيانات
+                        Data Dashboard
                     </h1>
                 </div>
                 <!-- Current Date and Time Display -->
-                <div class="flex items-center space-x-4 space-x-reverse text-white text-base sm:text-lg font-semibold">
+                <div class="flex items-center space-x-4 text-white text-base sm:text-lg font-semibold">
                     <div id="currentDate" class="px-3 py-1 rounded-full bg-blue-500 bg-opacity-40 shadow-md text-xs sm:text-base"></div>
                     <div id="currentTime" class="px-3 py-1 rounded-full bg-indigo-500 bg-opacity-40 shadow-md text-xs sm:text-base"></div>
                 </div>
@@ -182,22 +191,22 @@
                 <div class="bg-white p-4 sm:p-8 rounded-lg shadow-xl border border-gray-200">
                     <!-- Loading Indicator -->
                     <div id="loading" class="text-center text-xl font-semibold text-blue-600 my-10 hidden">
-                        <div class="flex items-center justify-center space-x-2 space-x-reverse">
+                        <div class="flex items-center justify-center space-x-2">
                             <svg class="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            <span id="loadingText">جارٍ تحميل البيانات...</span>
+                            <span id="loadingText">Loading data...</span>
                         </div>
                     </div>
 
                     <!-- Error Message -->
                     <div id="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative my-6 hidden" role="alert">
-                        <strong id="errorTitle" class="font-bold">خطأ!</strong>
-                        <span class="block sm:inline" id="errorText">تعذر تحميل البيانات. يرجى التأكد من أن مصدر البيانات متاح و Apps Script منشور بشكل صحيح.</span>
-                        <span class="absolute top-0 bottom-0 left-0 px-4 py-3">
+                        <strong id="errorTitle" class="font-bold">Error!</strong>
+                        <span class="block sm:inline" id="errorText">Failed to load data. Please ensure the data source is available and Apps Script is correctly deployed.</span>
+                        <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
                             <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" onclick="document.getElementById('errorMessage').classList.add('hidden')">
-                                <title>إغلاق</title>
+                                <title>Close</title>
                                 <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
                             </svg>
                         </span>
@@ -206,7 +215,7 @@
                     <!-- Latest Data Section -->
                     <section id="latestData" class="page-content">
                         <h2 id="latestDataTitle" class="text-xl sm:text-3xl font-bold text-gray-800 mb-6 border-b-2 pb-3 border-blue-500">
-                            أحدث بيانات المستشعر
+                            Latest Sensor Data
                         </h2>
                         <div class="flex justify-start mb-6">
                             <button id="generateInsightBtn" class="px-4 py-2 text-sm sm:px-6 sm:py-2 sm:text-lg rounded-full font-semibold text-white bg-purple-600 hover:bg-purple-500 transition duration-300 transform hover:scale-105 shadow-md">
@@ -221,7 +230,7 @@
                             <p id="insightContent" class="text-gray-800 text-sm sm:text-base leading-relaxed"></p>
                             <div class="flex justify-end mt-4">
                                 <button id="copyInsightBtn" class="px-3 py-1 sm:px-4 sm:py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300 text-xs sm:text-sm">
-                                    نسخ الرؤية
+                                    Copy Insight
                                 </button>
                             </div>
                             <div id="insightLoading" class="text-center text-xs sm:text-sm text-purple-600 mt-4 hidden">
@@ -237,7 +246,7 @@
                     <!-- Acceleration and Gyroscope Data Section -->
                     <section id="accelGyroData" class="page-content hidden">
                         <h2 id="accelGyroTitle" class="text-xl sm:text-3xl font-bold text-gray-800 mb-6 border-b-2 pb-3 border-blue-500">
-                            بيانات التسارع والجيروسكوب
+                            Acceleration and Gyroscope Data
                         </h2>
                         <div id="accelGyroContent" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Acceleration and Gyroscope data will be injected here by JavaScript -->
@@ -247,41 +256,41 @@
                     <!-- Full Table Section -->
                     <section id="fullTable" class="page-content hidden">
                         <h2 id="fullTableTitle" class="text-xl sm:text-3xl font-bold text-gray-800 mb-6 border-b-2 pb-3 border-blue-500">
-                            البيانات الكاملة مع التصفية
+                            Full Data with Filters
                         </h2>
 
                         <!-- Filters -->
                         <div class="mb-8 p-4 sm:p-6 bg-gray-50 rounded-lg shadow-inner">
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-4">
                                 <div>
-                                    <label id="fromDateLabel" for="fromDate" class="block text-gray-700 text-sm font-medium mb-2">من تاريخ:</label>
+                                    <label id="fromDateLabel" for="fromDate" class="block text-gray-700 text-sm font-medium mb-2">From Date:</label>
                                     <input type="date" id="fromDate" class="form-input w-full p-2 sm:p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-200">
                                 </div>
                                 <div>
-                                    <label id="toDateLabel" for="toDate" class="block text-gray-700 text-sm font-medium mb-2">إلى تاريخ:</label>
+                                    <label id="toDateLabel" for="toDate" class="block text-gray-700 text-sm font-medium mb-2">To Date:</label>
                                     <input type="date" id="toDate" class="form-input w-full p-2 sm:p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-200">
                                 </div>
                                 <div>
-                                    <label id="fromTimeLabel" for="fromTime" class="block text-gray-700 text-sm font-medium mb-2">من توقيت:</label>
+                                    <label id="fromTimeLabel" for="fromTime" class="block text-gray-700 text-sm font-medium mb-2">From Time:</label>
                                     <input type="time" id="fromTime" class="form-input w-full p-2 sm:p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-200">
                                 </div>
                                 <div>
-                                    <label id="toTimeLabel" for="toTime" class="block text-gray-700 text-sm font-medium mb-2">إلى توقيت:</label>
+                                    <label id="toTimeLabel" for="toTime" class="block text-gray-700 text-sm font-medium mb-2">To Time:</label>
                                     <input type="time" id="toTime" class="form-input w-full p-2 sm:p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-200">
                                 </div>
                             </div>
-                            <div class="flex justify-start space-x-2 sm:space-x-4 space-x-reverse flex-wrap">
+                            <div class="flex justify-start space-x-2 flex-wrap">
                                 <button id="applyFiltersBtn" class="px-4 py-2 text-sm sm:px-8 sm:py-3 sm:text-lg bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition duration-300 transform hover:scale-105 shadow-lg">
-                                    تطبيق التصفية
+                                    Apply Filter
                                 </button>
                                 <button id="resetFiltersBtn" class="px-4 py-2 text-sm sm:px-8 sm:py-3 sm:text-lg bg-red-500 text-white font-bold rounded-lg hover:bg-red-600 transition duration-300 transform hover:scale-105 shadow-lg">
-                                    إعادة تعيين
+                                    Reset
                                 </button>
                                 <button id="exportCsvBtn" class="px-4 py-2 text-sm sm:px-8 sm:py-3 sm:text-lg bg-gray-600 text-white font-bold rounded-lg hover:bg-gray-700 transition duration-300 transform hover:scale-105 shadow-lg">
-                                    تصدير CSV
+                                    Export CSV
                                 </button>
                                 <button id="exportPdfBtn" class="px-4 py-2 text-sm sm:px-8 sm:py-3 sm:text-lg bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition duration-300 transform hover:scale-105 shadow-lg">
-                                    تصدير PDF
+                                    Export PDF
                                 </button>
                             </div>
                         </div>
@@ -299,25 +308,25 @@
                                 </tbody>
                             </table>
                             <div id="noDataFound" class="hidden text-center py-8 text-gray-500 text-lg">
-                                لا توجد بيانات مطابقة لمعايير التصفية.
+                                No data to display or no data matching filter criteria.
                             </div>
                         </div>
                         <!-- Pagination Controls -->
                         <div id="paginationControls" class="flex justify-center items-center space-x-4 mt-6">
-                            <button id="prevPageBtn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed">السابق</button>
-                            <span id="pageInfo" class="text-gray-700">صفحة 1 من 1</span>
-                            <button id="nextPageBtn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed">التالي</button>
+                            <button id="prevPageBtn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                            <span id="pageInfo" class="text-gray-700">Page 1 of 1</span>
+                            <button id="nextPageBtn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
                         </div>
                     </section>
 
                     <!-- Charts Section -->
                     <section id="charts" class="page-content hidden">
                         <h2 id="chartsTitle" class="text-xl sm:text-3xl font-bold text-gray-800 mb-6 border-b-2 pb-3 border-blue-500">
-                            الرسوم البيانية لبيانات المستشعر
+                            Sensor Data Charts
                         </h2>
                         <!-- Chart Controls (Dropdown for Metric Selection) -->
                         <div class="mb-6 p-4 bg-gray-50 rounded-lg shadow-inner flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                            <label for="chartMetricSelect" id="chartMetricLabel" class="text-gray-700 font-medium whitespace-nowrap">اختر المقياس:</label>
+                            <label for="chartMetricSelect" id="chartMetricLabel" class="text-gray-700 font-medium whitespace-nowrap">Select Metric:</label>
                             <select id="chartMetricSelect" class="form-select flex-grow p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-200">
                                 <!-- Options will be populated by JavaScript -->
                             </select>
@@ -330,13 +339,13 @@
                             <!-- Min/Max/Avg Display -->
                             <div id="chartStats" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 w-full text-center">
                                 <div class="p-2 bg-blue-50 rounded-md">
-                                    <p id="minVal" class="text-sm font-semibold text-gray-700">الحد الأدنى: N/A</p>
+                                    <p id="minVal" class="text-sm font-semibold text-gray-700">Min: N/A</p>
                                 </div>
                                 <div class="p-2 bg-blue-50 rounded-md">
-                                    <p id="avgVal" class="text-sm font-semibold text-gray-700">المتوسط: N/A</p>
+                                    <p id="avgVal" class="text-sm font-semibold text-gray-700">Avg: N/A</p>
                                 </div>
                                 <div class="p-2 bg-blue-50 rounded-md">
-                                    <p id="maxVal" class="text-sm font-semibold text-gray-700">الحد الأقصى: N/A</p>
+                                    <p id="maxVal" class="text-sm font-semibold text-gray-700">Max: N/A</p>
                                 </div>
                             </div>
                         </div>
@@ -345,24 +354,24 @@
                     <!-- Threshold Settings Section (New Page) -->
                     <section id="thresholdSettings" class="page-content hidden">
                         <h2 id="thresholdSettingsTitle" class="text-xl sm:text-3xl font-bold text-gray-800 mb-6 border-b-2 pb-3 border-purple-500">
-                            إعدادات حدود التنبيه
+                            Alert Threshold Settings
                         </h2>
                         <div id="thresholdSettingsContent" class="grid grid-cols-1 gap-6">
                             <!-- Threshold settings will be injected here by JavaScript -->
                         </div>
-                        <div class="flex justify-start mt-8 space-x-4 space-x-reverse">
+                        <div class="flex justify-start mt-8 space-x-4"> <!-- Removed space-x-reverse for LTR -->
                             <button id="saveThresholdsBtn" class="px-6 py-2 text-base sm:px-8 sm:py-3 sm:text-lg bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105 shadow-lg">
-                                حفظ الحدود
+                                Save Thresholds
                             </button>
                             <button id="resetThresholdsBtn" class="px-6 py-2 text-base sm:px-8 sm:py-3 sm:text-lg bg-gray-600 text-white font-bold rounded-lg hover:bg-gray-700 transition duration-300 transform hover:scale-105 shadow-lg">
-                                إعادة تعيين الحدود
+                                Reset Thresholds
                             </button>
                         </div>
                         <div id="thresholdMessage" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative my-6 hidden" role="alert">
                             <span id="thresholdMessageText" class="block sm:inline"></span>
-                            <span class="absolute top-0 bottom-0 left-0 px-4 py-3">
+                            <span class="absolute top-0 bottom-0 right-0 px-4 py-3"> <!-- Changed left-0 to right-0 for LTR -->
                                 <svg class="fill-current h-6 w-6 text-green-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" onclick="document.getElementById('thresholdMessage').classList.add('hidden')">
-                                    <title>إغلاق</title>
+                                    <title>Close</title>
                                     <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
                                 </svg>
                             </span>
@@ -381,7 +390,7 @@
         let sensorData = []; // To store ALL fetched data
         let previousLatestEntry = {}; // To store the previous latest data for change indicators
         let chartInstance = null; // Single Chart.js instance for the main chart
-        let currentLanguage = 'ar'; // Default language is Arabic
+        let currentLanguage = 'en'; // Changed default language to English
         let autoRefreshIntervalId = null; // Stores the ID of the setInterval for auto-refresh
         let currentPage = 1;
         const itemsPerPage = 20; // Number of rows per page for the full table
@@ -1073,7 +1082,7 @@
 
             dataHealthCard.className = 'glassmorphism-card p-6 data-card-interactive';
             dataHealthCard.innerHTML = `
-                <h3 class="text-xl font-semibold text-blue-700 mb-2">حالة البيانات العامة</h3>
+                <h3 class="text-xl font-semibold text-blue-700 mb-2">Overall Data Health</h3>
                 <p class="text-2xl font-bold ${healthColor} mb-2">${healthText}</p>
                 <p class="text-lg text-gray-800">${translations[currentLanguage].criticalAlerts} <span class="font-bold text-red-600">${criticalAlertCount}</span></p>
                 <p class="text-lg text-gray-800">${translations[currentLanguage].warningAlerts} <span class="font-bold text-orange-500">${warningAlertCount}</span></p>
@@ -1316,7 +1325,7 @@
             if (tableHeaderRow.children.length === 0) {
                 headers.forEach(header => {
                     const th = document.createElement('th');
-                    th.className = 'px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right';
+                    th.className = 'px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-left'; // Changed text-right to text-left
                     th.textContent = translatedHeaders[header] || header;
                     tableHeaderRow.appendChild(th);
                 });
@@ -1872,15 +1881,15 @@
                 clearInterval(autoRefreshIntervalId);
                 autoRefreshIntervalId = null;
                 autoRefreshToggleBtn.textContent = translations[currentLanguage].autoRefreshOff;
-                autoRefreshToggleBtn.classList.remove('bg-green-600'); // Corrected from 500
-                autoRefreshToggleBtn.classList.add('bg-red-600'); // Corrected from 500
+                autoRefreshToggleBtn.classList.remove('bg-green-600'); 
+                autoRefreshToggleBtn.classList.add('bg-red-600'); 
             } else {
                 // If auto-refresh is inactive, start it
                 // Fetch data every 15 seconds
                 autoRefreshIntervalId = setInterval(fetchData, 15000); 
                 autoRefreshToggleBtn.textContent = translations[currentLanguage].autoRefreshOn;
-                autoRefreshToggleBtn.classList.remove('bg-red-600'); // Corrected from 500
-                autoRefreshToggleBtn.classList.add('bg-green-600'); // Corrected from 500
+                autoRefreshToggleBtn.classList.remove('bg-red-600'); 
+                autoRefreshToggleBtn.classList.add('bg-green-600'); 
             }
         }
         
@@ -1956,22 +1965,53 @@
             if (lang === 'ar') {
                 html.setAttribute('dir', 'rtl');
                 body.style.textAlign = 'right';
-                sidebar.style.right = '0'; // Position sidebar on right for RTL
-                sidebar.style.left = 'auto'; // Reset left position
-                mainContentWrapper.classList.remove('shifted-ltr'); // Remove LTR specific class
+                // For RTL, menu buttons are right-aligned
+                document.querySelectorAll('.nav-button').forEach(button => {
+                    button.classList.remove('text-left');
+                    button.classList.add('text-right');
+                });
+                document.querySelector('h2').textContent = 'القائمة'; // Update sidebar title
             } else {
                 html.setAttribute('dir', 'ltr');
                 body.style.textAlign = 'left';
-                sidebar.style.left = '0'; // Position sidebar on left for LTR
-                sidebar.style.right = 'auto'; // Reset right position
-                mainContentWrapper.classList.remove('shifted-rtl'); // Remove RTL specific class
+                // For LTR, menu buttons are left-aligned
+                document.querySelectorAll('.nav-button').forEach(button => {
+                    button.classList.remove('text-right');
+                    button.classList.add('text-left');
+                });
+                document.querySelector('h2').textContent = 'Menu'; // Update sidebar title
             }
-            // Re-apply shift if sidebar is open and on desktop
-            if (isSidebarOpen && window.innerWidth >= 768) {
+            
+            // Handle sidebar and main content positioning based on sidebar state and language
+            if (window.innerWidth >= 768) { // Desktop view
+                // On desktop, sidebar is part of the flex flow, no need for explicit margins on main content wrapper
+                mainContentWrapper.classList.remove('shifted-rtl-mobile-open', 'shifted-ltr-mobile-open');
+                mainContentWrapper.style.marginLeft = '0'; 
+                mainContentWrapper.style.marginRight = '0'; 
+
+                // Sidebar itself should be visible
+                sidebar.classList.remove('translate-x-full', '-translate-x-full');
+                sidebar.classList.remove('open-rtl', 'open-ltr');
+                sidebarOverlay.classList.add('hidden', 'opacity-0');
+                isSidebarOpen = true; // For desktop, logically sidebar is always "open"
+            } else { // Mobile view
+                // On mobile, sidebar is hidden by default and opened/closed by buttons
+                mainContentWrapper.classList.remove('shifted-rtl-mobile-open', 'shifted-ltr-mobile-open');
+                // Ensure the sidebar is in its correct hidden state based on language
                 if (lang === 'ar') {
-                     mainContentWrapper.classList.add('shifted-rtl');
+                    sidebar.classList.add('-translate-x-full'); // Hidden to the left for RTL
+                    sidebar.classList.remove('open-rtl');
                 } else {
-                     mainContentWrapper.classList.add('shifted-ltr');
+                    sidebar.classList.add('-translate-x-full'); // Hidden to the left for LTR
+                    sidebar.classList.remove('open-ltr');
+                }
+                mainContentWrapper.style.marginLeft = '0'; 
+                mainContentWrapper.style.marginRight = '0'; 
+                sidebarOverlay.classList.add('hidden', 'opacity-0');
+                isSidebarOpen = false; // Reset mobile state
+                // If the sidebar was open before resizing to mobile, ensure it closes
+                if (sidebar.classList.contains('open-ltr') || sidebar.classList.contains('open-rtl')) {
+                    closeSidebar();
                 }
             }
 
@@ -2166,16 +2206,22 @@
         function openSidebar() {
             isSidebarOpen = true;
             if (currentLanguage === 'ar') {
-                sidebar.classList.remove('translate-x-full'); // Assuming it starts off-screen to the right
+                sidebar.classList.remove('-translate-x-full'); 
                 sidebar.classList.add('open-rtl');
-                mainContentWrapper.classList.add('shifted-rtl');
+                // Apply mobile shift only if on mobile
+                if (window.innerWidth < 768) {
+                    mainContentWrapper.classList.add('shifted-rtl-mobile-open');
+                }
             } else {
-                sidebar.classList.remove('-translate-x-full'); // Assuming it starts off-screen to the left
+                sidebar.classList.remove('-translate-x-full'); 
                 sidebar.classList.add('open-ltr');
-                mainContentWrapper.classList.add('shifted-ltr');
+                // Apply mobile shift only if on mobile
+                if (window.innerWidth < 768) {
+                    mainContentWrapper.classList.add('shifted-ltr-mobile-open');
+                }
             }
             sidebarOverlay.classList.remove('hidden');
-            setTimeout(() => sidebarOverlay.classList.add('opacity-100'), 10); // Fade in overlay
+            sidebarOverlay.classList.add('show'); // Use 'show' class for opacity transition
         }
 
         /**
@@ -2184,15 +2230,15 @@
         function closeSidebar() {
             isSidebarOpen = false;
             if (currentLanguage === 'ar') {
-                sidebar.classList.add('translate-x-full');
+                sidebar.classList.add('-translate-x-full'); 
                 sidebar.classList.remove('open-rtl');
-                mainContentWrapper.classList.remove('shifted-rtl');
+                mainContentWrapper.classList.remove('shifted-rtl-mobile-open'); // Always remove on close
             } else {
                 sidebar.classList.add('-translate-x-full');
                 sidebar.classList.remove('open-ltr');
-                mainContentWrapper.classList.remove('shifted-ltr');
+                mainContentWrapper.classList.remove('shifted-ltr-mobile-open'); // Always remove on close
             }
-            sidebarOverlay.classList.remove('opacity-100');
+            sidebarOverlay.classList.remove('show'); // Remove 'show' class to fade out
             setTimeout(() => sidebarOverlay.classList.add('hidden'), 300); // Hide overlay after transition
         }
 
@@ -2270,37 +2316,35 @@
             // Adjust sidebar positioning on window resize for responsiveness
             window.addEventListener('resize', () => {
                 if (window.innerWidth >= 768) { // Desktop view
-                    isSidebarOpen = true; // Consider sidebar "open" on desktop by default
+                    // On desktop, sidebar is part of the flex flow, no need for explicit margins on main content wrapper
+                    mainContentWrapper.classList.remove('shifted-rtl-mobile-open', 'shifted-ltr-mobile-open');
+                    mainContentWrapper.style.marginLeft = '0'; 
+                    mainContentWrapper.style.marginRight = '0'; 
+
+                    // Sidebar itself should be visible
                     sidebar.classList.remove('translate-x-full', '-translate-x-full');
                     sidebar.classList.remove('open-rtl', 'open-ltr');
-                    mainContentWrapper.classList.remove('shifted-rtl', 'shifted-ltr');
                     sidebarOverlay.classList.add('hidden', 'opacity-0');
-                    // Ensure proper margin for content on desktop
-                    if (currentLanguage === 'ar') {
-                        // For RTL, sidebar is on the right, content needs margin on right
-                        mainContentWrapper.style.marginRight = '250px';
-                        mainContentWrapper.style.marginLeft = '0'; // Reset left margin
-                    } else {
-                        // For LTR, sidebar is on the left, content needs margin on left
-                        mainContentWrapper.style.marginLeft = '250px';
-                        mainContentWrapper.style.marginRight = '0'; // Reset right margin
-                    }
-
+                    isSidebarOpen = true; // For desktop, logically sidebar is always "open"
                 } else { // Mobile view
-                    // Hide sidebar by default on mobile if not already open
+                    // On mobile, sidebar is hidden by default and opened/closed by buttons
+                    mainContentWrapper.classList.remove('shifted-rtl-mobile-open', 'shifted-ltr-mobile-open');
+                    // Ensure the sidebar is in its correct hidden state based on language
                     if (currentLanguage === 'ar') {
-                        sidebar.classList.add('translate-x-full');
+                        sidebar.classList.add('-translate-x-full'); // Hidden to the left for RTL
                         sidebar.classList.remove('open-rtl');
-                        mainContentWrapper.classList.remove('shifted-rtl');
                     } else {
-                        sidebar.classList.add('-translate-x-full');
+                        sidebar.classList.add('-translate-x-full'); // Hidden to the left for LTR
                         sidebar.classList.remove('open-ltr');
-                        mainContentWrapper.classList.remove('shifted-ltr');
                     }
-                    mainContentWrapper.style.marginLeft = '0'; // Ensure no fixed margins
-                    mainContentWrapper.style.marginRight = '0'; // Ensure no fixed margins
+                    mainContentWrapper.style.marginLeft = '0'; 
+                    mainContentWrapper.style.marginRight = '0'; 
                     sidebarOverlay.classList.add('hidden', 'opacity-0');
-                    isSidebarOpen = false;
+                    isSidebarOpen = false; // Reset mobile state
+                    // If the sidebar was open before resizing to mobile, ensure it closes
+                    if (sidebar.classList.contains('open-ltr') || sidebar.classList.contains('open-rtl')) {
+                        closeSidebar();
+                    }
                 }
                 updateUIForLanguage(currentLanguage); // Re-apply language specific styles and re-render charts
             });
