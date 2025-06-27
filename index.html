@@ -164,7 +164,7 @@
 
     <script>
         // Google Sheets API URL
-        const GOOGLE_SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbyWRd4HkpQ_LQjn_vDUkIRveluRSRONMrZaB8h4fnpmux9v8nfgBzTxXdsgDHzz_VEg_Q/exec';
+        const GOOGLE_SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbxO7soutfxNmG1Vy6KvuZ4ZS96qWg9nJouY-vjvKt3_i-kQh4wa3hBbU0-vuqgU8jF02g/exec';
 
         // Global variables
         let sensorData = []; // To store all fetched data
@@ -198,40 +198,68 @@
         ];
 
         /**
-         * Helper function to extract only the date part (YYYY-MM-DD) from a string.
-         * Handles ISO strings like "2025-06-22T23:00:00.000Z" by taking the part before 'T'.
-         * @param {string} dateTimeString - The date/time string.
-         * @returns {string} The formatted date string (YYYY-MM-DD).
+         * Helper function to parse a date/time string into a Date object.
+         * Handles various ISO-like formats, including those with "Z" (UTC).
+         * @param {string} dateString - The date part (e.g., "2025-06-22T23:00:00.000Z" or "2025-06-22").
+         * @param {string} timeString - The time part (e.g., "1899-12-30T17:27:03.000Z" or "17:27:03").
+         * @returns {Date | null} A Date object in local timezone, or null if invalid.
          */
-        function getFormattedDate(dateTimeString) {
-            if (typeof dateTimeString === 'string' && dateTimeString.includes('T')) {
-                return dateTimeString.split('T')[0];
+        function parseDateTimeToLocalDate(dateString, timeString) {
+            let parsedDatePart = String(dateString).split('T')[0]; // Get YYYY-MM-DD from 'Date' column
+            let parsedTimePart = String(timeString);
+            if (parsedTimePart.includes('T')) {
+                parsedTimePart = parsedTimePart.split('T')[1].substring(0, 8); // Get HH:MM:SS from 'Heure' column
+            } else {
+                parsedTimePart = parsedTimePart.substring(0, 8); // Ensure HH:MM:SS format
             }
-            return String(dateTimeString).substring(0, 10); // Fallback for other formats
+
+            // Construct an ISO 8601 string assuming UTC, then convert to local Date object
+            // By default, new Date('YYYY-MM-DDTHH:MM:SSZ') will parse as UTC and then display in local time.
+            const isoString = `${parsedDatePart}T${parsedTimePart}Z`;
+            const date = new Date(isoString);
+
+            return isNaN(date.getTime()) ? null : date;
         }
 
         /**
-         * Helper function to extract only the time part (HH:MM:SS) from a string.
-         * Handles ISO strings like "1899-12-30T17:27:03.000Z" by taking the part after 'T' and formatting.
-         * @param {string} dateTimeString - The date/time string.
-         * @returns {string} The formatted time string (HH:MM:SS).
+         * Helper function to get only the date part (e.g., "2025-06-23") formatted for local display.
+         * @param {Date | string} dateTimeValue - The Date object or original string value.
+         * @param {string} timeValue - The original time string (Heure column).
+         * @returns {string} Formatted local date string (YYYY-MM-DD).
          */
-        function getFormattedTime(dateTimeString) {
-            if (typeof dateTimeString === 'string' && dateTimeString.includes('T')) {
-                return dateTimeString.split('T')[1].substring(0, 8); // Extracts HH:MM:SS
+        function getFormattedDateForDisplay(dateValue, timeValue) {
+            const dateObj = parseDateTimeToLocalDate(dateValue, timeValue);
+            if (dateObj) {
+                // Return YYYY-MM-DD in local time
+                return dateObj.toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' });
             }
-            return String(dateTimeString).substring(0, 8); // Fallback for other formats (e.g., "17:27:03")
+            return 'تاريخ غير صالح';
         }
 
         /**
-         * Helper function to format temperature values.
-         * @param {string | number} tempValue - The temperature value.
-         * @returns {string} Formatted temperature string or 'غير صالح'.
+         * Helper function to get only the time part (e.g., "16:56:43") formatted for local display.
+         * @param {Date | string} dateValue - The original date string (Date column).
+         * @param {string} timeValue - The Date object or original string value.
+         * @returns {string} Formatted local time string (HH:MM:SS).
          */
-        function formatTemperature(tempValue) {
-            const parsedTemp = parseFloat(tempValue);
-            if (!isNaN(parsedTemp)) {
-                return parsedTemp.toFixed(2); // Format to 2 decimal places
+        function getFormattedTimeForDisplay(dateValue, timeValue) {
+            const dateObj = parseDateTimeToLocalDate(dateValue, timeValue);
+            if (dateObj) {
+                // Return HH:MM:SS in local time
+                return dateObj.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            }
+            return 'وقت غير صالح';
+        }
+        
+        /**
+         * Helper function to format numeric values (e.g., temperature, humidity, acceleration).
+         * @param {string | number} value - The numeric value.
+         * @returns {string} Formatted number string or 'غير صالح'.
+         */
+        function formatNumericValue(value) {
+            const parsedValue = parseFloat(value);
+            if (!isNaN(parsedValue)) {
+                return parsedValue.toFixed(2); // Format to 2 decimal places
             }
             return 'غير صالح'; // Indicate invalid data
         }
@@ -305,6 +333,16 @@
                     console.warn('Data format is invalid or no data found.');
                 }
                 
+                // Sort the data by 'Date' then 'Heure' to ensure the latest data is at the end
+                actualData.sort((a, b) => {
+                    const dateA = parseDateTimeToLocalDate(a.Date, a.Heure);
+                    const dateB = parseDateTimeToLocalDate(b.Date, b.Heure);
+                    // Handle invalid dates by pushing them to the end or beginning
+                    if (!dateA || isNaN(dateA.getTime())) return 1;
+                    if (!dateB || isNaN(dateB.getTime())) return -1;
+                    return dateA.getTime() - dateB.getTime();
+                });
+
                 sensorData = actualData; // Store the fetched (and potentially filtered) data
                 
                 // Re-render based on the currently active page after fetching new data
@@ -337,7 +375,7 @@
                 return;
             }
 
-            const latestEntry = data[data.length - 1]; // Get the last entry
+            const latestEntry = data[data.length - 1]; // Get the last entry (after sorting in fetchData)
 
             // Arabic labels mapping
             const labels = {
@@ -362,11 +400,11 @@
                 if (latestEntry.hasOwnProperty(key)) {
                     let valueToDisplay = latestEntry[key];
                     if (key === 'Date') {
-                        valueToDisplay = getFormattedDate(valueToDisplay);
+                        valueToDisplay = getFormattedDateForDisplay(valueToDisplay, latestEntry['Heure']);
                     } else if (key === 'Heure') {
-                        valueToDisplay = getFormattedTime(valueToDisplay);
-                    } else if (key === 'Température (°C)') { 
-                        valueToDisplay = formatTemperature(valueToDisplay);
+                        valueToDisplay = getFormattedTimeForDisplay(latestEntry['Date'], valueToDisplay);
+                    } else if (chartMetrics.includes(key)) { // Apply formatNumericValue to all chartMetrics
+                        valueToDisplay = formatNumericValue(valueToDisplay);
                     }
 
                     const displayLabel = labels[key] || key; // Use Arabic label if available, else original key
@@ -434,11 +472,11 @@
                     
                     let cellValue = row[header];
                     if (header === 'Date') {
-                        cellValue = getFormattedDate(cellValue);
+                        cellValue = getFormattedDateForDisplay(cellValue, row['Heure']);
                     } else if (header === 'Heure') {
-                        cellValue = getFormattedTime(cellValue);
-                    } else if (header === 'Température (°C)') {
-                        cellValue = formatTemperature(cellValue);
+                        cellValue = getFormattedTimeForDisplay(row['Date'], cellValue);
+                    } else if (chartMetrics.includes(header)) { // Apply formatNumericValue to all chartMetrics
+                        cellValue = formatNumericValue(cellValue);
                     }
                     td.textContent = cellValue;
                     tr.appendChild(td);
@@ -484,16 +522,17 @@
 
             // Sort data by Timestamp to ensure correct chart rendering
             const sortedData = [...data].sort((a, b) => {
-                // Safely create Date objects from 'Date' and 'Heure' columns
-                // Using getFormattedDate and getFormattedTime to ensure clean parts
-                const dateA = a.Date && a.Heure ? new Date(`${getFormattedDate(a.Date)}T${getFormattedTime(a.Heure)}Z`) : new Date(0); 
-                const dateB = b.Date && b.Heure ? new Date(`${getFormattedDate(b.Date)}T${getFormattedTime(b.Heure)}Z`) : new Date(0); 
+                const dateA = parseDateTimeToLocalDate(a.Date, a.Heure); 
+                const dateB = parseDateTimeToLocalDate(b.Date, b.Heure); 
+                // Handle invalid dates by pushing them to the end or beginning
+                if (!dateA || isNaN(dateA.getTime())) return 1;
+                if (!dateB || isNaN(dateB.getTime())) return -1;
                 return dateA.getTime() - dateB.getTime();
             });
 
             // Extract labels (timestamps)
             const labels = sortedData.map(entry => {
-                const date = entry.Date && entry.Heure ? new Date(`${getFormattedDate(entry.Date)}T${getFormattedTime(entry.Heure)}Z`) : null;
+                const date = parseDateTimeToLocalDate(entry.Date, entry.Heure);
                 if (date && !isNaN(date.getTime())) {
                     return date.toLocaleString('ar-EG', {
                         year: 'numeric', month: 'short', day: 'numeric',
