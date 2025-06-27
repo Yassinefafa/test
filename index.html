@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة تحكم بيانات المستشعر</title>
+    <!-- Favicon - Added to fix 404 error -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -92,7 +94,7 @@
         <!-- Error Message -->
         <div id="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative my-6 hidden" role="alert">
             <strong id="errorTitle" class="font-bold">خطأ!</strong>
-            <span class="block sm:inline" id="errorText">تعذر تحميل البيانات. يرجى المحاولة مرة أخرى لاحقًا.</span>
+            <span class="block sm:inline" id="errorText">تعذر تحميل البيانات. يرجى التأكد من أن مصدر البيانات متاح و Apps Script منشور بشكل صحيح.</span>
             <span class="absolute top-0 bottom-0 left-0 px-4 py-3">
                 <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" onclick="document.getElementById('errorMessage').classList.add('hidden')">
                     <title>إغلاق</title>
@@ -379,7 +381,7 @@
          * @returns {Date | null} A Date object in local timezone, or null if invalid.
          */
         function parseDateTimeToLocalDate(dateString, timeString) {
-            let parsedDatePart = String(dateString).split('T')[0]; // Get YYYY-MM-DD from 'Date' column
+            let parsedDatePart = String(dateString).split('T')[0]; // Getilizce-MM-DD from 'Date' column
             let parsedTimePart = String(timeString);
             if (parsedTimePart.includes('T')) {
                 parsedTimePart = parsedTimePart.split('T')[1].substring(0, 8); // Get HH:MM:SS from 'Heure' column
