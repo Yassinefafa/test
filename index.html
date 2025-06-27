@@ -97,6 +97,9 @@
                 <button id="chartsBtn" class="nav-button px-6 py-2 rounded-full text-lg font-semibold text-white bg-blue-500 hover:bg-blue-400 transition duration-300 transform hover:scale-105 shadow-md" data-target="charts">
                     الرسوم البيانية
                 </button>
+                <button id="thresholdSettingsBtn" class="nav-button px-6 py-2 rounded-full text-lg font-semibold text-white bg-purple-500 hover:bg-purple-400 transition duration-300 transform hover:scale-105 shadow-md" data-target="thresholdSettings">
+                    العدادات
+                </button>
                 <!-- Auto Refresh Toggle Button -->
                 <button id="autoRefreshToggleBtn" class="px-6 py-2 rounded-full text-lg font-semibold text-white bg-green-500 hover:bg-green-400 transition duration-300 transform hover:scale-105 shadow-md">
                     تحديث تلقائي: تشغيل
@@ -269,6 +272,33 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Threshold Settings Section (New Page) -->
+            <section id="thresholdSettings" class="page-content hidden">
+                <h2 id="thresholdSettingsTitle" class="text-3xl font-bold text-gray-800 mb-6 border-b-2 pb-3 border-purple-500">
+                    إعدادات حدود التنبيه
+                </h2>
+                <div id="thresholdSettingsContent" class="grid grid-cols-1 gap-6">
+                    <!-- Threshold settings will be injected here by JavaScript -->
+                </div>
+                <div class="flex justify-start mt-8 space-x-4 space-x-reverse">
+                    <button id="saveThresholdsBtn" class="px-8 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105 shadow-lg">
+                        حفظ الحدود
+                    </button>
+                    <button id="resetThresholdsBtn" class="px-8 py-3 bg-gray-600 text-white font-bold rounded-lg hover:bg-gray-700 transition duration-300 transform hover:scale-105 shadow-lg">
+                        إعادة تعيين الحدود
+                    </button>
+                </div>
+                <div id="thresholdMessage" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative my-6 hidden" role="alert">
+                    <span id="thresholdMessageText" class="block sm:inline"></span>
+                    <span class="absolute top-0 bottom-0 left-0 px-4 py-3">
+                        <svg class="fill-current h-6 w-6 text-green-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" onclick="document.getElementById('thresholdMessage').classList.add('hidden')">
+                            <title>إغلاق</title>
+                            <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+                        </svg>
+                    </span>
+                </div>
+            </section>
         </div> <!-- End of new wrapper div -->
     </main>
 
@@ -355,6 +385,16 @@
         const pageInfo = document.getElementById('pageInfo');
         const exportCsvBtn = document.getElementById('exportCsvBtn');
 
+        // New elements for threshold settings page
+        const thresholdSettingsBtn = document.getElementById('thresholdSettingsBtn');
+        const thresholdSettingsSection = document.getElementById('thresholdSettings');
+        const thresholdSettingsTitle = document.getElementById('thresholdSettingsTitle');
+        const thresholdSettingsContent = document.getElementById('thresholdSettingsContent');
+        const saveThresholdsBtn = document.getElementById('saveThresholdsBtn');
+        const resetThresholdsBtn = document.getElementById('resetThresholdsBtn');
+        const thresholdMessage = document.getElementById('thresholdMessage');
+        const thresholdMessageText = document.getElementById('thresholdMessageText');
+
 
         // Metrics to display as charts (including Accel & Gyro)
         const chartMetrics = [
@@ -408,15 +448,14 @@
         ];
 
         // Define thresholds for sensor values (for alert indicators)
-        const THRESHOLDS = {
+        // Store a copy of original thresholds to allow reset
+        let THRESHOLDS = {
             'Température (°C)': { min: 10, max: 35, warningMin: 15, warningMax: 30 },
             'Humidité (%)': { min: 20, max: 80, warningMin: 30, warningMax: 70 },
             'Vibration': { min: 0, max: 100, warningMin: 50, warningMax: 80 }, // Example values
             'Temp. NTC (°C)': { min: 5, max: 40, warningMin: 10, warningMax: 35 },
             'Courant (V Bruts)': { min: 0.1, max: 5.0, warningMin: 0.5, warningMax: 4.5 },
             'Batterie (V)': { min: 3.0, max: 4.2, warningMin: 3.2, warningMax: 4.0 },
-            // For acceleration and gyroscope, define thresholds for individual components if desired,
-            // or a combined magnitude threshold. For simplicity, we can alert on extremes of individual axes.
             'Accélération X': { min: -5, max: 5, warningMin: -3, warningMax: 3 },
             'Accélération Y': { min: -5, max: 5, warningMin: -3, warningMax: 3 },
             'Accélération Z': { min: -15, max: 15, warningMin: -12, warningMax: 12 }, // Assuming Z is gravity
@@ -424,6 +463,7 @@
             'Gyroscope Y': { min: -100, max: 100, warningMin: -50, warningMax: 50 },
             'Gyroscope Z': { min: -100, max: 100, warningMin: -50, warningMax: 50 },
         };
+        const ORIGINAL_THRESHOLDS = JSON.parse(JSON.stringify(THRESHOLDS)); // Deep copy for reset
 
 
         // Translation object
@@ -434,6 +474,7 @@
                 accelGyroBtn: 'تسارع وجيروسكوب',
                 fullTableBtn: 'الجدول الكامل',
                 chartsBtn: 'الرسوم البيانية',
+                settingsBtn: 'العدادات', // New translation
                 loadingText: 'جارٍ تحميل البيانات...',
                 errorTitle: 'خطأ!',
                 errorText: 'تعذر تحميل البيانات. يرجى التأكد من أن مصدر البيانات متاح و Apps Script منشور بشكل صحيح.',
@@ -471,6 +512,18 @@
                 healthWarning: 'حالة البيانات: تحذير ⚠️', // New translation
                 healthCritical: 'حالة البيانات: حرج ❌', // New translation
                 healthUnknown: 'حالة البيانات: غير معروف ❓', // New translation
+                totalEntries: 'العدد الإجمالي للإدخالات:', // New translation
+                criticalAlerts: 'تنبيهات حرجة:', // New translation
+                warningAlerts: 'تنبيهات تحذيرية:', // New translation
+                thresholdSettingsTitle: 'إعدادات حدود التنبيه', // New translation
+                minThresholdLabel: 'الحد الأدنى:', // New translation
+                maxThresholdLabel: 'الحد الأقصى:', // New translation
+                warningMinThresholdLabel: 'تحذير (أدنى):', // New translation
+                warningMaxThresholdLabel: 'تحذير (أقصى):', // New translation
+                saveThresholdsBtn: 'حفظ الحدود', // New translation
+                resetThresholdsBtn: 'إعادة تعيين الحدود', // New translation
+                thresholdsSavedSuccess: 'تم حفظ الحدود بنجاح!', // New translation
+                thresholdsSaveError: 'خطأ في حفظ الحدود. يرجى التحقق من القيم.', // New translation
                 chartLabels: {
                     'Timestamp': 'الختم الزمني',
                     'Date': 'التاريخ',
@@ -500,6 +553,7 @@
                 accelGyroBtn: 'Acceleration & Gyro',
                 fullTableBtn: 'Full Table',
                 chartsBtn: 'Charts',
+                settingsBtn: 'Settings', // New translation
                 loadingText: 'Loading data...',
                 errorTitle: 'Error!',
                 errorText: 'Failed to load data. Please ensure the data source is available and Apps Script is correctly deployed.',
@@ -537,6 +591,18 @@
                 healthWarning: 'Data Health: Warning ⚠️', // New translation
                 healthCritical: 'Data Health: Critical ❌', // New translation
                 healthUnknown: 'Data Health: Unknown ❓', // New translation
+                totalEntries: 'Total Entries:', // New translation
+                criticalAlerts: 'Critical Alerts:', // New translation
+                warningAlerts: 'Warning Alerts:', // New translation
+                thresholdSettingsTitle: 'Alert Threshold Settings', // New translation
+                minThresholdLabel: 'Min Threshold:', // New translation
+                maxThresholdLabel: 'Max Threshold:', // New translation
+                warningMinThresholdLabel: 'Warning (Min):', // New translation
+                warningMaxThresholdLabel: 'Warning (Max):', // New translation
+                saveThresholdsBtn: 'Save Thresholds', // New translation
+                resetThresholdsBtn: 'Reset Thresholds', // New translation
+                thresholdsSavedSuccess: 'Thresholds saved successfully!', // New translation
+                thresholdsSaveError: 'Error saving thresholds. Please check values.', // New translation
                 chartLabels: {
                     'Timestamp': 'Timestamp',
                     'Date': 'Date',
@@ -566,6 +632,7 @@
                 accelGyroBtn: 'Accélération & Gyro',
                 fullTableBtn: 'Tableau Complet',
                 chartsBtn: 'Graphiques',
+                settingsBtn: 'Paramètres', // New translation
                 loadingText: 'Chargement des données...',
                 errorTitle: 'Erreur!',
                 errorText: 'Échec du chargement des données. Veuillez vous assurer que la source de données est disponible et que le script Apps Script est correctement déployé.',
@@ -603,6 +670,18 @@
                 healthWarning: 'État des données: Avertissement ⚠️', // New translation
                 healthCritical: 'État des données: Critique ❌', // New translation
                 healthUnknown: 'État des données: Inconnu ❓', // New translation
+                totalEntries: 'Total des entrées:', // New translation
+                criticalAlerts: 'Alertes critiques:', // New translation
+                warningAlerts: 'Alertes d\'avertissement:', // New translation
+                thresholdSettingsTitle: 'Paramètres des seuils d\'alerte', // New translation
+                minThresholdLabel: 'Seuil Min:', // New translation
+                maxThresholdLabel: 'Seuil Max:', // New translation
+                warningMinThresholdLabel: 'Avertissement (Min):', // New translation
+                warningMaxThresholdLabel: 'Avertissement (Max):', // New translation
+                saveThresholdsBtn: 'Enregistrer les seuils', // New translation
+                resetThresholdsBtn: 'Réinitialiser les seuils', // New translation
+                thresholdsSavedSuccess: 'Seuils enregistrés avec succès!', // New translation
+                thresholdsSaveError: 'Erreur lors de l\'enregistrement des seuils. Veuillez vérifier les valeurs.', // New translation
                 chartLabels: {
                     'Timestamp': 'Horodatage',
                     'Date': 'Date',
@@ -744,7 +823,9 @@
                 const selectedMetric = chartMetricSelect.value || chartMetrics[0];
                 renderChart(selectedMetric, filteredData); // Render charts with filtered data
             } else if (pageId === 'accelGyroData') {
-                renderAccelGyroData(sensorData); // Accel/Gyro also uses full data to find last entry
+                renderAccelGyroData(sensorData);
+            } else if (pageId === 'thresholdSettings') {
+                renderThresholdSettings(); // Render the settings page
             }
         }
 
@@ -862,26 +943,66 @@
             }
 
             const latestEntry = data[data.length - 1];
-
             const labels = translations[currentLanguage].chartLabels;
 
-            // Check overall data health
+            // Calculate overall data health and alerts
+            let criticalAlertCount = 0;
+            let warningAlertCount = 0;
             let overallHealth = 'normal';
-            for (const key in latestEntry) {
-                if (latestEntry.hasOwnProperty(key) && THRESHOLDS[key]) {
-                    const value = parseFloat(latestEntry[key]);
-                    const status = getValueStatus(key, value);
-                    if (status === 'critical') {
-                        overallHealth = 'critical';
-                        break;
-                    } else if (status === 'warning' && overallHealth === 'normal') {
-                        overallHealth = 'warning';
+
+            data.forEach(entry => {
+                for (const key in entry) {
+                    if (entry.hasOwnProperty(key) && THRESHOLDS[key]) {
+                        const value = parseFloat(entry[key]);
+                        const status = getValueStatus(key, value);
+                        if (status === 'critical') {
+                            criticalAlertCount++;
+                        } else if (status === 'warning') {
+                            warningAlertCount++;
+                        }
                     }
                 }
+            });
+
+            if (criticalAlertCount > 0) {
+                overallHealth = 'critical';
+            } else if (warningAlertCount > 0) {
+                overallHealth = 'warning';
             }
-            
-            // Display overall data health (optional, could be in a dedicated card or header)
-            // For now, let's keep it simple and just console log or add a global status bar later.
+
+            // Create and append Total Entries card
+            const totalEntriesCard = document.createElement('div');
+            totalEntriesCard.className = 'glassmorphism-card p-6 data-card-interactive';
+            totalEntriesCard.innerHTML = `
+                <h3 class="text-xl font-semibold text-blue-700 mb-2">${translations[currentLanguage].totalEntries}</h3>
+                <p class="text-2xl font-bold text-gray-900">${data.length}</p>
+            `;
+            latestDataContent.appendChild(totalEntriesCard);
+
+            // Create and append Data Health card
+            const dataHealthCard = document.createElement('div');
+            let healthText = '';
+            let healthColor = '';
+            if (overallHealth === 'critical') {
+                healthText = translations[currentLanguage].healthCritical;
+                healthColor = 'text-red-600';
+            } else if (overallHealth === 'warning') {
+                healthText = translations[currentLanguage].healthWarning;
+                healthColor = 'text-orange-500';
+            } else {
+                healthText = translations[currentLanguage].healthNormal;
+                healthColor = 'text-green-600';
+            }
+
+            dataHealthCard.className = 'glassmorphism-card p-6 data-card-interactive';
+            dataHealthCard.innerHTML = `
+                <h3 class="text-xl font-semibold text-blue-700 mb-2">حالة البيانات العامة</h3>
+                <p class="text-2xl font-bold ${healthColor} mb-2">${healthText}</p>
+                <p class="text-lg text-gray-800">${translations[currentLanguage].criticalAlerts} <span class="font-bold text-red-600">${criticalAlertCount}</span></p>
+                <p class="text-lg text-gray-800">${translations[currentLanguage].warningAlerts} <span class="font-bold text-orange-500">${warningAlertCount}</span></p>
+            `;
+            latestDataContent.appendChild(dataHealthCard);
+
 
             for (const key in latestEntry) {
                 // Exclude the individual Accel and Gyro components from this section, as they are now grouped
@@ -1206,6 +1327,7 @@
          */
         function populateChartMetricSelect() {
             chartMetricSelect.innerHTML = ''; // Clear existing options
+            // Combine chartMetrics with individual Accel/Gyro axes
             const allMetrics = [...new Set(chartMetrics.concat(
                 Object.keys(sensorData.length > 0 ? sensorData[0] : {}).filter(key => 
                     key.startsWith('Accélération') || key.startsWith('Gyroscope')
@@ -1217,11 +1339,19 @@
             if (allMetrics.includes('Accélération')) orderedMetrics.push('Accélération');
             if (allMetrics.includes('Gyroscope')) orderedMetrics.push('Gyroscope');
 
+            // Add other unique metrics that are not combined
             allMetrics.forEach(metric => {
-                if (!orderedMetrics.includes(metric)) {
+                if (!orderedMetrics.includes(metric) && !metric.startsWith('Accélération ') && !metric.startsWith('Gyroscope ')) {
                     orderedMetrics.push(metric);
                 }
             });
+            // Add individual Accel/Gyro axes at the end
+            allMetrics.forEach(metric => {
+                if (!orderedMetrics.includes(metric) && (metric.startsWith('Accélération ') || metric.startsWith('Gyroscope '))) {
+                    orderedMetrics.push(metric);
+                }
+            });
+
 
             orderedMetrics.forEach(metric => {
                 const option = document.createElement('option');
@@ -1444,6 +1574,139 @@
         }
 
         /**
+         * Renders the threshold settings page.
+         */
+        function renderThresholdSettings() {
+            thresholdSettingsContent.innerHTML = ''; // Clear previous content
+            thresholdMessage.classList.add('hidden'); // Hide any previous messages
+
+            const labels = translations[currentLanguage].chartLabels;
+            const t = translations[currentLanguage];
+
+            for (const metric in THRESHOLDS) {
+                if (THRESHOLDS.hasOwnProperty(metric)) {
+                    const thresholds = THRESHOLDS[metric];
+                    const metricLabel = labels[metric] || metric;
+
+                    const metricCard = document.createElement('div');
+                    metricCard.className = 'glassmorphism-card p-6 data-card-interactive';
+                    metricCard.innerHTML = `
+                        <h3 class="text-xl font-semibold text-blue-700 mb-4">${metricLabel}</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="${metric}-min" class="block text-gray-700 text-sm font-medium mb-2">${t.minThresholdLabel}</label>
+                                <input type="number" id="${metric}-min" class="form-input w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-200" value="${thresholds.min}" step="any">
+                            </div>
+                            <div>
+                                <label for="${metric}-max" class="block text-gray-700 text-sm font-medium mb-2">${t.maxThresholdLabel}</label>
+                                <input type="number" id="${metric}-max" class="form-input w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-200" value="${thresholds.max}" step="any">
+                            </div>
+                            <div>
+                                <label for="${metric}-warning-min" class="block text-gray-700 text-sm font-medium mb-2">${t.warningMinThresholdLabel}</label>
+                                <input type="number" id="${metric}-warning-min" class="form-input w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-200" value="${thresholds.warningMin}" step="any">
+                            </div>
+                            <div>
+                                <label for="${metric}-warning-max" class="block text-gray-700 text-sm font-medium mb-2">${t.warningMaxThresholdLabel}</label>
+                                <input type="number" id="${metric}-warning-max" class="form-input w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-200" value="${thresholds.warningMax}" step="any">
+                            </div>
+                        </div>
+                    `;
+                    thresholdSettingsContent.appendChild(metricCard);
+                }
+            }
+        }
+
+        /**
+         * Saves the updated thresholds from the input fields.
+         */
+        function saveThresholds() {
+            let allValid = true;
+            const newThresholds = {};
+            const t = translations[currentLanguage];
+
+            for (const metric in THRESHOLDS) {
+                if (THRESHOLDS.hasOwnProperty(metric)) {
+                    const minVal = parseFloat(document.getElementById(`${metric}-min`).value);
+                    const maxVal = parseFloat(document.getElementById(`${metric}-max`).value);
+                    const warningMinVal = parseFloat(document.getElementById(`${metric}-warning-min`).value);
+                    const warningMaxVal = parseFloat(document.getElementById(`${metric}-warning-max`).value);
+
+                    // Basic validation: ensure numbers and min <= warningMin <= warningMax <= max
+                    if (isNaN(minVal) || isNaN(maxVal) || isNaN(warningMinVal) || isNaN(warningMaxVal) ||
+                        minVal > warningMinVal || warningMinVal > warningMaxVal || warningMaxVal > maxVal) {
+                        allValid = false;
+                        // Optionally, highlight invalid fields or show specific error per field
+                        console.error(`Invalid thresholds for ${metric}`);
+                        // Break if any invalid, or collect all errors
+                        // For now, just mark allValid as false and continue to show general error
+                    }
+
+                    newThresholds[metric] = {
+                        min: minVal,
+                        max: maxVal,
+                        warningMin: warningMinVal,
+                        warningMax: warningMaxVal
+                    };
+                }
+            }
+
+            if (allValid) {
+                THRESHOLDS = newThresholds; // Update the global THRESHOLDS object
+                // In a real application, you'd save this to local storage or a backend
+                // For now, we update in memory and re-render.
+                
+                showThresholdMessage(t.thresholdsSavedSuccess, 'success');
+                // Re-render the relevant sections to apply new thresholds
+                renderLatestData(sensorData);
+                const activePageId = document.querySelector('.page-content:not(.hidden)').id;
+                if (activePageId === 'charts') {
+                    renderChart(chartMetricSelect.value || chartMetrics[0], getFilteredSensorData());
+                }
+                renderThresholdSettings(); // Re-render settings to show updated values
+            } else {
+                showThresholdMessage(t.thresholdsSaveError, 'error');
+            }
+        }
+
+        /**
+         * Resets the thresholds to their original default values.
+         */
+        function resetThresholds() {
+            THRESHOLDS = JSON.parse(JSON.stringify(ORIGINAL_THRESHOLDS)); // Restore from original copy
+            renderThresholdSettings(); // Re-render the settings page with original values
+            
+            // Re-render the relevant sections to apply reset thresholds
+            renderLatestData(sensorData);
+            const activePageId = document.querySelector('.page-content:not(.hidden)').id;
+            if (activePageId === 'charts') {
+                renderChart(chartMetricSelect.value || chartMetrics[0], getFilteredSensorData());
+            }
+            showThresholdMessage(translations[currentLanguage].thresholdsSavedSuccess, 'success'); // Re-using success message for reset
+        }
+
+
+        /**
+         * Displays a temporary message (success or error) on the threshold settings page.
+         * @param {string} message - The message to display.
+         * @param {'success' | 'error'} type - The type of message to determine styling.
+         */
+        function showThresholdMessage(message, type) {
+            thresholdMessageText.textContent = message;
+            thresholdMessage.classList.remove('hidden', 'bg-green-100', 'border-green-400', 'text-green-700', 'bg-red-100', 'border-red-400', 'text-red-700');
+            
+            if (type === 'success') {
+                thresholdMessage.classList.add('bg-green-100', 'border-green-400', 'text-green-700');
+            } else if (type === 'error') {
+                thresholdMessage.classList.add('bg-red-100', 'border-red-400', 'text-red-700');
+            }
+            // Automatically hide message after 5 seconds
+            setTimeout(() => {
+                thresholdMessage.classList.add('hidden');
+            }, 5000);
+        }
+
+
+        /**
          * Updates all UI elements based on the selected language.
          * @param {string} lang - The language code ('ar', 'en', 'fr').
          */
@@ -1461,6 +1724,7 @@
             accelGyroBtn.textContent = t.accelGyroBtn;
             fullTableBtn.textContent = t.fullTableBtn;
             chartsBtn.textContent = t.chartsBtn;
+            thresholdSettingsBtn.textContent = t.settingsBtn; // Update new settings button
 
             loadingText.textContent = t.loadingText;
             errorTitle.textContent = t.errorTitle;
@@ -1470,6 +1734,7 @@
             accelGyroTitle.textContent = t.accelGyroTitle;
             fullTableTitle.textContent = t.fullTableTitle;
             chartsTitle.textContent = t.chartsTitle;
+            thresholdSettingsTitle.textContent = t.thresholdSettingsTitle; // Update new settings page title
 
             fromDateLabel.textContent = t.fromDateLabel;
             toDateLabel.textContent = t.toDateLabel;
@@ -1487,6 +1752,9 @@
             insightCardTitle.textContent = t.insightCardTitle;
             insightLoadingText.textContent = t.generatingInsight;
             copyInsightBtn.textContent = t.copyInsightBtn; // Update copy button text
+
+            saveThresholdsBtn.textContent = t.saveThresholdsBtn; // Update new save button
+            resetThresholdsBtn.textContent = t.resetThresholdsBtn; // Update new reset button
 
             // Update pagination button texts
             prevPageBtn.textContent = t.prevPage;
@@ -1510,12 +1778,27 @@
                 renderChart(selectedMetric, filteredData);
             } else if (activePageId === 'accelGyroData') {
                 renderAccelGyroData(sensorData); // Accel/Gyro also uses full data to find last entry
+            } else if (activePageId === 'thresholdSettings') {
+                renderThresholdSettings(); // Re-render settings to show updated values
             }
 
             // Update min/avg/max labels
-            minVal.textContent = `${t.minLabel} ${formatNumericValue(parseFloat(minVal.textContent.split(': ')[1]))}`;
-            avgVal.textContent = `${t.avgLabel} ${formatNumericValue(parseFloat(avgVal.textContent.split(': ')[1]))}`;
-            maxVal.textContent = `${t.maxLabel} ${formatNumericValue(parseFloat(maxVal.textContent.split(': ')[1]))}`;
+            // Check if minVal.textContent has a numerical value before parsing
+            if (minVal.textContent && minVal.textContent.split(': ')[1]) {
+                minVal.textContent = `${t.minLabel} ${formatNumericValue(parseFloat(minVal.textContent.split(': ')[1]))}`;
+            } else {
+                minVal.textContent = `${t.minLabel} N/A`;
+            }
+            if (avgVal.textContent && avgVal.textContent.split(': ')[1]) {
+                avgVal.textContent = `${t.avgLabel} ${formatNumericValue(parseFloat(avgVal.textContent.split(': ')[1]))}`;
+            } else {
+                avgVal.textContent = `${t.avgLabel} N/A`;
+            }
+            if (maxVal.textContent && maxVal.textContent.split(': ')[1]) {
+                maxVal.textContent = `${t.maxLabel} ${formatNumericValue(parseFloat(maxVal.textContent.split(': ')[1]))}`;
+            } else {
+                maxVal.textContent = `${t.maxLabel} N/A`;
+            }
 
 
             updateCurrentDateTimeDisplay();
@@ -1743,6 +2026,10 @@ Provide insights in a clear, easy-to-understand paragraph.`;
                 chartMetricSelect.dataset.selected = selectedMetric; // Store selection
                 renderChart(selectedMetric, getFilteredSensorData());
             });
+
+            // Event listeners for threshold settings page
+            saveThresholdsBtn.addEventListener('click', saveThresholds);
+            resetThresholdsBtn.addEventListener('click', resetThresholds);
         });
 
     </script>
