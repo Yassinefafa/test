@@ -120,55 +120,14 @@
         #sidebarOverlay.show {
             opacity: 1; /* Fade in */
         }
-
-        /* Login Page Specific Styles */
-        #loginPage {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(to bottom right, #60a5fa, #818cf8); /* Blue-indigo gradient for login */
-            padding: 1rem;
-        }
-        .login-card {
-            background-color: rgba(255, 255, 255, 0.9); /* Opaque white for login card */
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-            border-radius: 1rem;
-        }
     </style>
 </head>
 <body class="text-gray-800">
     <!-- Sidebar Overlay for mobile -->
     <div id="sidebarOverlay" class="hidden md:hidden"></div>
 
-    <!-- Login Page -->
-    <section id="loginPage" class="absolute inset-0">
-        <div class="login-card p-8 sm:p-10 rounded-xl max-w-md w-full text-center">
-            <h2 id="loginTitle" class="text-3xl font-bold text-gray-800 mb-6">Login</h2>
-            <form id="loginForm" class="space-y-6">
-                <div>
-                    <label for="username" id="usernameLabel" class="block text-gray-700 text-sm font-medium mb-2 text-left">Username:</label>
-                    <input type="text" id="username" class="form-input w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="Enter your username">
-                </div>
-                <div>
-                    <label for="password" id="passwordLabel" class="block text-gray-700 text-sm font-medium mb-2 text-left">Password:</label>
-                    <input type="password" id="password" class="form-input w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="Enter your password">
-                </div>
-                <div id="loginErrorMsg" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative hidden text-sm" role="alert">
-                    <span id="loginErrorText" class="block">Invalid username or password.</span>
-                </div>
-                <button type="submit" id="loginBtn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105 shadow-lg">
-                    Login
-                </button>
-            </form>
-        </div>
-    </section>
-
     <!-- Overall Wrapper for Sidebar and Main Content -->
-    <div class="flex hidden" id="mainContentWrapper"> <!-- Initially hidden -->
+    <div class="flex">
         <!-- Sidebar -->
         <nav id="sidebar" class="fixed top-0 left-0 h-full bg-gradient-to-br from-blue-700 to-indigo-800 text-white p-6 shadow-xl space-y-4">
             <div class="flex justify-between items-center mb-6">
@@ -201,7 +160,7 @@
         </nav>
 
         <!-- Main Content Wrapper -->
-        <div id="mainContentArea" class="flex-1 w-full min-h-screen">
+        <div id="mainContentWrapper" class="flex-1 w-full min-h-screen">
             <!-- Header and Navigation (now only for title, date/time, language selector, and mobile menu button) -->
             <header class="bg-gradient-to-r from-blue-600 to-indigo-700 shadow-lg py-4 px-4 sm:px-6 md:px-8 flex justify-between items-center flex-wrap gap-4">
                 <div class="flex items-center gap-4">
@@ -218,10 +177,6 @@
                 <div class="flex items-center space-x-4 text-white text-base sm:text-lg font-semibold">
                     <div id="currentDate" class="px-3 py-1 rounded-full bg-blue-500 bg-opacity-40 shadow-md text-xs sm:text-base"></div>
                     <div id="currentTime" class="px-3 py-1 rounded-full bg-indigo-500 bg-opacity-40 shadow-md text-xs sm:text-base"></div>
-                    <!-- Logout Button -->
-                    <button id="logoutBtn" class="px-3 py-1 text-xs sm:px-4 sm:py-2 rounded-full font-semibold text-white bg-red-600 hover:bg-red-500 transition duration-300 transform hover:scale-105 shadow-md">
-                        Logout
-                    </button>
                 </div>
                 <!-- Language Selector -->
                 <div class="flex space-x-2">
@@ -526,19 +481,6 @@
         const mainContentWrapper = document.getElementById('mainContentWrapper');
         const sidebarOverlay = document.getElementById('sidebarOverlay');
 
-        // Login page elements
-        const loginPage = document.getElementById('loginPage');
-        const loginForm = document.getElementById('loginForm');
-        const usernameInput = document.getElementById('username');
-        const passwordInput = document.getElementById('password');
-        const loginBtn = document.getElementById('loginBtn');
-        const loginErrorMsg = document.getElementById('loginErrorMsg');
-        const loginErrorText = document.getElementById('loginErrorText');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const loginTitle = document.getElementById('loginTitle');
-        const usernameLabel = document.getElementById('usernameLabel');
-        const passwordLabel = document.getElementById('passwordLabel');
-
 
         // Metrics to display as charts (including Accel & Gyro)
         const chartMetrics = [
@@ -690,14 +632,7 @@
                 },
                 prevPage: 'السابق',
                 nextPage: 'التالي',
-                pageInfo: (currentPage, totalPages) => `صفحة ${currentPage} من ${totalPages}`,
-                // Login Page translations
-                loginTitle: 'تسجيل الدخول',
-                usernameLabel: 'اسم المستخدم:',
-                passwordLabel: 'كلمة المرور:',
-                loginBtn: 'تسجيل الدخول',
-                loginErrorText: 'اسم المستخدم أو كلمة المرور غير صالحة.',
-                logoutBtn: 'تسجيل الخروج'
+                pageInfo: (currentPage, totalPages) => `صفحة ${currentPage} من ${totalPages}`
             },
             'en': {
                 dashboardTitle: 'Data Dashboard',
@@ -778,14 +713,7 @@
                 },
                 prevPage: 'Previous',
                 nextPage: 'Next',
-                pageInfo: (currentPage, totalPages) => `Page ${currentPage} of ${totalPages}`,
-                // Login Page translations
-                loginTitle: 'Login',
-                usernameLabel: 'Username:',
-                passwordLabel: 'Password:',
-                loginBtn: 'Login',
-                loginErrorText: 'Invalid username or password.',
-                logoutBtn: 'Logout'
+                pageInfo: (currentPage, totalPages) => `Page ${currentPage} of ${totalPages}`
             },
             'fr': {
                 dashboardTitle: 'Tableau de Bord des Données',
@@ -866,14 +794,7 @@
                 },
                 prevPage: 'Précédent',
                 nextPage: 'Suivant',
-                pageInfo: (currentPage, totalPages) => `Page ${currentPage} sur ${totalPages}`,
-                // Login Page translations
-                loginTitle: 'Connexion',
-                usernameLabel: 'Nom d\'utilisateur:',
-                passwordLabel: 'Mot de passe:',
-                loginBtn: 'Connexion',
-                loginErrorText: 'Nom d\'utilisateur ou mot de passe invalide.',
-                logoutBtn: 'Déconnexion'
+                pageInfo: (currentPage, totalPages) => `Page ${currentPage} sur ${totalPages}`
             }
         };
 
@@ -1048,7 +969,7 @@
                 sensorData = actualData; // Store the FULL fetched data
                 
                 // Re-render based on the currently active page after fetching new data
-                const activePageId = document.querySelector('.page-content:not(.hidden)')?.id; // Use optional chaining
+                const activePageId = document.querySelector('.page-content:not(.hidden)').id;
                 const filteredData = getFilteredSensorData(); // Get filtered data for active page if needed
 
                 if (activePageId === 'latestData') {
@@ -1235,8 +1156,8 @@
                     latestDataContent.appendChild(dataCard);
                 }
             }
-            insightCard.classList.add('hidden'); // Hide insight card initially or after new data render
-            insightContent.textContent = ''; // Clear previous insight
+            insightCard.classList.add('hidden');
+            insightContent.textContent = '';
         }
 
         /**
@@ -1453,7 +1374,7 @@
          * Applies filters by re-rendering the currently active relevant page (table or charts).
          */
         function applyFilters() {
-            const activePageId = document.querySelector('.page-content:not(.hidden)')?.id; // Use optional chaining
+            const activePageId = document.querySelector('.page-content:not(.hidden)').id;
             const filteredData = getFilteredSensorData(); // Get newly filtered data
 
             if (activePageId === 'fullTable') {
@@ -1474,7 +1395,7 @@
             fromTimeInput.value = '';
             toTimeInput.value = '';
             
-            const activePageId = document.querySelector('.page-content:not(.hidden)')?.id; // Use optional chaining
+            const activePageId = document.querySelector('.page-content:not(.hidden)').id;
             // When resetting, we effectively want to show all data, so filter with empty criteria
             const allData = getFilteredSensorData(); // This will return sensorData as inputs are empty
             
@@ -1823,7 +1744,7 @@
                 showThresholdMessage(t.thresholdsSavedSuccess, 'success');
                 // Re-render the relevant sections to apply new thresholds
                 renderLatestData(sensorData);
-                const activePageId = document.querySelector('.page-content:not(.hidden)')?.id; // Use optional chaining
+                const activePageId = document.querySelector('.page-content:not(.hidden)').id;
                 if (activePageId === 'charts') {
                     renderChart(chartMetricSelect.value || chartMetrics[0], getFilteredSensorData());
                 }
@@ -1842,7 +1763,7 @@
             
             // Re-render the relevant sections to apply reset thresholds
             renderLatestData(sensorData);
-            const activePageId = document.querySelector('.page-content:not(.hidden)')?.id; // Use optional chaining
+            const activePageId = document.querySelector('.page-content:not(.hidden)').id;
             if (activePageId === 'charts') {
                 renderChart(chartMetricSelect.value || chartMetrics[0], getFilteredSensorData());
             }
@@ -1878,8 +1799,7 @@
                 // Determine which section is currently visible
                 const activeSection = document.querySelector('.page-content:not(.hidden)');
                 if (!activeSection) {
-                    // Using a custom message instead of alert
-                    showThresholdMessage(translations[currentLanguage].exportPdfError + ": " + translations[currentLanguage].noDataFound, 'error');
+                    alert('No content to export to PDF.');
                     return;
                 }
 
@@ -1947,7 +1867,7 @@
 
             } catch (error) {
                 console.error('Error exporting to PDF:', error);
-                showThresholdMessage(translations[currentLanguage].exportPdfError + ` (${error.message || error})`, 'error');
+                alert(translations[currentLanguage].exportPdfError + `\n${error.message}`);
             }
         }
 
@@ -1981,16 +1901,6 @@
             currentLanguage = lang;
             const t = translations[currentLanguage];
 
-            // Update login page elements
-            loginTitle.textContent = t.loginTitle;
-            usernameLabel.textContent = t.usernameLabel;
-            passwordLabel.textContent = t.passwordLabel;
-            loginBtn.textContent = t.loginBtn;
-            loginErrorText.textContent = t.loginErrorText;
-            usernameInput.placeholder = t.usernameLabel.replace(':', '').trim(); // Remove colon for placeholder
-            passwordInput.placeholder = t.passwordLabel.replace(':', '').trim(); // Remove colon for placeholder
-
-
             // Update header and navigation buttons
             dashboardTitle.textContent = t.dashboardTitle;
             // Sidebar buttons (they are nav-buttons too)
@@ -1999,7 +1909,6 @@
             document.getElementById('fullTableBtn').textContent = t.fullTableBtn;
             document.getElementById('chartsBtn').textContent = t.chartsBtn;
             document.getElementById('thresholdSettingsBtn').textContent = t.settingsBtn;
-            logoutBtn.textContent = t.logoutBtn; // Logout button
 
             // Update main content titles
             latestDataTitle.textContent = t.latestDataTitle;
@@ -2061,23 +1970,7 @@
                     button.classList.remove('text-left');
                     button.classList.add('text-right');
                 });
-                document.querySelector('#sidebar h2').textContent = 'القائمة'; // Update sidebar title
-                document.querySelector('#errorMessage span.absolute').style.left = '0';
-                document.querySelector('#errorMessage span.absolute').style.right = 'auto';
-                document.querySelector('#thresholdMessage span.absolute').style.left = '0';
-                document.querySelector('#thresholdMessage span.absolute').style.right = 'auto';
-                document.querySelector('#copyInsightBtn').classList.add('space-x-reverse');
-                // Adjust flex justification for RTL buttons
-                document.querySelectorAll('.flex.justify-start').forEach(el => {
-                    el.classList.add('space-x-reverse');
-                });
-
-                // Adjust login page text alignment
-                loginTitle.classList.remove('text-left');
-                loginTitle.classList.add('text-right');
-                usernameInput.style.textAlign = 'right';
-                passwordInput.style.textAlign = 'right';
-
+                document.querySelector('h2').textContent = 'القائمة'; // Update sidebar title
             } else {
                 html.setAttribute('dir', 'ltr');
                 body.style.textAlign = 'left';
@@ -2086,22 +1979,7 @@
                     button.classList.remove('text-right');
                     button.classList.add('text-left');
                 });
-                document.querySelector('#sidebar h2').textContent = 'Menu'; // Update sidebar title
-                document.querySelector('#errorMessage span.absolute').style.left = 'auto';
-                document.querySelector('#errorMessage span.absolute').style.right = '0';
-                document.querySelector('#thresholdMessage span.absolute').style.left = 'auto';
-                document.querySelector('#thresholdMessage span.absolute').style.right = '0';
-                document.querySelector('#copyInsightBtn').classList.remove('space-x-reverse');
-                // Adjust flex justification for LTR buttons
-                document.querySelectorAll('.flex.justify-start').forEach(el => {
-                    el.classList.remove('space-x-reverse');
-                });
-
-                // Adjust login page text alignment
-                loginTitle.classList.remove('text-right');
-                loginTitle.classList.add('text-left');
-                usernameInput.style.textAlign = 'left';
-                passwordInput.style.textAlign = 'left';
+                document.querySelector('h2').textContent = 'Menu'; // Update sidebar title
             }
             
             // Handle sidebar and main content positioning based on sidebar state and language
@@ -2139,7 +2017,7 @@
 
 
             // Re-render current page to apply language changes to dynamic content
-            const activePageId = document.querySelector('.page-content:not(.hidden)')?.id; // Use optional chaining
+            const activePageId = document.querySelector('.page-content:not(.hidden)').id;
             const filteredData = getFilteredSensorData(); // Get filtered data for active page if needed
 
             if (activePageId === 'latestData') {
@@ -2243,14 +2121,13 @@
 
         function exportToCSV() {
             if (sensorData.length === 0) {
-                // Using custom message instead of alert
-                showThresholdMessage(translations[currentLanguage].noDataFound, 'error');
+                alert(translations[currentLanguage].noDataFound);
                 return;
             }
 
             const filteredData = getFilteredSensorData(); // Use filtered data for CSV export
             if (filteredData.length === 0) {
-                showThresholdMessage(translations[currentLanguage].noDataFound, 'error');
+                alert(translations[currentLanguage].noDataFound);
                 return;
             }
 
@@ -2365,71 +2242,18 @@
             setTimeout(() => sidebarOverlay.classList.add('hidden'), 300); // Hide overlay after transition
         }
 
-        /**
-         * Shows the login page and hides the dashboard.
-         */
-        function showLoginPage() {
-            loginPage.classList.remove('hidden');
-            mainContentWrapper.classList.add('hidden');
-            loginErrorMsg.classList.add('hidden'); // Hide any previous error messages
-            usernameInput.value = '';
-            passwordInput.value = '';
-            // Stop auto-refresh if it's running
-            if (autoRefreshIntervalId) {
-                clearInterval(autoRefreshIntervalId);
-                autoRefreshIntervalId = null;
-                autoRefreshToggleBtn.textContent = translations[currentLanguage].autoRefreshOff;
-                autoRefreshToggleBtn.classList.remove('bg-green-600'); 
-                autoRefreshToggleBtn.classList.add('bg-red-600'); 
-            }
-        }
-
-        /**
-         * Shows the dashboard and hides the login page.
-         * Fetches initial data and starts auto-refresh.
-         */
-        function showDashboard() {
-            loginPage.classList.add('hidden');
-            mainContentWrapper.classList.remove('hidden');
-            // Re-fetch data and start auto-refresh when dashboard is shown
-            fetchData(); 
-            showPage('latestData'); // Show the latest data page by default after login
-            populateChartMetricSelect();
-            updateCurrentDateTimeDisplay();
-            if (!autoRefreshIntervalId) { // Only start if not already running
-                toggleAutoRefresh(); 
-            }
-        }
-
-        /**
-         * Handles the login attempt.
-         * @param {Event} event - The form submission event.
-         */
-        function handleLogin(event) {
-            event.preventDefault(); // Prevent default form submission
-            const username = usernameInput.value;
-            const password = passwordInput.value;
-
-            // Simple mock authentication
-            if (username === 'user' && password === 'password') {
-                showDashboard();
-            } else {
-                loginErrorMsg.classList.remove('hidden');
-            }
-        }
-
-        /**
-         * Handles the logout action.
-         */
-        function handleLogout() {
-            showLoginPage();
-        }
-
         // Event Listeners
         document.addEventListener('DOMContentLoaded', () => {
             // Initial UI update before anything else, so translations are applied early
             updateUIForLanguage(currentLanguage);
-            showLoginPage(); // Show login page first
+
+            fetchData(); // Fetch all data on page load
+            showPage('latestData'); // Show the latest data page by default
+
+            populateChartMetricSelect(); // Populate chart dropdown on load
+
+            // Start auto-refresh by default AFTER toggleAutoRefresh is defined
+            toggleAutoRefresh();
 
             setInterval(updateCurrentDateTimeDisplay, 1000); // Update current date and time every second 
 
@@ -2524,10 +2348,6 @@
                 }
                 updateUIForLanguage(currentLanguage); // Re-apply language specific styles and re-render charts
             });
-
-            // Login specific event listeners
-            loginForm.addEventListener('submit', handleLogin);
-            logoutBtn.addEventListener('click', handleLogout);
         });
 
     </script>
