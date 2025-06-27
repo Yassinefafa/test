@@ -88,24 +88,24 @@
                 <button class="lang-button px-4 py-2 rounded-full text-sm font-semibold text-white bg-gray-600 hover:bg-gray-500 transition duration-300" data-lang="en">English</button>
                 <button class="lang-button px-4 py-2 rounded-full text-sm font-semibold text-white bg-blue-500 hover:bg-blue-400 transition duration-300" data-lang="fr">Français</button>
             </div>
-            <div class="flex space-x-4 space-x-reverse"> <!-- space-x-reverse for RTL -->
-                <button id="latestDataBtn" class="nav-button px-6 py-2 rounded-full text-lg font-semibold text-white bg-blue-500 hover:bg-blue-400 transition duration-300 transform hover:scale-105 shadow-md" data-target="latestData">
+            <div class="flex space-x-4 space-x-reverse flex-wrap justify-center sm:justify-start"> <!-- space-x-reverse for RTL -->
+                <button id="latestDataBtn" class="nav-button px-4 py-2 text-base sm:px-6 sm:py-2 sm:text-lg rounded-full font-semibold text-white bg-blue-500 hover:bg-blue-400 transition duration-300 transform hover:scale-105 shadow-md">
                     البيانات الأخيرة
                 </button>
-                <button id="accelGyroBtn" class="nav-button px-6 py-2 rounded-full text-lg font-semibold text-white bg-blue-500 hover:bg-blue-400 transition duration-300 transform hover:scale-105 shadow-md" data-target="accelGyroData">
+                <button id="accelGyroBtn" class="nav-button px-4 py-2 text-base sm:px-6 sm:py-2 sm:text-lg rounded-full font-semibold text-white bg-blue-500 hover:bg-blue-400 transition duration-300 transform hover:scale-105 shadow-md" data-target="accelGyroData">
                     تسارع وجيروسكوب
                 </button>
-                <button id="fullTableBtn" class="nav-button px-6 py-2 rounded-full text-lg font-semibold text-white bg-blue-500 hover:bg-blue-400 transition duration-300 transform hover:scale-105 shadow-md" data-target="fullTable">
+                <button id="fullTableBtn" class="nav-button px-4 py-2 text-base sm:px-6 sm:py-2 sm:text-lg rounded-full font-semibold text-white bg-blue-500 hover:bg-blue-400 transition duration-300 transform hover:scale-105 shadow-md" data-target="fullTable">
                     الجدول الكامل
                 </button>
-                <button id="chartsBtn" class="nav-button px-6 py-2 rounded-full text-lg font-semibold text-white bg-blue-500 hover:bg-blue-400 transition duration-300 transform hover:scale-105 shadow-md" data-target="charts">
+                <button id="chartsBtn" class="nav-button px-4 py-2 text-base sm:px-6 sm:py-2 sm:text-lg rounded-full font-semibold text-white bg-blue-500 hover:bg-blue-400 transition duration-300 transform hover:scale-105 shadow-md" data-target="charts">
                     الرسوم البيانية
                 </button>
-                <button id="thresholdSettingsBtn" class="nav-button px-6 py-2 rounded-full text-lg font-semibold text-white bg-purple-500 hover:bg-purple-400 transition duration-300 transform hover:scale-105 shadow-md" data-target="thresholdSettings">
+                <button id="thresholdSettingsBtn" class="nav-button px-4 py-2 text-base sm:px-6 sm:py-2 sm:text-lg rounded-full font-semibold text-white bg-purple-500 hover:bg-purple-400 transition duration-300 transform hover:scale-105 shadow-md" data-target="thresholdSettings">
                     العدادات
                 </button>
                 <!-- Auto Refresh Toggle Button -->
-                <button id="autoRefreshToggleBtn" class="px-6 py-2 rounded-full text-lg font-semibold text-white bg-green-500 hover:bg-green-400 transition duration-300 transform hover:scale-105 shadow-md">
+                <button id="autoRefreshToggleBtn" class="px-4 py-2 text-base sm:px-6 sm:py-2 sm:text-lg rounded-full font-semibold text-white bg-green-500 hover:bg-green-400 transition duration-300 transform hover:scale-105 shadow-md">
                     تحديث تلقائي: تشغيل
                 </button>
             </div>
@@ -208,17 +208,17 @@
                             <input type="time" id="toTime" class="form-input w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-200">
                         </div>
                     </div>
-                    <div class="flex justify-start space-x-4 space-x-reverse">
-                        <button id="applyFiltersBtn" class="px-8 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition duration-300 transform hover:scale-105 shadow-lg">
+                    <div class="flex justify-start space-x-4 space-x-reverse flex-wrap">
+                        <button id="applyFiltersBtn" class="px-6 py-2 text-base sm:px-8 sm:py-3 sm:text-lg bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition duration-300 transform hover:scale-105 shadow-lg">
                             تطبيق التصفية
                         </button>
-                        <button id="resetFiltersBtn" class="px-8 py-3 bg-red-500 text-white font-bold rounded-lg hover:bg-red-600 transition duration-300 transform hover:scale-105 shadow-lg">
+                        <button id="resetFiltersBtn" class="px-6 py-2 text-base sm:px-8 sm:py-3 sm:text-lg bg-red-500 text-white font-bold rounded-lg hover:bg-red-600 transition duration-300 transform hover:scale-105 shadow-lg">
                             إعادة تعيين
                         </button>
-                        <button id="exportCsvBtn" class="px-8 py-3 bg-gray-600 text-white font-bold rounded-lg hover:bg-gray-700 transition duration-300 transform hover:scale-105 shadow-lg">
+                        <button id="exportCsvBtn" class="px-6 py-2 text-base sm:px-8 sm:py-3 sm:text-lg bg-gray-600 text-white font-bold rounded-lg hover:bg-gray-700 transition duration-300 transform hover:scale-105 shadow-lg">
                             تصدير CSV
                         </button>
-                         <button id="exportPdfBtn" class="px-8 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition duration-300 transform hover:scale-105 shadow-lg">
+                         <button id="exportPdfBtn" class="px-6 py-2 text-base sm:px-8 sm:py-3 sm:text-lg bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition duration-300 transform hover:scale-105 shadow-lg">
                             تصدير PDF
                         </button>
                     </div>
@@ -264,7 +264,7 @@
                 <!-- Single Chart Canvas -->
                 <div id="singleChartContainer" class="glassmorphism-card p-6 flex flex-col justify-center items-center">
                     <h3 id="currentChartTitle" class="text-xl font-semibold text-blue-700 mb-4 text-center"></h3>
-                    <canvas id="mainChartCanvas" width="350" height="288"></canvas>
+                    <canvas id="mainChartCanvas"></canvas> <!-- Removed fixed width/height -->
                     <!-- Min/Max/Avg Display -->
                     <div id="chartStats" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 w-full text-center">
                         <div class="p-2 bg-blue-50 rounded-md">
@@ -434,8 +434,7 @@
             'rgb(51, 102, 255)', // Royal Blue
             'rgb(255, 0, 255)',  // Magenta (new)
             'rgb(0, 255, 255)',  // Cyan (new)
-            'rgb(128, 0, 0)',    // Maroon (new)
-            'rgb(0, 128, 0)'     // Dark Green (new)
+            'rgb(128, 0, 0)'     // Dark Green (new)
         ];
 
         // Define a set of different point styles for charts
@@ -1519,8 +1518,8 @@
                     datasets: datasets
                 },
                 options: {
-                    responsive: false, // Keep responsive false for fixed dimensions
-                    maintainAspectRatio: false, // Keep this as false
+                    responsive: true, // Changed to true for responsiveness
+                    maintainAspectRatio: true, // Changed to true for responsiveness
                     plugins: {
                         legend: {
                             display: (selectedMetric === 'Accélération' || selectedMetric === 'Gyroscope'), // Only display legend for combined charts
