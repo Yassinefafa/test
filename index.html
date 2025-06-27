@@ -112,8 +112,25 @@
             <h2 id="latestDataTitle" class="text-3xl font-bold text-gray-800 mb-6 border-b-2 pb-3 border-blue-500">
                 أحدث بيانات المستشعر
             </h2>
+            <div class="flex justify-start mb-6"> <!-- Aligned to right for RTL, left for LTR -->
+                <button id="generateInsightBtn" class="px-6 py-2 rounded-full text-lg font-semibold text-white bg-purple-600 hover:bg-purple-500 transition duration-300 transform hover:scale-105 shadow-md">
+                    Generate Insight ✨
+                </button>
+            </div>
             <div id="latestDataContent" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Latest data will be injected here by JavaScript -->
+            </div>
+            <!-- This div will be shown/hidden by JS when insight is generated -->
+            <div id="insightCard" class="bg-white p-6 rounded-lg shadow-md border border-gray-100 col-span-full mt-6 hidden">
+                <h3 id="insightCardTitle" class="text-xl font-semibold text-purple-700 mb-4"></h3>
+                <p id="insightContent" class="text-gray-800 text-base leading-relaxed"></p>
+                <div id="insightLoading" class="text-center text-sm text-purple-600 mt-4 hidden">
+                    <svg class="animate-spin h-5 w-5 inline-block text-purple-600 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span id="insightLoadingText"></span>
+                </div>
             </div>
         </section>
 
@@ -135,7 +152,7 @@
 
             <!-- Filters -->
             <div class="mb-8 p-6 bg-gray-50 rounded-lg shadow-inner">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-4"> <!-- Restored 4 columns for time filters -->
                     <div>
                         <label id="fromDateLabel" for="fromDate" class="block text-gray-700 text-sm font-medium mb-2">من تاريخ:</label>
                         <input type="date" id="fromDate" class="form-input w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-200">
@@ -193,11 +210,11 @@
     </main>
 
     <script>
-        // Google Sheets API URL
+        // Google Sheets API URL - Ensure this URL is correct and published to 'Anyone' access
         const GOOGLE_SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbxO7soutfxNmG1Vy6KvuZ4ZS96qWg9nJouY-vjvKt3_i-kQh4wa3hBbU0-vuqgU8jF02g/exec';
 
         // Global variables
-        let sensorData = []; // To store all fetched data
+        let sensorData = []; // To store ALL fetched data
         const chartInstances = {}; // To keep track of Chart.js instances
         let currentLanguage = 'fr'; // Default language is French
         let autoRefreshIntervalId = null; // Stores the ID of the setInterval for auto-refresh
@@ -246,6 +263,14 @@
         // New element for auto-refresh button
         const autoRefreshToggleBtn = document.getElementById('autoRefreshToggleBtn');
 
+        // New elements for LLM insight
+        const insightCard = document.getElementById('insightCard');
+        const insightCardTitle = document.getElementById('insightCardTitle');
+        const insightContent = document.getElementById('insightContent');
+        const insightLoading = document.getElementById('insightLoading');
+        const insightLoadingText = document.getElementById('insightLoadingText');
+        const generateInsightBtn = document.getElementById('generateInsightBtn');
+
 
         // Metrics to display as charts (including Accel & Gyro)
         const chartMetrics = [
@@ -253,6 +278,38 @@
             'Accélération Z', 'Gyroscope X', 'Gyroscope Y', 'Gyroscope Z',
             'Vibration', 'Temp. NTC (°C)', 'Courant (V Bruts)', 'Batterie (V)'
         ];
+
+        // Define a set of appealing colors for charts
+        const chartColors = [
+            'rgb(75, 192, 192)', // Teal
+            'rgb(255, 99, 132)', // Red
+            'rgb(54, 162, 235)', // Blue
+            'rgb(255, 205, 86)', // Yellow
+            'rgb(153, 102, 255)',// Purple
+            'rgb(255, 159, 64)', // Orange
+            'rgb(201, 203, 207)',// Grey
+            'rgb(102, 204, 0)',  // Lime Green
+            'rgb(255, 102, 204)',// Pink
+            'rgb(0, 153, 153)',  // Dark Teal
+            'rgb(204, 51, 0)',   // Dark Red-Orange
+            'rgb(51, 102, 255)'  // Royal Blue
+        ];
+
+        // Define a set of different point styles for charts
+        const pointStyles = [
+            'circle',
+            'triangle',
+            'rect',
+            'star',
+            'cross',
+            'crossRot',
+            'dash',
+            'line',
+            'rectRounded',
+            'rectRot',
+            'triangle' // Repeat for more options if needed
+        ];
+
 
         // Translation object
         const translations = {
@@ -281,6 +338,12 @@
                 invalidValue: 'غير صالح',
                 autoRefreshOn: 'تحديث تلقائي: تشغيل',
                 autoRefreshOff: 'تحديث تلقائي: إيقاف',
+                generateInsightBtn: 'توليد رؤى ✨',
+                insightCardTitle: 'رؤى البيانات',
+                noDataForInsight: 'لا توجد بيانات متاحة لتوليد رؤى.',
+                generatingInsight: 'جارٍ توليد الرؤى...',
+                insightError: 'فشل توليد الرؤى. يرجى المحاولة مرة أخرى.',
+                insightFetchError: 'خطأ في جلب الرؤى من الذكاء الاصطناعي',
                 chartLabels: {
                     'Timestamp': 'الختم الزمني',
                     'Date': 'التاريخ',
@@ -288,7 +351,7 @@
                     'Température (°C)': 'درجة الحرارة (°C)',
                     'Humidité (%)': 'الرطوبة (%)',
                     'Accélération X': 'التسارع X',
-                    'Accélération Y': 'التسارع Y',
+                    'Accéléطة Y': 'التسارع Y',
                     'Accélération Z': 'التسارع Z',
                     'Gyroscope X': 'جيروسكوب X',
                     'Gyroscope Y': 'جيروسكوب Y',
@@ -324,6 +387,12 @@
                 invalidValue: 'Invalid',
                 autoRefreshOn: 'Auto Refresh: ON',
                 autoRefreshOff: 'Auto Refresh: OFF',
+                generateInsightBtn: 'Generate Insight ✨',
+                insightCardTitle: 'Data Insight',
+                noDataForInsight: 'No data available to generate insights.',
+                generatingInsight: 'Generating insight...',
+                insightError: 'Failed to generate insight. Please try again.',
+                insightFetchError: 'Error fetching insight from AI',
                 chartLabels: {
                     'Timestamp': 'Timestamp',
                     'Date': 'Date',
@@ -367,6 +436,12 @@
                 invalidValue: 'Invalide',
                 autoRefreshOn: 'Actualisation automatique: ON',
                 autoRefreshOff: 'Actualisation automatique: OFF',
+                generateInsightBtn: 'Générer une perspicacité ✨',
+                insightCardTitle: 'Perspicacité des Données',
+                noDataForInsight: 'Aucune donnée disponible pour générer des perspicacités.',
+                generatingInsight: 'Génération de la perspicacité...',
+                insightError: 'Échec de la génération de la perspicacité. Veuillez réessayer.',
+                insightFetchError: 'Erreur lors de la récupération de la perspicacité de l\'IA',
                 chartLabels: {
                     'Timestamp': 'Horodatage',
                     'Date': 'Date',
@@ -389,37 +464,42 @@
 
         /**
          * Helper function to parse a date/time string into a Date object.
-         * Handles various ISO-like formats, including those with "Z" (UTC).
-         * @param {string} dateString - The date part (e.g., "2025-06-22T23:00:00.000Z" or "2025-06-22").
-         * @param {string} timeString - The time part (e.g., "1899-12-30T17:27:03.000Z" or "17:27:03").
+         * This function assumes the input dateString is in 'YYYY-MM-DD' format and timeString is 'HH:MM:SS'.
+         * It constructs an ISO 8601 string and creates a Date object.
+         * The 'Z' indicates UTC, so JavaScript will convert it to the local timezone automatically.
+         * @param {string} dateString - The date part (e.g., "2025-06-22").
+         * @param {string} timeString - The time part (e.g., "17:27:03").
          * @returns {Date | null} A Date object in local timezone, or null if invalid.
          */
         function parseDateTimeToLocalDate(dateString, timeString) {
-            let parsedDatePart = String(dateString).split('T')[0]; // Getilizce-MM-DD from 'Date' column
+            // Ensure dateString is justgetFullYear-MM-DD
+            let parsedDatePart = String(dateString).split('T')[0];
+            // Ensure timeString is just HH:MM:SS
             let parsedTimePart = String(timeString);
             if (parsedTimePart.includes('T')) {
-                parsedTimePart = parsedTimePart.split('T')[1].substring(0, 8); // Get HH:MM:SS from 'Heure' column
+                parsedTimePart = parsedTimePart.split('T')[1].substring(0, 8);
             } else {
-                parsedTimePart = parsedTimePart.substring(0, 8); // Ensure HH:MM:SS format
+                parsedTimePart = parsedTimePart.substring(0, 8);
             }
 
-            // Construct an ISO 8601 string assuming UTC, then convert to local Date object
+            // Combine and assume UTC for parsing, then JS converts to local time
             const isoString = `${parsedDatePart}T${parsedTimePart}Z`;
             const date = new Date(isoString);
 
             return isNaN(date.getTime()) ? null : date;
         }
 
+
         /**
          * Helper function to get only the date part formatted for local display.
-         * @param {Date | string} dateTimeValue - The Date object or original string value from 'Date' column.
+         * @param {string} dateValue - The original date string from 'Date' column.
          * @param {string} timeValue - The original time string from 'Heure' column.
-         * @returns {string} Formatted local date string.
+         * @returns {string} Formatted local date string (e.g., "06/27/2025" for en-US).
          */
         function getFormattedDateForDisplay(dateValue, timeValue) {
             const dateObj = parseDateTimeToLocalDate(dateValue, timeValue);
             if (dateObj) {
-                // Use currentLanguage for locale formatting
+                // Use currentLanguage for locale formatting (e.g., 'fr' for dd/mm/yyyy)
                 return dateObj.toLocaleDateString(currentLanguage, { year: 'numeric', month: '2-digit', day: '2-digit' });
             }
             return translations[currentLanguage].invalidDate;
@@ -427,14 +507,14 @@
 
         /**
          * Helper function to get only the time part formatted for local display.
-         * @param {Date | string} dateValue - The original date string from 'Date' column.
-         * @param {string} timeValue - The Date object or original string value from 'Heure' column.
-         * @returns {string} Formatted local time string.
+         * @param {string} dateValue - The original date string from 'Date' column.
+         * @param {string} timeValue - The original time string from 'Heure' column.
+         * @returns {string} Formatted local time string (e.g., "14:02:03").
          */
         function getFormattedTimeForDisplay(dateValue, timeValue) {
             const dateObj = parseDateTimeToLocalDate(dateValue, timeValue);
             if (dateObj) {
-                // Use currentLanguage for locale formatting
+                // Use currentLanguage for locale formatting (e.g., 'fr' for 24-hour format)
                 return dateObj.toLocaleTimeString(currentLanguage, { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
             }
             return translations[currentLanguage].invalidTime;
@@ -443,15 +523,15 @@
         /**
          * Helper function to format numeric values (e.g., temperature, humidity, acceleration).
          * @param {string | number} value - The numeric value.
-         * @returns {string} Formatted number string or 'غير صالح'.
+         * @returns {string} Formatted number string or 'Invalid'.
          */
         function formatNumericValue(value) {
             const parsedValue = parseFloat(value);
             if (!isNaN(parsedValue)) {
-                // Use currentLanguage for locale-specific number formatting
+                // Use currentLanguage for locale-specific number formatting (e.g., French uses comma for decimal)
                 return parsedValue.toLocaleString(currentLanguage, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             }
-            return translations[currentLanguage].invalidValue; // Indicate invalid data
+            return translations[currentLanguage].invalidValue;
         }
 
         /**
@@ -487,55 +567,43 @@
                         delete chartInstances[chartId];
                     }
                 }
-            } else {
-                // If navigating to charts, render them
-                renderCharts(sensorData);
             }
-
+            
             // Re-render the specific section that is now visible to apply any latest data or language changes
+            // Always use getFilteredSensorData() for sections that need filtering based on UI inputs
+            const filteredData = getFilteredSensorData(); // Get filtered data for the current UI state
             if (pageId === 'latestData') {
-                renderLatestData(sensorData);
+                renderLatestData(sensorData); // Latest data always uses full data to find last entry
             } else if (pageId === 'fullTable') {
-                renderFullTable(sensorData);
+                renderFullTable(filteredData); // Render table with filtered data
+            } else if (pageId === 'charts') {
+                renderCharts(filteredData); // Render charts with filtered data
             } else if (pageId === 'accelGyroData') {
-                renderAccelGyroData(sensorData);
+                renderAccelGyroData(sensorData); // Accel/Gyro also uses full data to find last entry
             }
         }
 
         /**
-         * Fetches data from the Google Sheets API.
-         * Now includes filter parameters for server-side filtering.
-         * @param {Object} [filters={}] - Optional filter parameters (fromDate, toDate, fromTime, toTime).
+         * Fetches all data from the Google Sheets API.
+         * No longer accepts filters, always fetches full dataset.
          */
-        async function fetchData(filters = {}) {
+        async function fetchData() {
             loadingIndicator.classList.remove('hidden');
             errorMessageDiv.classList.add('hidden');
 
-            // Build URL with filter parameters
-            let url = new URL(GOOGLE_SHEETS_API_URL);
-            for (const key in filters) {
-                if (filters[key]) {
-                    url.searchParams.append(key, filters[key]);
-                }
-            }
-
             try {
-                const response = await fetch(url.toString());
+                const response = await fetch(GOOGLE_SHEETS_API_URL); // Fetch all data
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
                 
                 let actualData = [];
-                // Check if the data is directly an array (expected format for this API)
                 if (Array.isArray(data) && data.length > 0) {
                     actualData = data;
-                } 
-                // Fallback: check if data is nested under a 'data' key (less likely but good for robustness)
-                else if (data && Array.isArray(data.data) && data.data.length > 0) {
+                } else if (data && Array.isArray(data.data) && data.data.length > 0) {
                     actualData = data.data;
                 } else {
-                    // If no data or invalid format, set sensorData to empty array
                     actualData = []; 
                     console.warn('Data format is invalid or no data found.');
                 }
@@ -544,29 +612,30 @@
                 actualData.sort((a, b) => {
                     const dateA = parseDateTimeToLocalDate(a.Date, a.Heure);
                     const dateB = parseDateTimeToLocalDate(b.Date, b.Heure);
-                    // Handle invalid dates by pushing them to the end or beginning
                     if (!dateA || isNaN(dateA.getTime())) return 1;
                     if (!dateB || isNaN(dateB.getTime())) return -1;
                     return dateA.getTime() - dateB.getTime();
                 });
 
-                sensorData = actualData; // Store the fetched (and potentially filtered) data
+                sensorData = actualData; // Store the FULL fetched data
                 
                 // Re-render based on the currently active page after fetching new data
                 const activePageId = document.querySelector('.page-content:not(.hidden)').id;
+                const filteredData = getFilteredSensorData(); // Get filtered data for active page if needed
+
                 if (activePageId === 'latestData') {
                     renderLatestData(sensorData);
                 } else if (activePageId === 'fullTable') {
-                    renderFullTable(sensorData); // Render table with the newly fetched data
+                    renderFullTable(filteredData); // Render table with the newly fetched full data, applying current filters
                 } else if (activePageId === 'charts') {
-                    renderCharts(sensorData);
-                } else if (activePageId === 'accelGyroData') { // Render new section
+                    renderCharts(filteredData); // Render charts with the newly fetched full data, applying current filters
+                } else if (activePageId === 'accelGyroData') {
                     renderAccelGyroData(sensorData);
                 }
 
             } catch (error) {
                 console.error('Error fetching data:', error);
-                errorTextSpan.textContent = translations[currentLanguage].errorText; // Use translated error
+                errorTextSpan.textContent = translations[currentLanguage].errorText;
                 errorMessageDiv.classList.remove('hidden');
             } finally {
                 loadingIndicator.classList.add('hidden');
@@ -578,30 +647,30 @@
          * @param {Array<Object>} data - The full sensor data array.
          */
         function renderLatestData(data) {
-            latestDataContent.innerHTML = ''; // Clear previous content
+            latestDataContent.innerHTML = '';
+            
             if (data.length === 0) {
                 latestDataContent.innerHTML = `<p class="text-gray-500 text-center col-span-full">${translations[currentLanguage].noDataFound}</p>`;
+                insightCard.classList.add('hidden');
                 return;
             }
 
-            const latestEntry = data[data.length - 1]; // Get the last entry (after sorting in fetchData)
+            const latestEntry = data[data.length - 1];
 
-            // Dynamic labels based on current language
             const labels = translations[currentLanguage].chartLabels;
 
             for (const key in latestEntry) {
-                // Exclude Accel and Gyro data from this section as they will have their own section
                 if (latestEntry.hasOwnProperty(key) && !['Accélération X', 'Accélération Y', 'Accélération Z', 'Gyroscope X', 'Gyroscope Y', 'Gyroscope Z'].includes(key)) {
                     let valueToDisplay = latestEntry[key];
                     if (key === 'Date') {
                         valueToDisplay = getFormattedDateForDisplay(valueToDisplay, latestEntry['Heure']);
                     } else if (key === 'Heure') {
                         valueToDisplay = getFormattedTimeForDisplay(latestEntry['Date'], valueToDisplay);
-                    } else if (chartMetrics.includes(key)) { // Apply formatNumericValue to all chartMetrics
+                    } else if (chartMetrics.includes(key)) {
                         valueToDisplay = formatNumericValue(valueToDisplay);
                     }
 
-                    const displayLabel = labels[key] || key; // Use translated label if available, else original key
+                    const displayLabel = labels[key] || key;
 
                     const dataCard = document.createElement('div');
                     dataCard.className = 'bg-white p-6 rounded-lg shadow-md border border-gray-100 transform hover:scale-102 transition duration-300';
@@ -612,6 +681,8 @@
                     latestDataContent.appendChild(dataCard);
                 }
             }
+            insightCard.classList.add('hidden');
+            insightContent.textContent = '';
         }
 
         /**
@@ -619,13 +690,13 @@
          * @param {Array<Object>} data - The full sensor data array.
          */
         function renderAccelGyroData(data) {
-            accelGyroContent.innerHTML = ''; // Clear previous content
+            accelGyroContent.innerHTML = '';
             if (data.length === 0) {
                 accelGyroContent.innerHTML = `<p class="text-gray-500 text-center col-span-full">${translations[currentLanguage].noDataFound}</p>`;
                 return;
             }
 
-            const latestEntry = data[data.length - 1]; // Get the last entry
+            const latestEntry = data[data.length - 1];
 
             const labels = translations[currentLanguage].chartLabels;
 
@@ -656,35 +727,90 @@
             accelGyroContent.appendChild(gyroCard);
         }
 
+        /**
+         * Returns a filtered subset of sensorData based on current filter inputs.
+         * This function centralizes the filtering logic for both table and charts.
+         * @returns {Array<Object>} The filtered data.
+         */
+        function getFilteredSensorData() {
+            let filteredClientData = [...sensorData]; // Start with a copy of all data
+            const fromDateVal = fromDateInput.value;
+            const toDateVal = toDateInput.value;
+            const fromTimeVal = fromTimeInput.value;
+            const toTimeVal = toTimeInput.value;
+
+            if (fromDateVal || toDateVal || fromTimeVal || toTimeVal) {
+                let filterStartDateTime = null;
+                let filterEndDateTime = null;
+
+                // Construct filter start date/time
+                if (fromDateVal) {
+                    const timePart = fromTimeVal || '00:00:00'; // Default to start of day if no time
+                    filterStartDateTime = parseDateTimeToLocalDate(fromDateVal, timePart);
+                    if (isNaN(filterStartDateTime.getTime())) filterStartDateTime = null;
+                } else if (fromTimeVal) {
+                    const today = new Date().toISOString().split('T')[0];
+                    filterStartDateTime = parseDateTimeToLocalDate(today, fromTimeVal);
+                    if (isNaN(filterStartDateTime.getTime())) filterStartDateTime = null;
+                }
+
+                // Construct filter end date/time
+                if (toDateVal) {
+                    const timePart = toTimeVal || '23:59:59'; // Default to end of day if no time
+                    filterEndDateTime = parseDateTimeToLocalDate(toDateVal, timePart);
+                    if (isNaN(filterEndDateTime.getTime())) filterEndDateTime = null;
+                } else if (toTimeVal) {
+                    const today = new Date().toISOString().split('T')[0];
+                    filterEndDateTime = parseDateTimeToLocalDate(today, toTimeVal);
+                    if (isNaN(filterEndDateTime.getTime())) filterEndDateTime = null;
+                }
+
+                filteredClientData = filteredClientData.filter(row => {
+                    const rowDateTime = parseDateTimeToLocalDate(row.Date, row.Heure);
+
+                    if (!rowDateTime || isNaN(rowDateTime.getTime())) {
+                        return false;
+                    }
+
+                    let pass = true;
+                    if (filterStartDateTime && rowDateTime < filterStartDateTime) {
+                        pass = false;
+                    }
+                    if (pass && filterEndDateTime && rowDateTime > filterEndDateTime) {
+                        pass = false;
+                    }
+                    return pass;
+                });
+            }
+            return filteredClientData;
+        }
 
         /**
-         * Renders the full data table, applying filters if provided.
-         * @param {Array<Object>} data - The data array (already filtered if fetchData was called with filters).
+         * Renders the full data table, applying client-side filters.
+         * @param {Array<Object>} dataToRender - The data (already filtered by getFilteredSensorData).
          */
-        function renderFullTable(data) { 
+        function renderFullTable(dataToRender) {
             tableHeaderRow.innerHTML = '';
             tableBody.innerHTML = '';
             noDataFoundDiv.classList.add('hidden');
 
-            if (data.length === 0) {
+            if (dataToRender.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="100%" class="text-center py-4 text-gray-500">${translations[currentLanguage].noDataFound}</td></tr>`;
-                noDataFoundDiv.classList.remove('hidden'); // Show no data message
+                noDataFoundDiv.classList.remove('hidden');
                 return;
             }
 
-            // Create table headers dynamically based on data and current language
-            const headers = Object.keys(data[0]);
-            const translatedHeaders = translations[currentLanguage].chartLabels; // Using chartLabels as general headers map
+            const headers = Object.keys(dataToRender[0]);
+            const translatedHeaders = translations[currentLanguage].chartLabels;
 
             headers.forEach(header => {
                 const th = document.createElement('th');
-                th.className = 'px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right'; // text-right for RTL, will be adjusted by body dir
+                th.className = 'px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right';
                 th.textContent = translatedHeaders[header] || header;
                 tableHeaderRow.appendChild(th);
             });
 
-            // Populate table body with filtered data
-            data.forEach((row, index) => {
+            dataToRender.forEach((row, index) => {
                 const tr = document.createElement('tr');
                 tr.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
                 headers.forEach(header => {
@@ -696,7 +822,7 @@
                         cellValue = getFormattedDateForDisplay(cellValue, row['Heure']);
                     } else if (header === 'Heure') {
                         cellValue = getFormattedTimeForDisplay(row['Date'], cellValue);
-                    } else if (chartMetrics.includes(header)) { // Apply formatNumericValue to all chartMetrics
+                    } else if (chartMetrics.includes(header)) {
                         cellValue = formatNumericValue(cellValue);
                     }
                     td.textContent = cellValue;
@@ -707,51 +833,58 @@
         }
 
         /**
-         * Applies filters by re-fetching data from the server with filter parameters.
+         * Applies filters by re-rendering the currently active relevant page (table or charts).
          */
         function applyFilters() {
-            const filters = {
-                fromDate: fromDateInput.value,
-                toDate: toDateInput.value,
-                fromTime: fromTimeInput.value,
-                toTime: toTimeInput.value
-            };
-            fetchData(filters); // Fetch data with filters
+            const activePageId = document.querySelector('.page-content:not(.hidden)').id;
+            const filteredData = getFilteredSensorData(); // Get newly filtered data
+
+            if (activePageId === 'fullTable') {
+                renderFullTable(filteredData); // Re-render table
+            } else if (activePageId === 'charts') {
+                renderCharts(filteredData); // Re-render charts
+            }
         }
 
         /**
-         * Resets all filter inputs and re-fetches all data from the server.
+         * Resets all filter inputs and re-renders the relevant page with all data.
          */
         function resetFilters() {
             fromDateInput.value = '';
             toDateInput.value = '';
             fromTimeInput.value = '';
             toTimeInput.value = '';
-            fetchData(); // Fetch all data (no filters)
+            
+            const activePageId = document.querySelector('.page-content:not(.hidden)').id;
+            // When resetting, we effectively want to show all data, so filter with empty criteria
+            const allData = getFilteredSensorData(); // This will return sensorData as inputs are empty
+            
+            if (activePageId === 'fullTable') {
+                renderFullTable(allData); // Re-render table with all data
+            } else if (activePageId === 'charts') {
+                renderCharts(allData); // Re-render charts with all data
+            }
         }
 
         /**
          * Renders charts for the specified metrics.
-         * @param {Array<Object>} data - The data array (already filtered if fetchData was called with filters).
+         * @param {Array<Object>} dataToRender - The data to use for rendering charts (already filtered).
          */
-        function renderCharts(data) {
-            chartsContainer.innerHTML = ''; // Clear previous charts
-            if (data.length === 0) {
+        function renderCharts(dataToRender) {
+            chartsContainer.innerHTML = '';
+            if (dataToRender.length === 0) {
                 chartsContainer.innerHTML = `<p class="text-gray-500 text-center col-span-full">${translations[currentLanguage].noDataFound}</p>`;
                 return;
             }
 
-            // Sort data by Timestamp to ensure correct chart rendering
-            const sortedData = [...data].sort((a, b) => {
-                const dateA = parseDateTimeToLocalDate(a.Date, a.Heure); 
-                const dateB = parseDateTimeToLocalDate(b.Date, b.Heure); 
-                // Handle invalid dates by pushing them to the end or beginning
+            const sortedData = [...dataToRender].sort((a, b) => { // Use dataToRender here
+                const dateA = parseDateTimeToLocalDate(a.Date, a.Heure);
+                const dateB = parseDateTimeToLocalDate(b.Date, b.Heure);
                 if (!dateA || isNaN(dateA.getTime())) return 1;
                 if (!dateB || isNaN(dateB.getTime())) return -1;
                 return dateA.getTime() - dateB.getTime();
             });
 
-            // Extract labels (timestamps)
             const labels = sortedData.map(entry => {
                 const date = parseDateTimeToLocalDate(entry.Date, entry.Heure);
                 if (date && !isNaN(date.getTime())) {
@@ -761,23 +894,26 @@
                         hour12: false
                     });
                 }
-                return translations[currentLanguage].invalidDate + '/' + translations[currentLanguage].invalidTime; // Fallback for invalid dates
+                return translations[currentLanguage].invalidDate + '/' + translations[currentLanguage].invalidTime;
             });
 
-            chartMetrics.forEach(metric => {
-                // Destroy existing chart instance before creating a new one
+            chartMetrics.forEach((metric, index) => { // Added index for cycling colors and shapes
                 if (chartInstances[metric]) {
                     chartInstances[metric].destroy();
                     delete chartInstances[metric];
                 }
 
+                // Determine color and point style based on index
+                const color = chartColors[index % chartColors.length];
+                const pointStyle = pointStyles[index % pointStyles.length];
+
                 const chartDiv = document.createElement('div');
-                chartDiv.className = 'bg-white p-6 rounded-lg shadow-md border border-gray-100';
-                chartDiv.innerHTML = `<h3 class="text-xl font-semibold text-blue-700 mb-4 text-center">${translations[currentLanguage].chartLabels[metric] || metric}</h3><canvas id="chart-${metric.replace(/[^a-zA-Z0-9]/g, '-')}" class="w-full"></canvas>`;
+                // Added h-80 class for a fixed height, making charts consistent
+                chartDiv.className = 'bg-white p-6 rounded-lg shadow-md border border-gray-100 flex flex-col justify-center items-center';
+                chartDiv.innerHTML = `<h3 class="text-xl font-semibold text-blue-700 mb-4 text-center">${translations[currentLanguage].chartLabels[metric] || metric}</h3><canvas id="chart-${metric.replace(/[^a-zA-Z0-9]/g, '-')}" class="w-full h-80"></canvas>`;
                 chartsContainer.appendChild(chartDiv);
 
                 const ctx = document.getElementById(`chart-${metric.replace(/[^a-zA-Z0-9]/g, '-')}`).getContext('2d');
-                // Ensure values are numbers for charts, fallback to 0 if parsing fails
                 const datasets = sortedData.map(entry => parseFloat(entry[metric]) || 0); 
 
                 chartInstances[metric] = new Chart(ctx, {
@@ -785,22 +921,23 @@
                     data: {
                         labels: labels,
                         datasets: [{
-                            label: translations[currentLanguage].chartLabels[metric] || metric, // Chart legend label
+                            label: translations[currentLanguage].chartLabels[metric] || metric,
                             data: datasets,
-                            borderColor: '#3B82F6', // Blue-500
-                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            borderColor: color, // Dynamic color
+                            backgroundColor: color.replace('rgb', 'rgba').replace(')', ', 0.2)'), // Transparent version for fill
                             borderWidth: 2,
                             tension: 0.3,
-                            pointRadius: 3,
-                            pointBackgroundColor: '#2563EB' // Blue-600
+                            pointRadius: 5, // Slightly larger points for visibility
+                            pointBackgroundColor: color, // Point color matches line color
+                            pointStyle: pointStyle // Dynamic point style
                         }]
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false,
+                        maintainAspectRatio: false, // Maintain aspect ratio if height is not fixed by CSS
                         plugins: {
                             legend: {
-                                display: false // Hide legend as label is in title
+                                display: false
                             },
                             tooltip: {
                                 callbacks: {
@@ -808,10 +945,10 @@
                                         return `${translations[currentLanguage].chartLabels['Timestamp']}: ${context[0].label}`;
                                     },
                                     label: function(context) {
-                                        return `${translations[currentLanguage].chartLabels[metric] || metric}: ${context.raw.toLocaleString(currentLanguage)}`; // Format raw value
+                                        return `${translations[currentLanguage].chartLabels[metric] || metric}: ${context.raw.toLocaleString(currentLanguage)}`;
                                     }
                                 },
-                                rtl: (currentLanguage === 'ar') // Enable RTL for tooltips based on language
+                                rtl: (currentLanguage === 'ar')
                             }
                         },
                         scales: {
@@ -837,13 +974,12 @@
                                 ticks: {
                                     font: { size: 10 },
                                     callback: function(value) {
-                                        return value.toLocaleString(currentLanguage); // Format Y-axis ticks
+                                        return value.toLocaleString(currentLanguage);
                                     }
                                 }
                             }
                         },
-                        // Set RTL for chart layout if language is Arabic
-                        indexAxis: 'x', // Ensure X-axis is for data
+                        indexAxis: 'x',
                         rtl: (currentLanguage === 'ar') 
                     }
                 });
@@ -858,16 +994,14 @@
             currentLanguage = lang;
             const t = translations[currentLanguage];
 
-            // Update body direction and text alignment
             document.body.style.direction = (lang === 'ar') ? 'rtl' : 'ltr';
             document.body.style.textAlign = (lang === 'ar') ? 'right' : 'left';
 
-            // Update static texts
             dashboardTitle.textContent = t.dashboardTitle;
-            document.title = t.dashboardTitle; // Also update page title
+            document.title = t.dashboardTitle;
 
             latestDataBtn.textContent = t.latestDataBtn;
-            accelGyroBtn.textContent = t.accelGyroBtn; // Update new button text
+            accelGyroBtn.textContent = t.accelGyroBtn;
             fullTableBtn.textContent = t.fullTableBtn;
             chartsBtn.textContent = t.chartsBtn;
 
@@ -876,7 +1010,7 @@
             errorTextSpan.textContent = t.errorText;
 
             latestDataTitle.textContent = t.latestDataTitle;
-            accelGyroTitle.textContent = t.accelGyroTitle; // Update new section title
+            accelGyroTitle.textContent = t.accelGyroTitle;
             fullTableTitle.textContent = t.fullTableTitle;
             chartsTitle.textContent = t.chartsTitle;
 
@@ -887,25 +1021,27 @@
             applyFiltersBtn.textContent = t.applyFiltersBtn;
             resetFiltersBtn.textContent = t.resetFiltersBtn;
             
-            noDataFoundDiv.textContent = t.noDataFound; // Update the message if no data
+            noDataFoundDiv.textContent = t.noDataFound;
             
-            // Update auto refresh button text
             autoRefreshToggleBtn.textContent = autoRefreshIntervalId ? t.autoRefreshOn : t.autoRefreshOff;
 
-            // Re-render data to apply new language formatting (numbers, dates, times, headers)
-            // This is crucial after language change as it regenerates elements with new strings
+            generateInsightBtn.textContent = t.generateInsightBtn;
+            insightCardTitle.textContent = t.insightCardTitle;
+            insightLoadingText.textContent = t.generatingInsight;
+
+            // Re-render relevant sections to apply new language formatting and filters
             const activePageId = document.querySelector('.page-content:not(.hidden)').id;
+            const filteredData = getFilteredSensorData(); // Get filtered data based on current UI state
             if (activePageId === 'latestData') {
-                renderLatestData(sensorData);
+                renderLatestData(sensorData); // Latest data always uses full data to find last entry
             } else if (activePageId === 'fullTable') {
-                renderFullTable(sensorData);
+                renderFullTable(filteredData); // Re-render table with filtered data
             } else if (activePageId === 'charts') {
-                renderCharts(sensorData);
+                renderCharts(filteredData); // Re-render charts with filtered data
             } else if (activePageId === 'accelGyroData') {
-                renderAccelGyroData(sensorData);
+                renderAccelGyroData(sensorData); // Accel/Gyro also uses full data to find last entry
             }
 
-            // Update current date/time display with new language locale
             updateCurrentDateTimeDisplay();
         }
 
@@ -914,14 +1050,12 @@
          */
         function toggleAutoRefresh() {
             if (autoRefreshIntervalId) {
-                // Stop auto-refresh
                 clearInterval(autoRefreshIntervalId);
                 autoRefreshIntervalId = null;
                 autoRefreshToggleBtn.textContent = translations[currentLanguage].autoRefreshOff;
                 autoRefreshToggleBtn.classList.remove('bg-green-500', 'hover:bg-green-400');
                 autoRefreshToggleBtn.classList.add('bg-red-500', 'hover:bg-red-400');
             } else {
-                // Start auto-refresh (every 30 seconds)
                 autoRefreshIntervalId = setInterval(() => {
                     fetchData(); // Fetch new data
                 }, 30000); // 30 seconds
@@ -932,19 +1066,91 @@
             }
         }
 
+        /**
+         * Generates an insight from the latest sensor data using the Gemini API.
+         */
+        async function generateInsight() {
+            if (sensorData.length === 0) {
+                insightCard.classList.remove('hidden');
+                insightContent.textContent = translations[currentLanguage].noDataForInsight;
+                return;
+            }
+
+            insightContent.textContent = '';
+            insightLoadingText.textContent = translations[currentLanguage].generatingInsight;
+            insightLoading.classList.remove('hidden');
+            insightCard.classList.remove('hidden');
+            generateInsightBtn.disabled = true;
+            generateInsightBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            const latestEntry = sensorData[sensorData.length - 1];
+            let formattedData = "";
+            const labels = translations[currentLanguage].chartLabels;
+
+            for (const key in latestEntry) {
+                if (latestEntry.hasOwnProperty(key)) {
+                    let valueToDisplay = latestEntry[key];
+                    if (key === 'Date') {
+                        valueToDisplay = getFormattedDateForDisplay(valueToDisplay, latestEntry['Heure']);
+                    } else if (key === 'Heure') {
+                        valueToDisplay = getFormattedTimeForDisplay(latestEntry['Date'], valueToDisplay);
+                    } else if (chartMetrics.includes(key)) {
+                        valueToDisplay = formatNumericValue(valueToDisplay);
+                    }
+                    formattedData += `${labels[key] || key}: ${valueToDisplay}\n`;
+                }
+            }
+
+            const prompt = `Analyze the following sensor data and provide a concise summary of the latest readings. Highlight any unusual values or noticeable trends. Ensure the response is in ${currentLanguage === 'ar' ? 'Arabic' : (currentLanguage === 'en' ? 'English' : 'French')}.
+
+Latest Sensor Data:
+${formattedData}
+
+Provide insights in a clear, easy-to-understand paragraph.`;
+
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+            const payload = { contents: chatHistory };
+            const apiKey = ""; // If you want to use models other than gemini-2.0-flash or imagen-3.0-generate-002, provide an API key here. Otherwise, leave this as-is.
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    insightContent.textContent = text;
+                } else {
+                    insightContent.textContent = translations[currentLanguage].insightError;
+                    console.error("Gemini API response structure unexpected:", result);
+                }
+            } catch (error) {
+                insightContent.textContent = translations[currentLanguage].insightFetchError + `: ${error.message}`;
+                console.error("Error calling Gemini API:", error);
+            } finally {
+                insightLoading.classList.add('hidden');
+                generateInsightBtn.disabled = false;
+                generateInsightBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+
         // Event Listeners
         document.addEventListener('DOMContentLoaded', () => {
-            fetchData(); // Fetch data on page load
+            fetchData(); // Fetch all data on page load
             showPage('latestData'); // Show the latest data page by default
 
-            // Initial call to update UI for default language (French)
-            updateUIForLanguage(currentLanguage);
+            updateUIForLanguage(currentLanguage); // Initial call to update UI for default language
+            toggleAutoRefresh(); // Start auto-refresh by default
 
-            // Start auto-refresh by default
-            toggleAutoRefresh(); 
-
-            // Update current date and time every second
-            setInterval(updateCurrentDateTimeDisplay, 1000); 
+            setInterval(updateCurrentDateTimeDisplay, 1000); // Update current date and time every second 
 
             document.querySelectorAll('.nav-button').forEach(button => {
                 button.addEventListener('click', (event) => {
@@ -953,7 +1159,6 @@
                 });
             });
 
-            // Language switcher event listeners
             document.querySelectorAll('.lang-button').forEach(button => {
                 button.addEventListener('click', (event) => {
                     const lang = event.target.dataset.lang;
@@ -961,14 +1166,12 @@
                 });
             });
 
-            // Auto-refresh toggle button listener
             autoRefreshToggleBtn.addEventListener('click', toggleAutoRefresh);
+            generateInsightBtn.addEventListener('click', generateInsight);
 
+            applyFiltersBtn.addEventListener('click', applyFilters); // Client-side filter application
+            resetFiltersBtn.addEventListener('click', resetFilters); // Client-side filter reset
         });
-
-        // The ResizeObserver block has been removed as Chart.js's responsive property
-        // should handle resizing automatically, reducing potential layout thrashing.
-        // If charts do not resize as expected, a debounced resize function might be reconsidered.
 
     </script>
 </body>
