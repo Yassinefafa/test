@@ -13,6 +13,8 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6; /* لون خلفية خفيف */
+            display: flex; /* استخدام فليكس بوكس لتحديد تخطيط الشريط الجانبي والمحتوى الرئيسي */
+            flex-direction: row; /* الشريط الجانبي والمحتوى في صف واحد */
         }
         /* تصميم مخصص لأزرار الفلاتر والأزرار العامة */
         button {
@@ -139,24 +141,24 @@
             stroke-width: 0;
         }
 
-        /* تصميم القائمة الجانبية */
+        /* تصميم القائمة الجانبية (الآن على اليسار) */
         .sidebar {
             width: 250px;
             background-color: #374151; /* لون رمادي داكن للخلفية */
             color: #fff;
             position: fixed;
             top: 0;
-            right: -250px; /* مخفية في البداية */
+            left: -250px; /* مخفية في البداية على اليسار */
             height: 100%;
             padding-top: 4rem; /* مسافة للرأس */
-            transition: right 0.3s ease-in-out;
+            transition: left 0.3s ease-in-out; /* انتقال للجانب الأيسر */
             z-index: 50; /* فوق المحتوى ولكن تحت التلميح */
-            box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2); /* ظل لليمين */
             display: flex;
             flex-direction: column;
         }
         .sidebar.open {
-            right: 0; /* تظهر عند الفتح */
+            left: 0; /* تظهر عند الفتح على اليسار */
         }
         .sidebar ul {
             list-style: none;
@@ -177,7 +179,7 @@
         .sidebar .close-btn {
             position: absolute;
             top: 1rem;
-            left: 1rem;
+            right: 1rem; /* زر الإغلاق على اليمين في القائمة الجانبية اليسرى */
             background: none;
             border: none;
             color: #fff;
@@ -186,11 +188,11 @@
             display: none; /* مخفي افتراضياً، يظهر على الجوال */
         }
 
-        /* زر الهامبرغر */
+        /* زر الهامبرغر (الآن على اليسار) */
         .hamburger-btn {
             position: fixed;
             top: 1rem;
-            right: 1rem;
+            left: 1rem; /* زر الهامبرغر على اليسار */
             z-index: 60; /* فوق الشريط الجانبي */
             background-color: #4f46e5;
             color: white;
@@ -204,7 +206,7 @@
         }
 
         /* إخفاء زر الهامبرغر والقائمة الجانبية على الشاشات الكبيرة */
-        @media (min-width: 1024px) { /* breakpoint for large screens */
+        @media (min-width: 1024px) { /* نقطة توقف للشاشات الكبيرة */
             .sidebar {
                 position: static; /* ليست ثابتة */
                 width: 200px; /* عرض ثابت على الشاشات الكبيرة */
@@ -213,7 +215,8 @@
                 box-shadow: none;
                 background-color: transparent; /* خلفية شفافة */
                 display: block; /* مرئية دائمًا */
-                margin-left: 1.5rem; /* مسافة عن المحتوى الرئيسي */
+                margin-right: 1.5rem; /* مسافة عن المحتوى الرئيسي على اليمين */
+                order: -1; /* لجعلها تظهر قبل المحتوى الرئيسي في تخطيط الفليكس بوكس */
             }
             .sidebar ul li a {
                 color: #4b5563; /* لون نص داكن على الخلفية الفاتحة */
@@ -228,10 +231,26 @@
             .sidebar .close-btn {
                 display: none; /* إخفاء زر الإغلاق */
             }
+
+            /* Adjust main content for large screens */
+            main {
+                margin-left: 1.5rem; /* لتوفير مساحة بجانب الشريط الجانبي الأيسر */
+                flex-grow: 1; /* للسماح للمحتوى الرئيسي بالتوسع */
+            }
+        }
+
+        /* على الشاشات الصغيرة، المحتوى الرئيسي يبدأ بعد زر الهامبرغر */
+        @media (max-width: 1023px) {
+            body {
+                flex-direction: column; /* المحتوى يكون عموديًا على الشاشات الصغيرة */
+            }
+            main {
+                padding-top: 4rem; /* لتجنب تداخل المحتوى مع زر الهامبرغر */
+            }
         }
     </style>
 </head>
-<body class="p-4 bg-gray-100 flex min-h-screen">
+<body class="p-4 bg-gray-100 min-h-screen">
 
     <!-- زر الهامبرغر (يظهر على الجوال فقط) -->
     <button id="hamburgerBtn" class="hamburger-btn lg:hidden">
@@ -556,22 +575,37 @@
                 let timeMatch = true;
 
                 // Date filtering
+                let fromDateObj = null;
                 if (filterDateFromValue) {
-                    const fromDateObj = new Date(filterDateFromValue);
-                    fromDateObj.setHours(0, 0, 0, 0); // Start of the day
-                    if (rowDateTime < fromDateObj) {
-                        dateMatch = false;
-                        console.log(`  Row Date (${formatDate(rowDateTime)}) < From Date (${formatDate(fromDateObj)}) -> dateMatch = false for row: ${JSON.stringify(d[DATE_COLUMN_NAME])}`);
+                    fromDateObj = new Date(filterDateFromValue);
+                    if (isNaN(fromDateObj.getTime())) {
+                        console.warn("Invalid 'Date From' filter value, ignoring filter:", filterDateFromValue);
+                        fromDateObj = null; // Invalidate filter if value is bad
+                    } else {
+                        fromDateObj.setHours(0, 0, 0, 0); // Start of the day
                     }
                 }
+
+                let toDateObj = null;
                 if (filterDateToValue) {
-                    const toDateObj = new Date(filterDateToValue);
-                    toDateObj.setHours(23, 59, 59, 999); // End of the day
-                    if (rowDateTime > toDateObj) {
-                        dateMatch = false;
-                        console.log(`  Row Date (${formatDate(rowDateTime)}) > To Date (${formatDate(toDateObj)}) -> dateMatch = false for row: ${JSON.stringify(d[DATE_COLUMN_NAME])}`);
+                    toDateObj = new Date(filterDateToValue);
+                    if (isNaN(toDateObj.getTime())) {
+                        console.warn("Invalid 'Date To' filter value, ignoring filter:", filterDateToValue);
+                        toDateObj = null; // Invalidate filter if value is bad
+                    } else {
+                        toDateObj.setHours(23, 59, 59, 999); // End of the day
                     }
                 }
+
+                if (fromDateObj && rowDateTime < fromDateObj) {
+                    dateMatch = false;
+                    console.log(`  Row Date (${formatDate(rowDateTime)}) < From Date (${formatDate(fromDateObj)}) -> dateMatch = false for row: ${JSON.stringify(d[DATE_COLUMN_NAME])}`);
+                }
+                if (toDateObj && rowDateTime > toDateObj) {
+                    dateMatch = false;
+                    console.log(`  Row Date (${formatDate(rowDateTime)}) > To Date (${formatDate(toDateObj)}) -> dateMatch = false for row: ${JSON.stringify(d[DATE_COLUMN_NAME])}`);
+                }
+
 
                 // Time filtering, only if dateMatch is true
                 if (dateMatch && (filterTimeFromValue || filterTimeToValue)) {
@@ -583,26 +617,36 @@
 
                     console.log(`  Row Time Only for row ${JSON.stringify(d[DATE_COLUMN_NAME])} ${JSON.stringify(d[TIME_COLUMN_NAME])}: ${formatTime(rowTimeOnly)}`);
 
+                    let fromTimeOnly = null;
                     if (filterTimeFromValue) {
                         const [fromHours, fromMinutes] = filterTimeFromValue.split(':').map(Number);
-                        const fromTimeOnly = new Date(dummyTimeCompareDate);
-                        fromTimeOnly.setHours(fromHours, fromMinutes, 0, 0); // From HH:MM:00.000
-
-                        if (rowTimeOnly < fromTimeOnly) {
-                            timeMatch = false;
-                            console.log(`    Row Time (${formatTime(rowTimeOnly)}) < From Time (${formatTime(fromTimeOnly)}) -> timeMatch = false for row: ${JSON.stringify(d[TIME_COLUMN_NAME])}`);
+                        if (isNaN(fromHours) || isNaN(fromMinutes)) {
+                            console.warn("Invalid 'Time From' filter value, ignoring filter:", filterTimeFromValue);
+                        } else {
+                            fromTimeOnly = new Date(dummyTimeCompareDate);
+                            fromTimeOnly.setHours(fromHours, fromMinutes, 0, 0); // From HH:MM:00.000
                         }
                     }
 
-                    if (filterTimeToValue && timeMatch) { // Only check if fromTime filter still allows
+                    let toTimeOnly = null;
+                    if (filterTimeToValue) {
                         const [toHours, toMinutes] = filterTimeToValue.split(':').map(Number);
-                        const toTimeOnly = new Date(dummyTimeCompareDate);
-                        toTimeOnly.setHours(toHours, toMinutes, 59, 999); // To HH:MM:59.999 (end of minute)
-
-                        if (rowTimeOnly > toTimeOnly) {
-                            timeMatch = false;
-                            console.log(`    Row Time (${formatTime(rowTimeOnly)}) > To Time (${formatTime(toTimeOnly)}) -> timeMatch = false for row: ${JSON.stringify(d[TIME_COLUMN_NAME])}`);
+                        if (isNaN(toHours) || isNaN(toMinutes)) {
+                            console.warn("Invalid 'Time To' filter value, ignoring filter:", filterTimeToValue);
+                        } else {
+                            toTimeOnly = new Date(dummyTimeCompareDate);
+                            toTimeOnly.setHours(toHours, toMinutes, 59, 999); // To HH:MM:59.999 (end of minute)
                         }
+                    }
+
+                    if (fromTimeOnly && rowTimeOnly < fromTimeOnly) {
+                        timeMatch = false;
+                        console.log(`    Row Time (${formatTime(rowTimeOnly)}) < From Time (${formatTime(fromTimeOnly)}) -> timeMatch = false for row: ${JSON.stringify(d[TIME_COLUMN_NAME])}`);
+                    }
+
+                    if (toTimeOnly && timeMatch && rowTimeOnly > toTimeOnly) { // Only check if fromTime filter still allows
+                        timeMatch = false;
+                        console.log(`    Row Time (${formatTime(rowTimeOnly)}) > To Time (${formatTime(toTimeOnly)}) -> timeMatch = false for row: ${JSON.stringify(d[TIME_COLUMN_NAME])}`);
                     }
                 }
                 
@@ -721,8 +765,16 @@
             const maxTemp = d3.max(filteredChartData, d => d.parsedTemperature);
             
             // Add some padding to min/max temperature for better visualization
-            const yDomainMin = (minTemp !== undefined && minTemp !== null) ? minTemp * 0.9 : 0;
-            const yDomainMax = (maxTemp !== undefined && maxTemp !== null) ? maxTemp * 1.1 : 100; // Default range if data is uniform
+            // Ensure yDomainMin is not greater than yDomainMax, especially if minTemp === maxTemp
+            let yDomainMin = (minTemp !== undefined && minTemp !== null) ? minTemp * 0.9 : 0;
+            let yDomainMax = (maxTemp !== undefined && maxTemp !== null) ? maxTemp * 1.1 : 100;
+
+            // If all temperatures are the same, adjust the domain slightly to show a visible line
+            if (yDomainMin === yDomainMax) {
+                yDomainMin = minTemp - 1;
+                yDomainMax = maxTemp + 1;
+            }
+
 
             const margin = { top: 20, right: 30, bottom: 60, left: 60 };
             const containerWidth = chartContainer.offsetWidth; // استخدام عرض الحاوية الفعلية
