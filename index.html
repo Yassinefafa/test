@@ -12,8 +12,8 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            direction: rtl; /* Set text direction to right-to-left for Arabic */
-            text-align: right; /* Align text to the right for Arabic */
+            direction: rtl; /* Default to RTL for Arabic initially, will be changed by JS for LTR languages */
+            text-align: right; /* Default to right for Arabic, will be changed by JS for LTR languages */
         }
         .container {
             max-width: 1200px;
@@ -44,18 +44,32 @@
 <body class="bg-gray-100 text-gray-800">
     <!-- Header and Navigation -->
     <header class="bg-gradient-to-r from-blue-600 to-indigo-700 shadow-lg py-4">
-        <nav class="container flex justify-between items-center">
-            <h1 class="text-white text-3xl font-bold rounded-lg px-3 py-1 bg-opacity-20 bg-white">
+        <nav class="container flex justify-between items-center flex-wrap gap-4">
+            <h1 id="dashboardTitle" class="text-white text-3xl font-bold rounded-lg px-3 py-1 bg-opacity-20 bg-white">
                 لوحة تحكم البيانات
             </h1>
+            <!-- Current Date and Time Display -->
+            <div class="flex items-center space-x-4 space-x-reverse text-white text-lg font-semibold">
+                <div id="currentDate" class="px-3 py-1 rounded-full bg-blue-500 bg-opacity-40 shadow-md"></div>
+                <div id="currentTime" class="px-3 py-1 rounded-full bg-indigo-500 bg-opacity-40 shadow-md"></div>
+            </div>
+            <!-- Language Selector -->
+            <div class="flex space-x-2">
+                <button class="lang-button px-4 py-2 rounded-full text-sm font-semibold text-white bg-gray-600 hover:bg-gray-500 transition duration-300" data-lang="ar">العربية</button>
+                <button class="lang-button px-4 py-2 rounded-full text-sm font-semibold text-white bg-gray-600 hover:bg-gray-500 transition duration-300" data-lang="en">English</button>
+                <button class="lang-button px-4 py-2 rounded-full text-sm font-semibold text-white bg-blue-500 hover:bg-blue-400 transition duration-300" data-lang="fr">Français</button>
+            </div>
             <div class="flex space-x-4 space-x-reverse"> <!-- space-x-reverse for RTL -->
-                <button class="nav-button px-6 py-2 rounded-full text-lg font-semibold text-white bg-blue-500 hover:bg-blue-400 transition duration-300 transform hover:scale-105 shadow-md" data-target="latestData">
+                <button id="latestDataBtn" class="nav-button px-6 py-2 rounded-full text-lg font-semibold text-white bg-blue-500 hover:bg-blue-400 transition duration-300 transform hover:scale-105 shadow-md" data-target="latestData">
                     البيانات الأخيرة
                 </button>
-                <button class="nav-button px-6 py-2 rounded-full text-lg font-semibold text-white bg-blue-500 hover:bg-blue-400 transition duration-300 transform hover:scale-105 shadow-md" data-target="fullTable">
+                <button id="accelGyroBtn" class="nav-button px-6 py-2 rounded-full text-lg font-semibold text-white bg-blue-500 hover:bg-blue-400 transition duration-300 transform hover:scale-105 shadow-md" data-target="accelGyroData">
+                    تسارع وجيروسكوب
+                </button>
+                <button id="fullTableBtn" class="nav-button px-6 py-2 rounded-full text-lg font-semibold text-white bg-blue-500 hover:bg-blue-400 transition duration-300 transform hover:scale-105 shadow-md" data-target="fullTable">
                     الجدول الكامل
                 </button>
-                <button class="nav-button px-6 py-2 rounded-full text-lg font-semibold text-white bg-blue-500 hover:bg-blue-400 transition duration-300 transform hover:scale-105 shadow-md" data-target="charts">
+                <button id="chartsBtn" class="nav-button px-6 py-2 rounded-full text-lg font-semibold text-white bg-blue-500 hover:bg-blue-400 transition duration-300 transform hover:scale-105 shadow-md" data-target="charts">
                     الرسوم البيانية
                 </button>
             </div>
@@ -71,13 +85,13 @@
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span>جارٍ تحميل البيانات...</span>
+                <span id="loadingText">جارٍ تحميل البيانات...</span>
             </div>
         </div>
 
         <!-- Error Message -->
         <div id="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative my-6 hidden" role="alert">
-            <strong class="font-bold">خطأ!</strong>
+            <strong id="errorTitle" class="font-bold">خطأ!</strong>
             <span class="block sm:inline" id="errorText">تعذر تحميل البيانات. يرجى المحاولة مرة أخرى لاحقًا.</span>
             <span class="absolute top-0 bottom-0 left-0 px-4 py-3">
                 <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" onclick="document.getElementById('errorMessage').classList.add('hidden')">
@@ -89,7 +103,7 @@
 
         <!-- Latest Data Section -->
         <section id="latestData" class="page-content bg-white p-8 rounded-lg shadow-xl border border-gray-200">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6 border-b-2 pb-3 border-blue-500">
+            <h2 id="latestDataTitle" class="text-3xl font-bold text-gray-800 mb-6 border-b-2 pb-3 border-blue-500">
                 أحدث بيانات المستشعر
             </h2>
             <div id="latestDataContent" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -97,9 +111,19 @@
             </div>
         </section>
 
+        <!-- Acceleration and Gyroscope Data Section -->
+        <section id="accelGyroData" class="page-content hidden bg-white p-8 rounded-lg shadow-xl border border-gray-200">
+            <h2 id="accelGyroTitle" class="text-3xl font-bold text-gray-800 mb-6 border-b-2 pb-3 border-blue-500">
+                بيانات التسارع والجيروسكوب
+            </h2>
+            <div id="accelGyroContent" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Acceleration and Gyroscope data will be injected here by JavaScript -->
+            </div>
+        </section>
+
         <!-- Full Table Section -->
         <section id="fullTable" class="page-content hidden bg-white p-8 rounded-lg shadow-xl border border-gray-200">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6 border-b-2 pb-3 border-blue-500">
+            <h2 id="fullTableTitle" class="text-3xl font-bold text-gray-800 mb-6 border-b-2 pb-3 border-blue-500">
                 البيانات الكاملة مع التصفية
             </h2>
 
@@ -107,19 +131,19 @@
             <div class="mb-8 p-6 bg-gray-50 rounded-lg shadow-inner">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-4">
                     <div>
-                        <label for="fromDate" class="block text-gray-700 text-sm font-medium mb-2">من تاريخ:</label>
+                        <label id="fromDateLabel" for="fromDate" class="block text-gray-700 text-sm font-medium mb-2">من تاريخ:</label>
                         <input type="date" id="fromDate" class="form-input w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-200">
                     </div>
                     <div>
-                        <label for="toDate" class="block text-gray-700 text-sm font-medium mb-2">إلى تاريخ:</label>
+                        <label id="toDateLabel" for="toDate" class="block text-gray-700 text-sm font-medium mb-2">إلى تاريخ:</label>
                         <input type="date" id="toDate" class="form-input w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-200">
                     </div>
                     <div>
-                        <label for="fromTime" class="block text-gray-700 text-sm font-medium mb-2">من توقيت:</label>
+                        <label id="fromTimeLabel" for="fromTime" class="block text-gray-700 text-sm font-medium mb-2">من توقيت:</label>
                         <input type="time" id="fromTime" class="form-input w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-200">
                     </div>
                     <div>
-                        <label for="toTime" class="block text-gray-700 text-sm font-medium mb-2">إلى توقيت:</label>
+                        <label id="toTimeLabel" for="toTime" class="block text-gray-700 text-sm font-medium mb-2">إلى توقيت:</label>
                         <input type="time" id="toTime" class="form-input w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-200">
                     </div>
                 </div>
@@ -153,7 +177,7 @@
 
         <!-- Charts Section -->
         <section id="charts" class="page-content hidden bg-white p-8 rounded-lg shadow-xl border border-gray-200">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6 border-b-2 pb-3 border-blue-500">
+            <h2 id="chartsTitle" class="text-3xl font-bold text-gray-800 mb-6 border-b-2 pb-3 border-blue-500">
                 الرسوم البيانية لبيانات المستشعر
             </h2>
             <div id="chartsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -169,6 +193,7 @@
         // Global variables
         let sensorData = []; // To store all fetched data
         const chartInstances = {}; // To keep track of Chart.js instances
+        let currentLanguage = 'fr'; // Default language is French
 
         // DOM Elements
         const loadingIndicator = document.getElementById('loading');
@@ -190,12 +215,161 @@
         const noDataFoundDiv = document.getElementById('noDataFound');
         const chartsContainer = document.getElementById('chartsContainer');
 
-        // Metrics to display as charts
+        // Elements for current date/time display
+        const currentDateDisplay = document.getElementById('currentDate');
+        const currentTimeDisplay = document.getElementById('currentTime');
+
+        // Elements for language update
+        const dashboardTitle = document.getElementById('dashboardTitle');
+        const latestDataTitle = document.getElementById('latestDataTitle');
+        const fullTableTitle = document.getElementById('fullTableTitle');
+        const chartsTitle = document.getElementById('chartsTitle');
+        const fromDateLabel = document.getElementById('fromDateLabel');
+        const toDateLabel = document.getElementById('toDateLabel');
+        const fromTimeLabel = document.getElementById('fromTimeLabel');
+        const toTimeLabel = document.getElementById('toTimeLabel');
+        const loadingText = document.getElementById('loadingText');
+        const errorTitle = document.getElementById('errorTitle');
+
+        // New elements for Acceleration and Gyroscope section
+        const accelGyroDataSection = document.getElementById('accelGyroData');
+        const accelGyroTitle = document.getElementById('accelGyroTitle');
+        const accelGyroContent = document.getElementById('accelGyroContent');
+
+
+        // Metrics to display as charts (including Accel & Gyro)
         const chartMetrics = [
             'Température (°C)', 'Humidité (%)', 'Accélération X', 'Accélération Y',
             'Accélération Z', 'Gyroscope X', 'Gyroscope Y', 'Gyroscope Z',
             'Vibration', 'Temp. NTC (°C)', 'Courant (V Bruts)', 'Batterie (V)'
         ];
+
+        // Translation object
+        const translations = {
+            'ar': {
+                dashboardTitle: 'لوحة تحكم البيانات',
+                latestDataBtn: 'البيانات الأخيرة',
+                accelGyroBtn: 'تسارع وجيروسكوب',
+                fullTableBtn: 'الجدول الكامل',
+                chartsBtn: 'الرسوم البيانية',
+                loadingText: 'جارٍ تحميل البيانات...',
+                errorTitle: 'خطأ!',
+                errorText: 'تعذر تحميل البيانات. يرجى التأكد من أن مصدر البيانات متاح و Apps Script منشور بشكل صحيح.',
+                latestDataTitle: 'أحدث بيانات المستشعر',
+                accelGyroTitle: 'بيانات التسارع والجيروسكوب',
+                fullTableTitle: 'البيانات الكاملة مع التصفية',
+                fromDateLabel: 'من تاريخ:',
+                toDateLabel: 'إلى تاريخ:',
+                fromTimeLabel: 'من توقيت:',
+                toTimeLabel: 'إلى توقيت:',
+                applyFiltersBtn: 'تطبيق التصفية',
+                resetFiltersBtn: 'إعادة تعيين',
+                noDataFound: 'لا توجد بيانات لعرضها أو لا توجد بيانات مطابقة لمعايير التصفية.',
+                chartsTitle: 'الرسوم البيانية لبيانات المستشعر',
+                invalidDate: 'تاريخ غير صالح',
+                invalidTime: 'وقت غير صالح',
+                invalidValue: 'غير صالح',
+                chartLabels: {
+                    'Timestamp': 'الختم الزمني',
+                    'Date': 'التاريخ',
+                    'Heure': 'التوقيت',
+                    'Température (°C)': 'درجة الحرارة (°C)',
+                    'Humidité (%)': 'الرطوبة (%)',
+                    'Accélération X': 'التسارع X',
+                    'Accélération Y': 'التسارع Y',
+                    'Accélération Z': 'التسارع Z',
+                    'Gyroscope X': 'جيروسكوب X',
+                    'Gyroscope Y': 'جيروسكوب Y',
+                    'Gyroscope Z': 'جيروسكوب Z',
+                    'Vibration': 'الاهتزاز',
+                    'Temp. NTC (°C)': 'درجة حرارة NTC (°C)',
+                    'Courant (V Bruts)': 'التيار (فولت خام)',
+                    'Batterie (V)': 'البطارية (فولت)'
+                }
+            },
+            'en': {
+                dashboardTitle: 'Data Dashboard',
+                latestDataBtn: 'Latest Data',
+                accelGyroBtn: 'Acceleration & Gyro',
+                fullTableBtn: 'Full Table',
+                chartsBtn: 'Charts',
+                loadingText: 'Loading data...',
+                errorTitle: 'Error!',
+                errorText: 'Failed to load data. Please ensure the data source is available and Apps Script is correctly deployed.',
+                latestDataTitle: 'Latest Sensor Data',
+                accelGyroTitle: 'Acceleration and Gyroscope Data',
+                fullTableTitle: 'Full Data with Filters',
+                fromDateLabel: 'From Date:',
+                toDateLabel: 'To Date:',
+                fromTimeLabel: 'From Time:',
+                toTimeLabel: 'To Time:',
+                applyFiltersBtn: 'Apply Filter',
+                resetFiltersBtn: 'Reset',
+                noDataFound: 'No data to display or no data matching filter criteria.',
+                chartsTitle: 'Sensor Data Charts',
+                invalidDate: 'Invalid Date',
+                invalidTime: 'Invalid Time',
+                invalidValue: 'Invalid',
+                chartLabels: {
+                    'Timestamp': 'Timestamp',
+                    'Date': 'Date',
+                    'Heure': 'Time',
+                    'Température (°C)': 'Temperature (°C)',
+                    'Humidité (%)': 'Humidity (%)',
+                    'Accélération X': 'Acceleration X',
+                    'Accélération Y': 'Acceleration Y',
+                    'Accélération Z': 'Acceleration Z',
+                    'Gyroscope X': 'Gyroscope X',
+                    'Gyroscope Y': 'Gyroscope Y',
+                    'Gyroscope Z': 'Gyroscope Z',
+                    'Vibration': 'Vibration',
+                    'Temp. NTC (°C)': 'NTC Temp (°C)',
+                    'Courant (V Bruts)': 'Current (Raw V)',
+                    'Batterie (V)': 'Battery (V)'
+                }
+            },
+            'fr': {
+                dashboardTitle: 'Tableau de Bord des Données',
+                latestDataBtn: 'Dernières Données',
+                accelGyroBtn: 'Accélération & Gyro',
+                fullTableBtn: 'Tableau Complet',
+                chartsBtn: 'Graphiques',
+                loadingText: 'Chargement des données...',
+                errorTitle: 'Erreur!',
+                errorText: 'Échec du chargement des données. Veuillez vous assurer que la source de données est disponible et que le script Apps Script est correctement déployé.',
+                latestDataTitle: 'Dernières Données des Capteurs',
+                accelGyroTitle: 'Données d\'Accélération et de Gyroscope',
+                fullTableTitle: 'Tableau Complet des Données avec Filtres',
+                fromDateLabel: 'Du Date:',
+                toDateLabel: 'Au Date:',
+                fromTimeLabel: 'Du Temps:',
+                toTimeLabel: 'Au Temps:',
+                applyFiltersBtn: 'Appliquer le Filtre',
+                resetFiltersBtn: 'Réinitialiser',
+                noDataFound: 'Aucune donnée à afficher ou aucune donnée ne correspond aux critères de filtre.',
+                chartsTitle: 'Graphiques des Données des Capteurs',
+                invalidDate: 'Date Invalide',
+                invalidTime: 'Heure Invalide',
+                invalidValue: 'Invalide',
+                chartLabels: {
+                    'Timestamp': 'Horodatage',
+                    'Date': 'Date',
+                    'Heure': 'Heure',
+                    'Température (°C)': 'Température (°C)',
+                    'Humidité (%)': 'Humidité (%)',
+                    'Accélération X': 'Accélération X',
+                    'Accélération Y': 'Accélération Y',
+                    'Accélération Z': 'Accélération Z',
+                    'Gyroscope X': 'Gyroscope X',
+                    'Gyroscope Y': 'Gyroscope Y',
+                    'Gyroscope Z': 'Gyroscope Z',
+                    'Vibration': 'Vibration',
+                    'Temp. NTC (°C)': 'Temp. NTC (°C)',
+                    'Courant (V Bruts)': 'Courant (V bruts)',
+                    'Batterie (V)': 'Batterie (V)'
+                }
+            }
+        };
 
         /**
          * Helper function to parse a date/time string into a Date object.
@@ -214,7 +388,6 @@
             }
 
             // Construct an ISO 8601 string assuming UTC, then convert to local Date object
-            // By default, new Date('YYYY-MM-DDTHH:MM:SSZ') will parse as UTC and then display in local time.
             const isoString = `${parsedDatePart}T${parsedTimePart}Z`;
             const date = new Date(isoString);
 
@@ -222,33 +395,33 @@
         }
 
         /**
-         * Helper function to get only the date part (e.g., "2025-06-23") formatted for local display.
-         * @param {Date | string} dateTimeValue - The Date object or original string value.
-         * @param {string} timeValue - The original time string (Heure column).
-         * @returns {string} Formatted local date string (YYYY-MM-DD).
+         * Helper function to get only the date part formatted for local display.
+         * @param {Date | string} dateTimeValue - The Date object or original string value from 'Date' column.
+         * @param {string} timeValue - The original time string from 'Heure' column.
+         * @returns {string} Formatted local date string.
          */
         function getFormattedDateForDisplay(dateValue, timeValue) {
             const dateObj = parseDateTimeToLocalDate(dateValue, timeValue);
             if (dateObj) {
-                // Return YYYY-MM-DD in local time
-                return dateObj.toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                // Use currentLanguage for locale formatting
+                return dateObj.toLocaleDateString(currentLanguage, { year: 'numeric', month: '2-digit', day: '2-digit' });
             }
-            return 'تاريخ غير صالح';
+            return translations[currentLanguage].invalidDate;
         }
 
         /**
-         * Helper function to get only the time part (e.g., "16:56:43") formatted for local display.
-         * @param {Date | string} dateValue - The original date string (Date column).
-         * @param {string} timeValue - The Date object or original string value.
-         * @returns {string} Formatted local time string (HH:MM:SS).
+         * Helper function to get only the time part formatted for local display.
+         * @param {Date | string} dateValue - The original date string from 'Date' column.
+         * @param {string} timeValue - The Date object or original string value from 'Heure' column.
+         * @returns {string} Formatted local time string.
          */
         function getFormattedTimeForDisplay(dateValue, timeValue) {
             const dateObj = parseDateTimeToLocalDate(dateValue, timeValue);
             if (dateObj) {
-                // Return HH:MM:SS in local time
-                return dateObj.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                // Use currentLanguage for locale formatting
+                return dateObj.toLocaleTimeString(currentLanguage, { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
             }
-            return 'وقت غير صالح';
+            return translations[currentLanguage].invalidTime;
         }
         
         /**
@@ -259,11 +432,23 @@
         function formatNumericValue(value) {
             const parsedValue = parseFloat(value);
             if (!isNaN(parsedValue)) {
-                return parsedValue.toFixed(2); // Format to 2 decimal places
+                // Use currentLanguage for locale-specific number formatting
+                return parsedValue.toLocaleString(currentLanguage, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             }
-            return 'غير صالح'; // Indicate invalid data
+            return translations[currentLanguage].invalidValue; // Indicate invalid data
         }
 
+        /**
+         * Updates the display with the current local date and time based on currentLanguage.
+         */
+        function updateCurrentDateTimeDisplay() {
+            const now = new Date();
+            const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+            const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+
+            currentDateDisplay.textContent = now.toLocaleDateString(currentLanguage, dateOptions);
+            currentTimeDisplay.textContent = now.toLocaleTimeString(currentLanguage, timeOptions);
+        }
 
         /**
          * Shows a specific page section and hides others.
@@ -292,6 +477,8 @@
             // If navigating to full table, ensure it's rendered with current filters
             if (pageId === 'fullTable') {
                 renderFullTable(sensorData);
+            } else if (pageId === 'accelGyroData') {
+                renderAccelGyroData(sensorData);
             }
         }
 
@@ -353,11 +540,13 @@
                     renderFullTable(sensorData); // Render table with the newly fetched data
                 } else if (activePageId === 'charts') {
                     renderCharts(sensorData);
+                } else if (activePageId === 'accelGyroData') { // Render new section
+                    renderAccelGyroData(sensorData);
                 }
 
             } catch (error) {
                 console.error('Error fetching data:', error);
-                errorTextSpan.textContent = `تعذر تحميل البيانات: ${error.message}. يرجى التأكد من أن مصدر البيانات متاح و Apps Script منشور بشكل صحيح.`;
+                errorTextSpan.textContent = translations[currentLanguage].errorText; // Use translated error
                 errorMessageDiv.classList.remove('hidden');
             } finally {
                 loadingIndicator.classList.add('hidden');
@@ -371,33 +560,18 @@
         function renderLatestData(data) {
             latestDataContent.innerHTML = ''; // Clear previous content
             if (data.length === 0) {
-                latestDataContent.innerHTML = '<p class="text-gray-500 text-center col-span-full">لا توجد بيانات لعرضها.</p>';
+                latestDataContent.innerHTML = `<p class="text-gray-500 text-center col-span-full">${translations[currentLanguage].noDataFound}</p>`;
                 return;
             }
 
             const latestEntry = data[data.length - 1]; // Get the last entry (after sorting in fetchData)
 
-            // Arabic labels mapping
-            const labels = {
-                'Timestamp': 'الختم الزمني',
-                'Date': 'التاريخ',
-                'Heure': 'التوقيت', // Use 'Heure' as the key for time
-                'Température (°C)': 'درجة الحرارة (°C)',
-                'Humidité (%)': 'الرطوبة (%)',
-                'Accélération X': 'التسارع X',
-                'Accélération Y': 'التسارع Y', 
-                'Accélération Z': 'التسارع Z',
-                'Gyroscope X': 'جيروسكوب X',
-                'Gyroscope Y': 'جيروسكوب Y',
-                'Gyroscope Z': 'جيروسكوب Z',
-                'Vibration': 'الاهتزاز',
-                'Temp. NTC (°C)': 'درجة حرارة NTC (°C)',
-                'Courant (V Bruts)': 'التيار (فولت خام)',
-                'Batterie (V)': 'البطارية (فولت)'
-            };
+            // Dynamic labels based on current language
+            const labels = translations[currentLanguage].chartLabels;
 
             for (const key in latestEntry) {
-                if (latestEntry.hasOwnProperty(key)) {
+                // Exclude Accel and Gyro data from this section as they will have their own section
+                if (latestEntry.hasOwnProperty(key) && !['Accélération X', 'Accélération Y', 'Accélération Z', 'Gyroscope X', 'Gyroscope Y', 'Gyroscope Z'].includes(key)) {
                     let valueToDisplay = latestEntry[key];
                     if (key === 'Date') {
                         valueToDisplay = getFormattedDateForDisplay(valueToDisplay, latestEntry['Heure']);
@@ -407,7 +581,7 @@
                         valueToDisplay = formatNumericValue(valueToDisplay);
                     }
 
-                    const displayLabel = labels[key] || key; // Use Arabic label if available, else original key
+                    const displayLabel = labels[key] || key; // Use translated label if available, else original key
 
                     const dataCard = document.createElement('div');
                     dataCard.className = 'bg-white p-6 rounded-lg shadow-md border border-gray-100 transform hover:scale-102 transition duration-300';
@@ -421,6 +595,49 @@
         }
 
         /**
+         * Renders acceleration and gyroscope data in dedicated cards.
+         * @param {Array<Object>} data - The full sensor data array.
+         */
+        function renderAccelGyroData(data) {
+            accelGyroContent.innerHTML = ''; // Clear previous content
+            if (data.length === 0) {
+                accelGyroContent.innerHTML = `<p class="text-gray-500 text-center col-span-full">${translations[currentLanguage].noDataFound}</p>`;
+                return;
+            }
+
+            const latestEntry = data[data.length - 1]; // Get the last entry
+
+            const labels = translations[currentLanguage].chartLabels;
+
+            // Create Acceleration Card
+            const accelCard = document.createElement('div');
+            accelCard.className = 'bg-white p-6 rounded-lg shadow-md border border-gray-100';
+            accelCard.innerHTML = `
+                <h3 class="text-xl font-semibold text-blue-700 mb-4">${labels['Accélération X'].replace(' X', '')}</h3>
+                <div class="space-y-2">
+                    <p class="text-lg text-gray-800"><span class="font-semibold">${labels['Accélération X']}:</span> ${formatNumericValue(latestEntry['Accélération X'])}</p>
+                    <p class="text-lg text-gray-800"><span class="font-semibold">${labels['Accélération Y']}:</span> ${formatNumericValue(latestEntry['Accélération Y'])}</p>
+                    <p class="text-lg text-gray-800"><span class="font-semibold">${labels['Accélération Z']}:</span> ${formatNumericValue(latestEntry['Accélération Z'])}</p>
+                </div>
+            `;
+            accelGyroContent.appendChild(accelCard);
+
+            // Create Gyroscope Card
+            const gyroCard = document.createElement('div');
+            gyroCard.className = 'bg-white p-6 rounded-lg shadow-md border border-gray-100';
+            gyroCard.innerHTML = `
+                <h3 class="text-xl font-semibold text-blue-700 mb-4">${labels['Gyroscope X'].replace(' X', '')}</h3>
+                <div class="space-y-2">
+                    <p class="text-lg text-gray-800"><span class="font-semibold">${labels['Gyroscope X']}:</span> ${formatNumericValue(latestEntry['Gyroscope X'])}</p>
+                    <p class="text-lg text-gray-800"><span class="font-semibold">${labels['Gyroscope Y']}:</span> ${formatNumericValue(latestEntry['Gyroscope Y'])}</p>
+                    <p class="text-lg text-gray-800"><span class="font-semibold">${labels['Gyroscope Z']}:</span> ${formatNumericValue(latestEntry['Gyroscope Z'])}</p>
+                </div>
+            `;
+            accelGyroContent.appendChild(gyroCard);
+        }
+
+
+        /**
          * Renders the full data table, applying filters if provided.
          * @param {Array<Object>} data - The data array (already filtered if fetchData was called with filters).
          */
@@ -430,35 +647,19 @@
             noDataFoundDiv.classList.add('hidden');
 
             if (data.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="100%" class="text-center py-4 text-gray-500">لا توجد بيانات لعرضها أو لا توجد بيانات مطابقة لمعايير التصفية.</td></tr>';
+                tableBody.innerHTML = `<tr><td colspan="100%" class="text-center py-4 text-gray-500">${translations[currentLanguage].noDataFound}</td></tr>`;
                 noDataFoundDiv.classList.remove('hidden'); // Show no data message
                 return;
             }
 
-            // Create table headers
+            // Create table headers dynamically based on data and current language
             const headers = Object.keys(data[0]);
-            const arabicHeaders = {
-                'Timestamp': 'الختم الزمني',
-                'Date': 'التاريخ',
-                'Heure': 'التوقيت', // Use 'Heure' as the key for time
-                'Température (°C)': 'درجة الحرارة (°C)',
-                'Humidité (%)': 'الرطوبة (%)',
-                'Accélération X': 'التسارع X',
-                'Accélération Y': 'التسارع Y', 
-                'Accélération Z': 'التسارع Z',
-                'Gyroscope X': 'جيروسكوب X',
-                'Gyroscope Y': 'جيروسكوب Y',
-                'Gyroscope Z': 'جيروسكوب Z',
-                'Vibration': 'الاهتزاز',
-                'Temp. NTC (°C)': 'درجة حرارة NTC (°C)',
-                'Courant (V Bruts)': 'التيار (فولت خام)',
-                'Batterie (V)': 'البطارية (فولت)'
-            };
+            const translatedHeaders = translations[currentLanguage].chartLabels; // Using chartLabels as general headers map
 
             headers.forEach(header => {
                 const th = document.createElement('th');
-                th.className = 'px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right'; // text-right for RTL
-                th.textContent = arabicHeaders[header] || header;
+                th.className = 'px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right'; // text-right for RTL, will be adjusted by body dir
+                th.textContent = translatedHeaders[header] || header;
                 tableHeaderRow.appendChild(th);
             });
 
@@ -516,7 +717,7 @@
         function renderCharts(data) {
             chartsContainer.innerHTML = ''; // Clear previous charts
             if (data.length === 0) {
-                chartsContainer.innerHTML = '<p class="text-gray-500 text-center col-span-full">لا توجد بيانات لإنشاء الرسوم البيانية.</p>';
+                chartsContainer.innerHTML = `<p class="text-gray-500 text-center col-span-full">${translations[currentLanguage].noDataFound}</p>`;
                 return;
             }
 
@@ -534,13 +735,13 @@
             const labels = sortedData.map(entry => {
                 const date = parseDateTimeToLocalDate(entry.Date, entry.Heure);
                 if (date && !isNaN(date.getTime())) {
-                    return date.toLocaleString('ar-EG', {
+                    return date.toLocaleString(currentLanguage, {
                         year: 'numeric', month: 'short', day: 'numeric',
                         hour: '2-digit', minute: '2-digit', second: '2-digit',
                         hour12: false
                     });
                 }
-                return 'تاريخ/وقت غير صالح'; // Fallback for invalid dates
+                return translations[currentLanguage].invalidDate + '/' + translations[currentLanguage].invalidTime; // Fallback for invalid dates
             });
 
             chartMetrics.forEach(metric => {
@@ -552,7 +753,7 @@
 
                 const chartDiv = document.createElement('div');
                 chartDiv.className = 'bg-white p-6 rounded-lg shadow-md border border-gray-100';
-                chartDiv.innerHTML = `<h3 class="text-xl font-semibold text-blue-700 mb-4 text-center">${metric}</h3><canvas id="chart-${metric.replace(/[^a-zA-Z0-9]/g, '-')}" class="w-full"></canvas>`;
+                chartDiv.innerHTML = `<h3 class="text-xl font-semibold text-blue-700 mb-4 text-center">${translations[currentLanguage].chartLabels[metric] || metric}</h3><canvas id="chart-${metric.replace(/[^a-zA-Z0-9]/g, '-')}" class="w-full"></canvas>`;
                 chartsContainer.appendChild(chartDiv);
 
                 const ctx = document.getElementById(`chart-${metric.replace(/[^a-zA-Z0-9]/g, '-')}`).getContext('2d');
@@ -564,7 +765,7 @@
                     data: {
                         labels: labels,
                         datasets: [{
-                            label: metric,
+                            label: translations[currentLanguage].chartLabels[metric] || metric, // Chart legend label
                             data: datasets,
                             borderColor: '#3B82F6', // Blue-500
                             backgroundColor: 'rgba(59, 130, 246, 0.2)',
@@ -584,20 +785,20 @@
                             tooltip: {
                                 callbacks: {
                                     title: function(context) {
-                                        return `التاريخ/الوقت: ${context[0].label}`;
+                                        return `${translations[currentLanguage].chartLabels['Timestamp']}: ${context[0].label}`;
                                     },
                                     label: function(context) {
-                                        return `${metric}: ${context.raw}`;
+                                        return `${translations[currentLanguage].chartLabels[metric] || metric}: ${context.raw.toLocaleString(currentLanguage)}`; // Format raw value
                                     }
                                 },
-                                rtl: true // Enable RTL for tooltips
+                                rtl: (currentLanguage === 'ar') // Enable RTL for tooltips based on language
                             }
                         },
                         scales: {
                             x: {
                                 title: {
                                     display: true,
-                                    text: 'الختم الزمني',
+                                    text: translations[currentLanguage].chartLabels['Timestamp'],
                                     font: { size: 14, weight: 'bold' }
                                 },
                                 ticks: {
@@ -610,28 +811,91 @@
                                 beginAtZero: true,
                                 title: {
                                     display: true,
-                                    text: metric,
+                                    text: translations[currentLanguage].chartLabels[metric] || metric,
                                     font: { size: 14, weight: 'bold' }
                                 },
                                 ticks: {
-                                    font: { size: 10 }
+                                    font: { size: 10 },
+                                    callback: function(value) {
+                                        return value.toLocaleString(currentLanguage); // Format Y-axis ticks
+                                    }
                                 }
                             }
                         },
-                        interaction: {
-                            mode: 'index',
-                            intersect: false,
-                        },
+                        // Set RTL for chart layout if language is Arabic
+                        indexAxis: 'x', // Ensure X-axis is for data
+                        rtl: (currentLanguage === 'ar') 
                     }
                 });
             });
         }
 
+        /**
+         * Updates all UI elements based on the selected language.
+         * @param {string} lang - The language code ('ar', 'en', 'fr').
+         */
+        function updateUIForLanguage(lang) {
+            currentLanguage = lang;
+            const t = translations[currentLanguage];
+
+            // Update body direction and text alignment
+            document.body.style.direction = (lang === 'ar') ? 'rtl' : 'ltr';
+            document.body.style.textAlign = (lang === 'ar') ? 'right' : 'left';
+
+            // Update static texts
+            dashboardTitle.textContent = t.dashboardTitle;
+            document.title = t.dashboardTitle; // Also update page title
+
+            latestDataBtn.textContent = t.latestDataBtn;
+            accelGyroBtn.textContent = t.accelGyroBtn; // Update new button text
+            fullTableBtn.textContent = t.fullTableBtn;
+            chartsBtn.textContent = t.chartsBtn;
+
+            loadingText.textContent = t.loadingText;
+            errorTitle.textContent = t.errorTitle;
+            errorTextSpan.textContent = t.errorText;
+
+            latestDataTitle.textContent = t.latestDataTitle;
+            accelGyroTitle.textContent = t.accelGyroTitle; // Update new section title
+            fullTableTitle.textContent = t.fullTableTitle;
+            chartsTitle.textContent = t.chartsTitle;
+
+            fromDateLabel.textContent = t.fromDateLabel;
+            toDateLabel.textContent = t.toDateLabel;
+            fromTimeLabel.textContent = t.fromTimeLabel;
+            toTimeLabel.textContent = t.toTimeLabel;
+            applyFiltersBtn.textContent = t.applyFiltersBtn;
+            resetFiltersBtn.textContent = t.resetFiltersBtn;
+            
+            noDataFoundDiv.textContent = t.noDataFound; // Update the message if no data
+
+            // Re-render data to apply new language formatting (numbers, dates, times, headers)
+            // This is crucial after language change as it regenerates elements with new strings
+            const activePageId = document.querySelector('.page-content:not(.hidden)').id;
+            if (activePageId === 'latestData') {
+                renderLatestData(sensorData);
+            } else if (activePageId === 'fullTable') {
+                renderFullTable(sensorData);
+            } else if (activePageId === 'charts') {
+                renderCharts(sensorData);
+            } else if (activePageId === 'accelGyroData') {
+                renderAccelGyroData(sensorData);
+            }
+
+            // Update current date/time display with new language locale
+            updateCurrentDateTimeDisplay();
+        }
 
         // Event Listeners
         document.addEventListener('DOMContentLoaded', () => {
             fetchData(); // Fetch data on page load
             showPage('latestData'); // Show the latest data page by default
+
+            // Initial call to update UI for default language (French)
+            updateUIForLanguage(currentLanguage);
+
+            // Update current date and time every second
+            setInterval(updateCurrentDateTimeDisplay, 1000); 
 
             document.querySelectorAll('.nav-button').forEach(button => {
                 button.addEventListener('click', (event) => {
@@ -640,8 +904,14 @@
                 });
             });
 
-            applyFiltersBtn.addEventListener('click', applyFilters);
-            resetFiltersBtn.addEventListener('click', resetFilters);
+            // Language switcher event listeners
+            document.querySelectorAll('.lang-button').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const lang = event.target.dataset.lang;
+                    updateUIForLanguage(lang);
+                });
+            });
+
         });
 
         // The ResizeObserver block has been removed as Chart.js's responsive property
