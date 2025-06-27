@@ -54,6 +54,16 @@
             box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2); /* Softer shadow for depth */
             border-radius: 0.75rem; /* Matches Tailwind's rounded-lg */
         }
+        /* Enhanced interactivity for cards */
+        .data-card-interactive {
+            transform: scale(1);
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .data-card-interactive:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+        }
     </style>
 </head>
 <body class="text-gray-800"> <!-- Removed bg-gray-100 as custom gradient is applied -->
@@ -140,6 +150,11 @@
                 <div id="insightCard" class="glassmorphism-card p-6 col-span-full mt-6 hidden">
                     <h3 id="insightCardTitle" class="text-xl font-semibold text-purple-700 mb-4"></h3>
                     <p id="insightContent" class="text-gray-800 text-base leading-relaxed"></p>
+                    <div class="flex justify-end mt-4">
+                        <button id="copyInsightBtn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300 text-sm">
+                            نسخ الرؤية
+                        </button>
+                    </div>
                     <div id="insightLoading" class="text-center text-sm text-purple-600 mt-4 hidden">
                         <svg class="animate-spin h-5 w-5 inline-block text-purple-600 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -193,6 +208,9 @@
                         <button id="resetFiltersBtn" class="px-8 py-3 bg-red-500 text-white font-bold rounded-lg hover:bg-red-600 transition duration-300 transform hover:scale-105 shadow-lg">
                             إعادة تعيين
                         </button>
+                        <button id="exportCsvBtn" class="px-8 py-3 bg-gray-600 text-white font-bold rounded-lg hover:bg-gray-700 transition duration-300 transform hover:scale-105 shadow-lg">
+                            تصدير CSV
+                        </button>
                     </div>
                 </div>
 
@@ -212,6 +230,12 @@
                         لا توجد بيانات مطابقة لمعايير التصفية.
                     </div>
                 </div>
+                <!-- Pagination Controls -->
+                <div id="paginationControls" class="flex justify-center items-center space-x-4 mt-6">
+                    <button id="prevPageBtn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed">السابق</button>
+                    <span id="pageInfo" class="text-gray-700">صفحة 1 من 1</span>
+                    <button id="nextPageBtn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed">التالي</button>
+                </div>
             </section>
 
             <!-- Charts Section -->
@@ -219,9 +243,30 @@
                 <h2 id="chartsTitle" class="text-3xl font-bold text-gray-800 mb-6 border-b-2 pb-3 border-blue-500">
                     الرسوم البيانية لبيانات المستشعر
                 </h2>
-                <!-- Changed grid-cols-2 to grid-cols-1 to force vertical stacking -->
-                <div id="chartsContainer" class="grid grid-cols-1 gap-8"> 
-                    <!-- Charts will be injected here by JavaScript -->
+                <!-- Chart Controls (Dropdown for Metric Selection) -->
+                <div class="mb-6 p-4 bg-gray-50 rounded-lg shadow-inner flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <label for="chartMetricSelect" id="chartMetricLabel" class="text-gray-700 font-medium whitespace-nowrap">اختر المقياس:</label>
+                    <select id="chartMetricSelect" class="form-select flex-grow p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-200">
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+
+                <!-- Single Chart Canvas -->
+                <div id="singleChartContainer" class="glassmorphism-card p-6 flex flex-col justify-center items-center">
+                    <h3 id="currentChartTitle" class="text-xl font-semibold text-blue-700 mb-4 text-center"></h3>
+                    <canvas id="mainChartCanvas" width="350" height="288"></canvas>
+                    <!-- Min/Max/Avg Display -->
+                    <div id="chartStats" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 w-full text-center">
+                        <div class="p-2 bg-blue-50 rounded-md">
+                            <p id="minVal" class="text-sm font-semibold text-gray-700">الحد الأدنى: N/A</p>
+                        </div>
+                        <div class="p-2 bg-blue-50 rounded-md">
+                            <p id="avgVal" class="text-sm font-semibold text-gray-700">المتوسط: N/A</p>
+                        </div>
+                        <div class="p-2 bg-blue-50 rounded-md">
+                            <p id="maxVal" class="text-sm font-semibold text-gray-700">الحد الأقصى: N/A</p>
+                        </div>
+                    </div>
                 </div>
             </section>
         </div> <!-- End of new wrapper div -->
@@ -229,13 +274,18 @@
 
     <script>
         // Google Sheets API URL - Ensure this URL is correct and published to 'Anyone' access
+        // Replace 'YOUR_GOOGLE_SHEETS_API_URL_HERE' with your actual deployed Google Apps Script URL.
+        // It should look something like: 'https://script.google.com/macros/s/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/exec'
         const GOOGLE_SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbxO7soutfxNmG1Vy6KvuZ4ZS96qWg9nJouY-vjvKt3_i-kQh4wa3hBbU0-vuqgU8jF02g/exec';
 
         // Global variables
         let sensorData = []; // To store ALL fetched data
-        const chartInstances = {}; // To keep track of Chart.js instances
-        let currentLanguage = 'fr'; // Default language is French
+        let previousLatestEntry = {}; // To store the previous latest data for change indicators
+        let chartInstance = null; // Single Chart.js instance for the main chart
+        let currentLanguage = 'ar'; // Default language is Arabic
         let autoRefreshIntervalId = null; // Stores the ID of the setInterval for auto-refresh
+        let currentPage = 1;
+        const itemsPerPage = 20; // Number of rows per page for the full table
 
         // DOM Elements
         const loadingIndicator = document.getElementById('loading');
@@ -255,7 +305,15 @@
         const applyFiltersBtn = document.getElementById('applyFiltersBtn');
         const resetFiltersBtn = document.getElementById('resetFiltersBtn');
         const noDataFoundDiv = document.getElementById('noDataFound');
-        const chartsContainer = document.getElementById('chartsContainer');
+        const chartsContainer = document.getElementById('chartsContainer'); // Now holds dropdown and single chart
+        const mainChartCanvas = document.getElementById('mainChartCanvas'); // The single chart canvas
+        const chartMetricSelect = document.getElementById('chartMetricSelect'); // Dropdown for metric selection
+        const currentChartTitle = document.getElementById('currentChartTitle'); // Title for the selected chart
+        const chartStats = document.getElementById('chartStats'); // Div to display min/avg/max
+        const minVal = document.getElementById('minVal');
+        const avgVal = document.getElementById('avgVal');
+        const maxVal = document.getElementById('maxVal');
+
 
         // Elements for current date/time display
         const currentDateDisplay = document.getElementById('currentDate');
@@ -288,10 +346,17 @@
         const insightLoading = document.getElementById('insightLoading');
         const insightLoadingText = document.getElementById('insightLoadingText');
         const generateInsightBtn = document.getElementById('generateInsightBtn');
+        const copyInsightBtn = document.getElementById('copyInsightBtn'); // New copy insight button
+
+        // Pagination elements
+        const paginationControls = document.getElementById('paginationControls');
+        const prevPageBtn = document.getElementById('prevPageBtn');
+        const nextPageBtn = document.getElementById('nextPageBtn');
+        const pageInfo = document.getElementById('pageInfo');
+        const exportCsvBtn = document.getElementById('exportCsvBtn');
 
 
         // Metrics to display as charts (including Accel & Gyro)
-        // Group Acceleration and Gyroscope to be rendered as single charts with multiple lines
         const chartMetrics = [
             'Température (°C)', 
             'Humidité (%)', 
@@ -342,6 +407,24 @@
             'star'
         ];
 
+        // Define thresholds for sensor values (for alert indicators)
+        const THRESHOLDS = {
+            'Température (°C)': { min: 10, max: 35, warningMin: 15, warningMax: 30 },
+            'Humidité (%)': { min: 20, max: 80, warningMin: 30, warningMax: 70 },
+            'Vibration': { min: 0, max: 100, warningMin: 50, warningMax: 80 }, // Example values
+            'Temp. NTC (°C)': { min: 5, max: 40, warningMin: 10, warningMax: 35 },
+            'Courant (V Bruts)': { min: 0.1, max: 5.0, warningMin: 0.5, warningMax: 4.5 },
+            'Batterie (V)': { min: 3.0, max: 4.2, warningMin: 3.2, warningMax: 4.0 },
+            // For acceleration and gyroscope, define thresholds for individual components if desired,
+            // or a combined magnitude threshold. For simplicity, we can alert on extremes of individual axes.
+            'Accélération X': { min: -5, max: 5, warningMin: -3, warningMax: 3 },
+            'Accélération Y': { min: -5, max: 5, warningMin: -3, warningMax: 3 },
+            'Accélération Z': { min: -15, max: 15, warningMin: -12, warningMax: 12 }, // Assuming Z is gravity
+            'Gyroscope X': { min: -100, max: 100, warningMin: -50, warningMax: 50 },
+            'Gyroscope Y': { min: -100, max: 100, warningMin: -50, warningMax: 50 },
+            'Gyroscope Z': { min: -100, max: 100, warningMin: -50, warningMax: 50 },
+        };
+
 
         // Translation object
         const translations = {
@@ -363,8 +446,13 @@
                 toTimeLabel: 'إلى توقيت:',
                 applyFiltersBtn: 'تطبيق التصفية',
                 resetFiltersBtn: 'إعادة تعيين',
+                exportCsvBtn: 'تصدير CSV', // New translation
                 noDataFound: 'لا توجد بيانات لعرضها أو لا توجد بيانات مطابقة لمعايير التصفية.',
                 chartsTitle: 'الرسوم البيانية لبيانات المستشعر',
+                chartMetricLabel: 'اختر المقياس:', // New translation
+                minLabel: 'الحد الأدنى:', // New translation
+                avgLabel: 'المتوسط:', // New translation
+                maxLabel: 'الحد الأقصى:', // New translation
                 invalidDate: 'تاريخ غير صالح',
                 invalidTime: 'وقت غير صالح',
                 invalidValue: 'غير صالح',
@@ -376,6 +464,13 @@
                 generatingInsight: 'جارٍ توليد الرؤى...',
                 insightError: 'فشل توليد الرؤى. يرجى المحاولة مرة أخرى.',
                 insightFetchError: 'خطأ في جلب الرؤى من الذكاء الاصطناعي',
+                copyInsightBtn: 'نسخ الرؤية', // New translation
+                copiedSuccess: 'تم نسخ الرؤية بنجاح!', // New translation
+                copyFailed: 'فشل النسخ.', // New translation
+                healthNormal: 'حالة البيانات: طبيعية ✅', // New translation
+                healthWarning: 'حالة البيانات: تحذير ⚠️', // New translation
+                healthCritical: 'حالة البيانات: حرج ❌', // New translation
+                healthUnknown: 'حالة البيانات: غير معروف ❓', // New translation
                 chartLabels: {
                     'Timestamp': 'الختم الزمني',
                     'Date': 'التاريخ',
@@ -386,15 +481,18 @@
                     'Accélération X': 'التسارع X',
                     'Accélération Y': 'التسارع Y',
                     'Accélération Z': 'التسارع Z',
-                    'Gyroscope': 'الجيروسكوب', // Combined label
-                    'Gyroscope X': 'جيروسكوب X',
-                    'Gyroscope Y': 'جيروسكوب Y',
-                    'Gyroscope Z': 'جيروسكوب Z',
                     'Vibration': 'الاهتزاز',
                     'Temp. NTC (°C)': 'درجة حرارة NTC (°C)',
                     'Courant (V Bruts)': 'التيار (فولت خام)',
-                    'Batterie (V)': 'البطارية (فولت)'
-                }
+                    'Batterie (V)': 'البطارية (فولت)',
+                    'Gyroscope': 'الجيروسكوب', // Combined label
+                    'Gyroscope X': 'جيروسكوب X',
+                    'Gyroscope Y': 'جيروسكوب Y',
+                    'Gyroscope Z': 'جيروسكوب Z'
+                },
+                prevPage: 'السابق',
+                nextPage: 'التالي',
+                pageInfo: (currentPage, totalPages) => `صفحة ${currentPage} من ${totalPages}`
             },
             'en': {
                 dashboardTitle: 'Data Dashboard',
@@ -414,8 +512,13 @@
                 toTimeLabel: 'To Time:',
                 applyFiltersBtn: 'Apply Filter',
                 resetFiltersBtn: 'Reset',
+                exportCsvBtn: 'Export CSV', // New translation
                 noDataFound: 'No data to display or no data matching filter criteria.',
                 chartsTitle: 'Sensor Data Charts',
+                chartMetricLabel: 'Select Metric:', // New translation
+                minLabel: 'Min:', // New translation
+                avgLabel: 'Avg:', // New translation
+                maxLabel: 'Max:', // New translation
                 invalidDate: 'Invalid Date',
                 invalidTime: 'Invalid Time',
                 invalidValue: 'Invalid',
@@ -427,6 +530,13 @@
                 generatingInsight: 'Generating insight...',
                 insightError: 'Failed to generate insight. Please try again.',
                 insightFetchError: 'Error fetching insight from AI',
+                copyInsightBtn: 'Copy Insight', // New translation
+                copiedSuccess: 'Insight copied successfully!', // New translation
+                copyFailed: 'Failed to copy.', // New translation
+                healthNormal: 'Data Health: Normal ✅', // New translation
+                healthWarning: 'Data Health: Warning ⚠️', // New translation
+                healthCritical: 'Data Health: Critical ❌', // New translation
+                healthUnknown: 'Data Health: Unknown ❓', // New translation
                 chartLabels: {
                     'Timestamp': 'Timestamp',
                     'Date': 'Date',
@@ -437,15 +547,18 @@
                     'Accélération X': 'Acceleration X',
                     'Accélération Y': 'Acceleration Y',
                     'Accélération Z': 'Acceleration Z',
-                    'Gyroscope': 'Gyroscope', // Combined label
-                    'Gyroscope X': 'Gyroscope X',
-                    'Gyroscope Y': 'Gyroscope Y',
-                    'Gyroscope Z': 'Gyroscope Z',
                     'Vibration': 'Vibration',
                     'Temp. NTC (°C)': 'NTC Temp (°C)',
                     'Courant (V Bruts)': 'Current (Raw V)',
-                    'Batterie (V)': 'Battery (V)'
-                }
+                    'Batterie (V)': 'Battery (V)',
+                    'Gyroscope': 'Gyroscope', // Combined label
+                    'Gyroscope X': 'Gyroscope X',
+                    'Gyroscope Y': 'Gyroscope Y',
+                    'Gyroscope Z': 'Gyroscope Z'
+                },
+                prevPage: 'Previous',
+                nextPage: 'Next',
+                pageInfo: (currentPage, totalPages) => `Page ${currentPage} of ${totalPages}`
             },
             'fr': {
                 dashboardTitle: 'Tableau de Bord des Données',
@@ -465,8 +578,13 @@
                 toTimeLabel: 'Au Temps:',
                 applyFiltersBtn: 'Appliquer le Filtre',
                 resetFiltersBtn: 'Réinitialiser',
+                exportCsvBtn: 'Exporter CSV', // New translation
                 noDataFound: 'Aucune donnée à afficher ou aucune donnée ne correspond aux critères de filtre.',
                 chartsTitle: 'Graphiques des Données des Capteurs',
+                chartMetricLabel: 'Sélectionner une métrique:', // New translation
+                minLabel: 'Min:', // New translation
+                avgLabel: 'Moy:', // New translation
+                maxLabel: 'Max:', // New translation
                 invalidDate: 'Date Invalide',
                 invalidTime: 'Heure Invalide',
                 invalidValue: 'Invalide',
@@ -478,6 +596,13 @@
                 generatingInsight: 'Génération de la perspicacité...',
                 insightError: 'Échec de la génération de la perspicacité. Veuillez réessayer.',
                 insightFetchError: 'Erreur lors de la récupération de la perspicacité de l\'IA',
+                copyInsightBtn: 'Copier la perspicacité', // New translation
+                copiedSuccess: 'Perspicacité copiée avec succès!', // New translation
+                copyFailed: 'Échec de la copie.', // New translation
+                healthNormal: 'État des données: Normal ✅', // New translation
+                healthWarning: 'État des données: Avertissement ⚠️', // New translation
+                healthCritical: 'État des données: Critique ❌', // New translation
+                healthUnknown: 'État des données: Inconnu ❓', // New translation
                 chartLabels: {
                     'Timestamp': 'Horodatage',
                     'Date': 'Date',
@@ -488,15 +613,18 @@
                     'Accélération X': 'Accélération X',
                     'Accélération Y': 'Accélération Y',
                     'Accélération Z': 'Accélération Z',
-                    'Gyroscope': 'Gyroscope', // Combined label
-                    'Gyroscope X': 'Gyroscope X',
-                    'Gyroscope Y': 'Gyroscope Y',
-                    'Gyroscope Z': 'Gyroscope Z',
                     'Vibration': 'Vibration',
                     'Temp. NTC (°C)': 'Temp. NTC (°C)',
                     'Courant (V Bruts)': 'Courant (V bruts)',
-                    'Batterie (V)': 'Batterie (V)'
-                }
+                    'Batterie (V)': 'Batterie (V)',
+                    'Gyroscope': 'Gyroscope', // Combined label
+                    'Gyroscope X': 'Gyroscope X',
+                    'Gyroscope Y': 'Gyroscope Y',
+                    'Gyroscope Z': 'Gyroscope Z'
+                },
+                prevPage: 'Précédent',
+                nextPage: 'Suivant',
+                pageInfo: (currentPage, totalPages) => `Page ${currentPage} sur ${totalPages}`
             }
         };
 
@@ -561,13 +689,14 @@
         /**
          * Helper function to format numeric values (e.g., temperature, humidity, acceleration).
          * @param {string | number} value - The numeric value.
+         * @param {number} [decimalPlaces=2] - Number of decimal places to format to.
          * @returns {string} Formatted number string or 'Invalid'.
          */
-        function formatNumericValue(value) {
+        function formatNumericValue(value, decimalPlaces = 2) {
             const parsedValue = parseFloat(value);
             if (!isNaN(parsedValue)) {
                 // Use currentLanguage for locale-specific number formatting (e.g., French uses comma for decimal)
-                return parsedValue.toLocaleString(currentLanguage, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                return parsedValue.toLocaleString(currentLanguage, { minimumFractionDigits: decimalPlaces, maximumFractionDigits: decimalPlaces });
             }
             return translations[currentLanguage].invalidValue;
         }
@@ -597,25 +726,23 @@
             // Show the requested content section
             document.getElementById(pageId).classList.remove('hidden');
 
-            // Destroy existing charts if switching away from charts page
-            if (pageId !== 'charts') {
-                for (const chartId in chartInstances) {
-                    if (chartInstances[chartId]) {
-                        chartInstances[chartId].destroy();
-                        delete chartInstances[chartId];
-                    }
-                }
+            // Destroy existing single chart instance when leaving charts page
+            if (pageId !== 'charts' && chartInstance) {
+                chartInstance.destroy();
+                chartInstance = null;
             }
             
             // Re-render the specific section that is now visible to apply any latest data or language changes
-            // Always use getFilteredSensorData() for sections that need filtering based on UI inputs
             const filteredData = getFilteredSensorData(); // Get filtered data for the current UI state
             if (pageId === 'latestData') {
                 renderLatestData(sensorData); // Latest data always uses full data to find last entry
             } else if (pageId === 'fullTable') {
+                currentPage = 1; // Reset to first page when navigating to table
                 renderFullTable(filteredData); // Render table with filtered data
             } else if (pageId === 'charts') {
-                renderCharts(filteredData); // Render charts with filtered data
+                // Render the selected chart based on the dropdown, or the first one by default
+                const selectedMetric = chartMetricSelect.value || chartMetrics[0];
+                renderChart(selectedMetric, filteredData); // Render charts with filtered data
             } else if (pageId === 'accelGyroData') {
                 renderAccelGyroData(sensorData); // Accel/Gyro also uses full data to find last entry
             }
@@ -629,10 +756,20 @@
             loadingIndicator.classList.remove('hidden');
             errorMessageDiv.classList.add('hidden');
 
+            // Check if the API URL is still the placeholder
+            if (GOOGLE_SHEETS_API_URL === 'YOUR_GOOGLE_SHEETS_API_URL_HERE') {
+                const errorMsg = 'Error: GOOGLE_SHEETS_API_URL is still the placeholder. Please replace it with your actual Google Apps Script URL.';
+                console.error(errorMsg);
+                errorTextSpan.textContent = translations[currentLanguage].errorText + ` (${errorMsg})`;
+                errorMessageDiv.classList.remove('hidden');
+                loadingIndicator.classList.add('hidden');
+                return; // Stop execution if URL is not set
+            }
+
             try {
                 const response = await fetch(GOOGLE_SHEETS_API_URL); // Fetch all data
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
                 }
                 const data = await response.json();
                 
@@ -655,6 +792,13 @@
                     return dateA.getTime() - dateB.getTime();
                 });
 
+                // Store previous latest entry for comparison before updating sensorData
+                if (sensorData.length > 0) {
+                    previousLatestEntry = sensorData[sensorData.length - 1];
+                } else {
+                    previousLatestEntry = {};
+                }
+
                 sensorData = actualData; // Store the FULL fetched data
                 
                 // Re-render based on the currently active page after fetching new data
@@ -664,16 +808,18 @@
                 if (activePageId === 'latestData') {
                     renderLatestData(sensorData);
                 } else if (activePageId === 'fullTable') {
-                    renderFullTable(filteredData); // Render table with the newly fetched full data, applying current filters
+                    // Re-render table, staying on the current page if possible
+                    renderFullTable(filteredData); 
                 } else if (activePageId === 'charts') {
-                    renderCharts(filteredData); // Render charts with the newly fetched full data, applying current filters
+                    const selectedMetric = chartMetricSelect.value || chartMetrics[0];
+                    renderChart(selectedMetric, filteredData); // Render selected chart with new data
                 } else if (activePageId === 'accelGyroData') {
                     renderAccelGyroData(sensorData);
                 }
 
             } catch (error) {
-                console.error('Error fetching data:', error);
-                errorTextSpan.textContent = translations[currentLanguage].errorText;
+                console.error('Error fetching data:', error); // Log the full error object
+                errorTextSpan.textContent = translations[currentLanguage].errorText + ` (${error.message || error})`;
                 errorMessageDiv.classList.remove('hidden');
             } finally {
                 loadingIndicator.classList.add('hidden');
@@ -681,7 +827,29 @@
         }
 
         /**
+         * Determines the status of a value against its thresholds.
+         * @param {string} metricName - The name of the metric.
+         * @param {number} value - The current value.
+         * @returns {string} 'normal', 'warning', 'critical', or 'unknown'.
+         */
+        function getValueStatus(metricName, value) {
+            const thresholds = THRESHOLDS[metricName];
+            if (!thresholds || isNaN(value)) {
+                return 'unknown';
+            }
+
+            if (value < thresholds.min || value > thresholds.max) {
+                return 'critical';
+            } else if (value < thresholds.warningMin || value > thresholds.warningMax) {
+                return 'warning';
+            } else {
+                return 'normal';
+            }
+        }
+
+        /**
          * Renders the latest sensor data on the main page.
+         * Includes value change indicators and threshold alerts.
          * @param {Array<Object>} data - The full sensor data array.
          */
         function renderLatestData(data) {
@@ -697,33 +865,86 @@
 
             const labels = translations[currentLanguage].chartLabels;
 
+            // Check overall data health
+            let overallHealth = 'normal';
+            for (const key in latestEntry) {
+                if (latestEntry.hasOwnProperty(key) && THRESHOLDS[key]) {
+                    const value = parseFloat(latestEntry[key]);
+                    const status = getValueStatus(key, value);
+                    if (status === 'critical') {
+                        overallHealth = 'critical';
+                        break;
+                    } else if (status === 'warning' && overallHealth === 'normal') {
+                        overallHealth = 'warning';
+                    }
+                }
+            }
+            
+            // Display overall data health (optional, could be in a dedicated card or header)
+            // For now, let's keep it simple and just console log or add a global status bar later.
+
             for (const key in latestEntry) {
                 // Exclude the individual Accel and Gyro components from this section, as they are now grouped
                 if (latestEntry.hasOwnProperty(key) && 
                     !['Accélération X', 'Accélération Y', 'Accélération Z', 
-                       'Gyroscope X', 'Gyroscope Y', 'Gyroscope Z'].includes(key) &&
+                       'Gyroscope X', 'Gyroscope Y', 'Gyroscope Z', 'Timestamp', 'Date', 'Heure'].includes(key) &&
                     !['Accélération', 'Gyroscope'].includes(key) // Also exclude the combined metrics to avoid duplicates
                     ) {
                     let valueToDisplay = latestEntry[key];
-                    if (key === 'Date') {
-                        valueToDisplay = getFormattedDateForDisplay(valueToDisplay, latestEntry['Heure']);
-                    } else if (key === 'Heure') {
-                        valueToDisplay = getFormattedTimeForDisplay(latestEntry['Date'], valueToDisplay);
-                    } else if (chartMetrics.includes(key) || 
-                                (key === 'Accélération X' && chartMetrics.includes('Accélération')) ||
-                                (key === 'Gyroscope X' && chartMetrics.includes('Gyroscope')) // Check if the individual metric is part of a combined chart
-                            ) {
-                        valueToDisplay = formatNumericValue(valueToDisplay);
-                    }
+                    let changeIndicator = '';
+                    let alertIndicator = '';
 
                     const displayLabel = labels[key] || key;
 
+                    if (chartMetrics.includes(key) || 
+                                (key.startsWith('Accélération') && chartMetrics.includes('Accélération')) ||
+                                (key.startsWith('Gyroscope') && chartMetrics.includes('Gyroscope'))
+                            ) {
+                        const numericValue = parseFloat(valueToDisplay);
+                        valueToDisplay = formatNumericValue(numericValue);
+
+                        // Value Change Indicator
+                        if (previousLatestEntry[key] !== undefined && !isNaN(parseFloat(previousLatestEntry[key]))) {
+                            const prevValue = parseFloat(previousLatestEntry[key]);
+                            const change = numericValue - prevValue;
+                            if (prevValue !== 0) { // Avoid division by zero
+                                const percentageChange = (change / prevValue) * 100;
+                                let arrow = '';
+                                let color = 'text-gray-500';
+                                if (change > 0) {
+                                    arrow = '▲'; // Up arrow
+                                    color = 'text-green-500';
+                                } else if (change < 0) {
+                                    arrow = '▼'; // Down arrow
+                                    color = 'text-red-500';
+                                }
+                                changeIndicator = `<span class="${color} text-sm font-semibold ml-2">${arrow} ${Math.abs(percentageChange).toFixed(1)}%</span>`;
+                            }
+                        }
+
+                        // Threshold Alert Indicator
+                        const status = getValueStatus(key, numericValue);
+                        if (status === 'warning') {
+                            alertIndicator = '<span class="text-orange-500 ml-2 text-xl" title="Warning: Value near limit">⚠️</span>';
+                        } else if (status === 'critical') {
+                            alertIndicator = '<span class="text-red-600 ml-2 text-xl" title="Critical: Value out of limit">❌</span>';
+                        }
+                    } else if (key === 'Date') {
+                        valueToDisplay = getFormattedDateForDisplay(valueToDisplay, latestEntry['Heure']);
+                    } else if (key === 'Heure') {
+                        valueToDisplay = getFormattedTimeForDisplay(latestEntry['Date'], valueToDisplay);
+                    }
+
                     const dataCard = document.createElement('div');
-                    // Applied glassmorphism-card class
-                    dataCard.className = 'glassmorphism-card p-6 transform hover:scale-102 transition duration-300';
+                    // Added data-card-interactive for animations
+                    dataCard.className = 'glassmorphism-card p-6 data-card-interactive';
                     dataCard.innerHTML = `
                         <h3 class="text-xl font-semibold text-blue-700 mb-2">${displayLabel}</h3>
-                        <p class="text-2xl font-bold text-gray-900">${valueToDisplay}</p>
+                        <p class="text-2xl font-bold text-gray-900 flex items-center">
+                            ${valueToDisplay}
+                            ${changeIndicator}
+                            ${alertIndicator}
+                        </p>
                     `;
                     latestDataContent.appendChild(dataCard);
                 }
@@ -744,36 +965,76 @@
             }
 
             const latestEntry = data[data.length - 1];
-
             const labels = translations[currentLanguage].chartLabels;
 
             // Create Acceleration Card
             const accelCard = document.createElement('div');
-            // Applied glassmorphism-card class
-            accelCard.className = 'glassmorphism-card p-6';
+            // Added data-card-interactive for animations
+            accelCard.className = 'glassmorphism-card p-6 data-card-interactive';
             accelCard.innerHTML = `
                 <h3 class="text-xl font-semibold text-blue-700 mb-4">${labels['Accélération']}</h3>
                 <div class="space-y-2">
-                    <p class="text-lg text-gray-800"><span class="font-semibold">${labels['Accélération X']}:</span> ${formatNumericValue(latestEntry['Accélération X'])}</p>
-                    <p class="text-lg text-gray-800"><span class="font-semibold">${labels['Accélération Y']}:</span> ${formatNumericValue(latestEntry['Accélération Y'])}</p>
-                    <p class="text-lg text-gray-800"><span class="font-semibold">${labels['Accélération Z']}:</span> ${formatNumericValue(latestEntry['Accélération Z'])}</p>
+                    <p class="text-lg text-gray-800 flex items-center"><span class="font-semibold">${labels['Accélération X']}:</span> ${formatNumericValue(latestEntry['Accélération X'])} ${getChangeAndAlert(latestEntry, previousLatestEntry, 'Accélération X')}</p>
+                    <p class="text-lg text-gray-800 flex items-center"><span class="font-semibold">${labels['Accélération Y']}:</span> ${formatNumericValue(latestEntry['Accélération Y'])} ${getChangeAndAlert(latestEntry, previousLatestEntry, 'Accélération Y')}</p>
+                    <p class="text-lg text-gray-800 flex items-center"><span class="font-semibold">${labels['Accélération Z']}:</span> ${formatNumericValue(latestEntry['Accélération Z'])} ${getChangeAndAlert(latestEntry, previousLatestEntry, 'Accélération Z')}</p>
                 </div>
             `;
             accelGyroContent.appendChild(accelCard);
 
             // Create Gyroscope Card
             const gyroCard = document.createElement('div');
-            // Applied glassmorphism-card class
-            gyroCard.className = 'glassmorphism-card p-6';
+            // Added data-card-interactive for animations
+            gyroCard.className = 'glassmorphism-card p-6 data-card-interactive';
             gyroCard.innerHTML = `
                 <h3 class="text-xl font-semibold text-blue-700 mb-4">${labels['Gyroscope']}</h3>
                 <div class="space-y-2">
-                    <p class="text-lg text-gray-800"><span class="font-semibold">${labels['Gyroscope X']}:</span> ${formatNumericValue(latestEntry['Gyroscope X'])}</p>
-                    <p class="text-lg text-gray-800"><span class="font-semibold">${labels['Gyroscope Y']}:</span> ${formatNumericValue(latestEntry['Gyroscope Y'])}</p>
-                    <p class="text-lg text-gray-800"><span class="font-semibold">${labels['Gyroscope Z']}:</span> ${formatNumericValue(latestEntry['Gyroscope Z'])}</p>
+                    <p class="text-lg text-gray-800 flex items-center"><span class="font-semibold">${labels['Gyroscope X']}:</span> ${formatNumericValue(latestEntry['Gyroscope X'])} ${getChangeAndAlert(latestEntry, previousLatestEntry, 'Gyroscope X')}</p>
+                    <p class="text-lg text-gray-800 flex items-center"><span class="font-semibold">${labels['Gyroscope Y']}:</span> ${formatNumericValue(latestEntry['Gyroscope Y'])} ${getChangeAndAlert(latestEntry, previousLatestEntry, 'Gyroscope Y')}</p>
+                    <p class="text-lg text-gray-800 flex items-center"><span class="font-semibold">${labels['Gyroscope Z']}:</span> ${formatNumericValue(latestEntry['Gyroscope Z'])} ${getChangeAndAlert(latestEntry, previousLatestEntry, 'Gyroscope Z')}</p>
                 </div>
             `;
             accelGyroContent.appendChild(gyroCard);
+        }
+
+        /**
+         * Helper function to generate change indicator and alert for a metric.
+         * @param {Object} currentData - The current data entry.
+         * @param {Object} prevData - The previous data entry.
+         * @param {string} key - The metric key.
+         * @returns {string} HTML string for change and alert indicators.
+         */
+        function getChangeAndAlert(currentData, prevData, key) {
+            let changeIndicator = '';
+            let alertIndicator = '';
+            const numericValue = parseFloat(currentData[key]);
+
+            // Value Change Indicator
+            if (prevData[key] !== undefined && !isNaN(parseFloat(prevData[key]))) {
+                const prevValue = parseFloat(prevData[key]);
+                const change = numericValue - prevValue;
+                if (prevValue !== 0) {
+                    const percentageChange = (change / prevValue) * 100;
+                    let arrow = '';
+                    let color = 'text-gray-500';
+                    if (change > 0) {
+                        arrow = '▲';
+                        color = 'text-green-500';
+                    } else if (change < 0) {
+                        arrow = '▼';
+                        color = 'text-red-500';
+                    }
+                    changeIndicator = `<span class="${color} text-sm font-semibold mr-1">${arrow} ${Math.abs(percentageChange).toFixed(1)}%</span>`;
+                }
+            }
+
+            // Threshold Alert Indicator
+            const status = getValueStatus(key, numericValue);
+            if (status === 'warning') {
+                alertIndicator = '<span class="text-orange-500 ml-1 text-xl" title="Warning: Value near limit">⚠️</span>';
+            } else if (status === 'critical') {
+                alertIndicator = '<span class="text-red-600 ml-1 text-xl" title="Critical: Value out of limit">❌</span>';
+            }
+            return `${changeIndicator}${alertIndicator}`;
         }
 
         /**
@@ -835,7 +1096,7 @@
         }
 
         /**
-         * Renders the full data table, applying client-side filters.
+         * Renders the full data table, applying client-side filters and pagination.
          * @param {Array<Object>} dataToRender - The data (already filtered by getFilteredSensorData).
          */
         function renderFullTable(dataToRender) {
@@ -846,20 +1107,32 @@
             if (dataToRender.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="100%" class="text-center py-4 text-gray-500">${translations[currentLanguage].noDataFound}</td></tr>`;
                 noDataFoundDiv.classList.remove('hidden');
+                paginationControls.classList.add('hidden');
                 return;
             }
 
             const headers = Object.keys(dataToRender[0]);
             const translatedHeaders = translations[currentLanguage].chartLabels;
 
-            headers.forEach(header => {
-                const th = document.createElement('th');
-                th.className = 'px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right';
-                th.textContent = translatedHeaders[header] || header;
-                tableHeaderRow.appendChild(th);
-            });
+            // Render headers only once
+            if (tableHeaderRow.children.length === 0) {
+                headers.forEach(header => {
+                    const th = document.createElement('th');
+                    th.className = 'px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right';
+                    th.textContent = translatedHeaders[header] || header;
+                    tableHeaderRow.appendChild(th);
+                });
+            }
 
-            dataToRender.forEach((row, index) => {
+            // Implement pagination
+            const totalPages = Math.ceil(dataToRender.length / itemsPerPage);
+            currentPage = Math.min(Math.max(1, currentPage), totalPages); // Ensure currentPage is valid
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedData = dataToRender.slice(startIndex, endIndex);
+
+            paginatedData.forEach((row, index) => {
                 const tr = document.createElement('tr');
                 tr.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
                 headers.forEach(header => {
@@ -882,6 +1155,12 @@
                 });
                 tableBody.appendChild(tr);
             });
+
+            // Update pagination controls
+            prevPageBtn.disabled = currentPage === 1;
+            nextPageBtn.disabled = currentPage === totalPages;
+            pageInfo.textContent = translations[currentLanguage].pageInfo(currentPage, totalPages);
+            paginationControls.classList.remove('hidden');
         }
 
         /**
@@ -892,9 +1171,11 @@
             const filteredData = getFilteredSensorData(); // Get newly filtered data
 
             if (activePageId === 'fullTable') {
+                currentPage = 1; // Reset to first page on filter change
                 renderFullTable(filteredData); // Re-render table
             } else if (activePageId === 'charts') {
-                renderCharts(filteredData); // Re-render charts
+                const selectedMetric = chartMetricSelect.value || chartMetrics[0]; // Use current selection or default
+                renderChart(selectedMetric, filteredData); // Re-render charts
             }
         }
 
@@ -912,22 +1193,70 @@
             const allData = getFilteredSensorData(); // This will return sensorData as inputs are empty
             
             if (activePageId === 'fullTable') {
+                currentPage = 1; // Reset to first page on filter reset
                 renderFullTable(allData); // Re-render table with all data
             } else if (activePageId === 'charts') {
-                renderCharts(allData); // Re-render charts with all data
+                const selectedMetric = chartMetricSelect.value || chartMetrics[0];
+                renderChart(selectedMetric, allData); // Re-render charts with all data
             }
         }
 
         /**
-         * Renders charts for the specified metrics.
-         * Now supports rendering combined metrics (e.g., Acceleration X, Y, Z on one chart).
-         * @param {Array<Object>} dataToRender - The data to use for rendering charts (already filtered).
+         * Populates the chart metric dropdown.
          */
-        function renderCharts(dataToRender) {
-            chartsContainer.innerHTML = '';
+        function populateChartMetricSelect() {
+            chartMetricSelect.innerHTML = ''; // Clear existing options
+            const allMetrics = [...new Set(chartMetrics.concat(
+                Object.keys(sensorData.length > 0 ? sensorData[0] : {}).filter(key => 
+                    key.startsWith('Accélération') || key.startsWith('Gyroscope')
+                )
+            ))].filter(m => m !== 'Timestamp' && m !== 'Date' && m !== 'Heure'); // Filter out date/time for dropdown
+            
+            // Reorder to put combined metrics first if they exist
+            const orderedMetrics = [];
+            if (allMetrics.includes('Accélération')) orderedMetrics.push('Accélération');
+            if (allMetrics.includes('Gyroscope')) orderedMetrics.push('Gyroscope');
+
+            allMetrics.forEach(metric => {
+                if (!orderedMetrics.includes(metric)) {
+                    orderedMetrics.push(metric);
+                }
+            });
+
+            orderedMetrics.forEach(metric => {
+                const option = document.createElement('option');
+                option.value = metric;
+                option.textContent = translations[currentLanguage].chartLabels[metric] || metric;
+                chartMetricSelect.appendChild(option);
+            });
+
+            // Set default selection if a value was previously selected
+            if (chartMetricSelect.dataset.selected) {
+                chartMetricSelect.value = chartMetricSelect.dataset.selected;
+            } else {
+                chartMetricSelect.value = orderedMetrics[0] || '';
+            }
+        }
+
+
+        /**
+         * Renders a single chart for the specified metric.
+         * @param {string} selectedMetric - The metric to render (e.g., 'Température (°C)', 'Accélération').
+         * @param {Array<Object>} dataToRender - The data to use for rendering the chart (already filtered).
+         */
+        function renderChart(selectedMetric, dataToRender) {
             if (dataToRender.length === 0) {
-                chartsContainer.innerHTML = `<p class="text-gray-500 text-center col-span-full">${translations[currentLanguage].noDataFound}</p>`;
+                mainChartCanvas.classList.add('hidden');
+                currentChartTitle.textContent = translations[currentLanguage].noDataFound;
+                chartStats.classList.add('hidden');
+                if (chartInstance) {
+                    chartInstance.destroy();
+                    chartInstance = null;
+                }
                 return;
+            } else {
+                mainChartCanvas.classList.remove('hidden');
+                chartStats.classList.remove('hidden');
             }
 
             const sortedData = [...dataToRender].sort((a, b) => {
@@ -950,159 +1279,167 @@
                 return translations[currentLanguage].invalidDate + '/' + translations[currentLanguage].invalidTime;
             });
 
-            let colorIndex = 0; // Keep track of global color index for unique colors
+            let datasets = [];
+            let chartMetricLabel = translations[currentLanguage].chartLabels[selectedMetric] || selectedMetric;
+            currentChartTitle.textContent = chartMetricLabel;
 
-            chartMetrics.forEach((metric) => {
-                let datasets = [];
-                let chartTitle = translations[currentLanguage].chartLabels[metric] || metric;
+            let values = []; // To store values for min/max/avg calculation
 
-                if (metric === 'Accélération') {
-                    // Acceleration X, Y, Z on one chart
-                    ['X', 'Y', 'Z'].forEach((axis) => {
-                        const componentMetric = `Accélération ${axis}`;
-                        const color = chartColors[colorIndex % chartColors.length];
-                        const pointStyle = pointStyles[colorIndex % pointStyles.length];
-                        colorIndex++; // Increment for next unique color/style
+            if (selectedMetric === 'Accélération') {
+                ['X', 'Y', 'Z'].forEach((axis, i) => {
+                    const componentMetric = `Accélération ${axis}`;
+                    const color = chartColors[i % chartColors.length]; // Use limited colors for combined chart
+                    const pointStyle = pointStyles[i % pointStyles.length];
 
-                        datasets.push({
-                            label: translations[currentLanguage].chartLabels[componentMetric] || componentMetric,
-                            data: sortedData.map(entry => parseFloat(entry[componentMetric]) || 0),
-                            borderColor: color,
-                            backgroundColor: color.replace('rgb', 'rgba').replace(')', ', 0.1)'), // Lighter background for combined charts
-                            borderWidth: 2,
-                            tension: 0.3,
-                            pointRadius: 5,
-                            pointBackgroundColor: color,
-                            pointStyle: pointStyle,
-                            fill: false // Do not fill for multi-line charts unless desired
-                        });
+                    const dataForAxis = sortedData.map(entry => {
+                        const val = parseFloat(entry[componentMetric]);
+                        if (!isNaN(val)) values.push(val); // Add to values for stats
+                        return val || 0;
                     });
-                } else if (metric === 'Gyroscope') {
-                    // Gyroscope X, Y, Z on one chart
-                    ['X', 'Y', 'Z'].forEach((axis) => {
-                        const componentMetric = `Gyroscope ${axis}`;
-                        const color = chartColors[colorIndex % chartColors.length];
-                        const pointStyle = pointStyles[colorIndex % pointStyles.length];
-                        colorIndex++; // Increment for next unique color/style
-
-                        datasets.push({
-                            label: translations[currentLanguage].chartLabels[componentMetric] || componentMetric,
-                            data: sortedData.map(entry => parseFloat(entry[componentMetric]) || 0),
-                            borderColor: color,
-                            backgroundColor: color.replace('rgb', 'rgba').replace(')', ', 0.1)'),
-                            borderWidth: 2,
-                            tension: 0.3,
-                            pointRadius: 5,
-                            pointBackgroundColor: color,
-                            pointStyle: pointStyle,
-                            fill: false
-                        });
-                    });
-                } else {
-                    // Single metric charts
-                    const color = chartColors[colorIndex % chartColors.length];
-                    const pointStyle = pointStyles[colorIndex % pointStyles.length];
-                    colorIndex++; // Increment for next unique color/style
 
                     datasets.push({
-                        label: chartTitle,
-                        data: sortedData.map(entry => parseFloat(entry[metric]) || 0),
+                        label: translations[currentLanguage].chartLabels[componentMetric] || componentMetric,
+                        data: dataForAxis,
                         borderColor: color,
-                        backgroundColor: color.replace('rgb', 'rgba').replace(')', ', 0.2)'),
+                        backgroundColor: color.replace('rgb', 'rgba').replace(')', ', 0.1)'),
                         borderWidth: 2,
                         tension: 0.3,
-                        pointRadius: 5,
+                        pointRadius: 3, // Smaller points for multi-line
                         pointBackgroundColor: color,
                         pointStyle: pointStyle,
-                        fill: true // Fill for single line charts
+                        fill: false
                     });
-                }
-
-                // Skip rendering if no valid datasets were created (e.g., if data is missing for a metric)
-                if (datasets.length === 0) {
-                    return; 
-                }
-
-                if (chartInstances[metric]) {
-                    chartInstances[metric].destroy();
-                    delete chartInstances[metric];
-                }
-
-                const chartDiv = document.createElement('div');
-                // Applied glassmorphism-card class here
-                chartDiv.className = 'glassmorphism-card p-6 flex flex-col justify-center items-center';
-                // Removed Tailwind CSS sizing classes and added fixed width/height attributes to canvas
-                chartDiv.innerHTML = `<h3 class="text-xl font-semibold text-blue-700 mb-4 text-center">${chartTitle}</h3><canvas id="chart-${metric.replace(/[^a-zA-Z0-9]/g, '-')}" width="350" height="288"></canvas>`;
-                chartsContainer.appendChild(chartDiv);
-
-                const ctx = document.getElementById(`chart-${metric.replace(/[^a-zA-Z0-9]/g, '-')}`).getContext('2d');
-                
-
-                chartInstances[metric] = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: datasets // Use the dynamically created datasets array
-                    },
-                    options: {
-                        responsive: false, // Set responsive to false to prevent automatic resizing
-                        maintainAspectRatio: false, // Keep this as false
-                        plugins: {
-                            legend: {
-                                display: (metric === 'Accélération' || metric === 'Gyroscope'), // Only display legend for combined charts
-                                rtl: (currentLanguage === 'ar'),
-                                labels: {
-                                    font: {
-                                        size: 12
-                                    },
-                                    usePointStyle: true // Show the point style in the legend
-                                }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    title: function(context) {
-                                        return `${translations[currentLanguage].chartLabels['Timestamp']}: ${context[0].label}`;
-                                    },
-                                    label: function(context) {
-                                        // Display the dataset label (e.g., "Acceleration X") and its value
-                                        return `${context.dataset.label}: ${context.raw.toLocaleString(currentLanguage)}`;
-                                    }
-                                },
-                                rtl: (currentLanguage === 'ar')
-                            }
-                        },
-                        scales: {
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: translations[currentLanguage].chartLabels['Timestamp'],
-                                    font: { size: 14, weight: 'bold' }
-                                },
-                                ticks: {
-                                    autoSkip: true,
-                                    maxTicksLimit: 10,
-                                    font: { size: 10 }
-                                }
-                            },
-                            y: {
-                                beginAtZero: false, // Set to false to allow Chart.js to determine optimal y-axis scale
-                                title: {
-                                    display: true,
-                                    text: chartTitle, // Y-axis title based on the main metric
-                                    font: { size: 14, weight: 'bold' }
-                                },
-                                ticks: {
-                                    font: { size: 10 },
-                                    callback: function(value) {
-                                        return value.toLocaleString(currentLanguage);
-                                    }
-                                }
-                            }
-                        },
-                        indexAxis: 'x',
-                        rtl: (currentLanguage === 'ar') 
-                    }
                 });
+            } else if (selectedMetric === 'Gyroscope') {
+                ['X', 'Y', 'Z'].forEach((axis, i) => {
+                    const componentMetric = `Gyroscope ${axis}`;
+                    const color = chartColors[(i + 3) % chartColors.length]; // Offset colors
+                    const pointStyle = pointStyles[(i + 3) % pointStyles.length];
+
+                    const dataForAxis = sortedData.map(entry => {
+                        const val = parseFloat(entry[componentMetric]);
+                        if (!isNaN(val)) values.push(val); // Add to values for stats
+                        return val || 0;
+                    });
+
+                    datasets.push({
+                        label: translations[currentLanguage].chartLabels[componentMetric] || componentMetric,
+                        data: dataForAxis,
+                        borderColor: color,
+                        backgroundColor: color.replace('rgb', 'rgba').replace(')', ', 0.1)'),
+                        borderWidth: 2,
+                        tension: 0.3,
+                        pointRadius: 3, // Smaller points for multi-line
+                        pointBackgroundColor: color,
+                        pointStyle: pointStyle,
+                        fill: false
+                    });
+                });
+            } else {
+                // Single metric chart
+                const color = chartColors[0]; // Use first color for single charts
+                const pointStyle = pointStyles[0];
+
+                const dataForMetric = sortedData.map(entry => {
+                    const val = parseFloat(entry[selectedMetric]);
+                    if (!isNaN(val)) values.push(val); // Add to values for stats
+                    return val || 0;
+                });
+
+                datasets.push({
+                    label: chartMetricLabel,
+                    data: dataForMetric,
+                    borderColor: color,
+                    backgroundColor: color.replace('rgb', 'rgba').replace(')', ', 0.2)'),
+                    borderWidth: 2,
+                    tension: 0.3,
+                    pointRadius: 5,
+                    pointBackgroundColor: color,
+                    pointStyle: pointStyle,
+                    fill: true
+                });
+            }
+
+            // Calculate Min, Max, Average
+            let min = values.length > 0 ? Math.min(...values) : NaN;
+            let max = values.length > 0 ? Math.max(...values) : NaN;
+            let sum = values.reduce((a, b) => a + b, 0);
+            let avg = values.length > 0 ? sum / values.length : NaN;
+
+            minVal.textContent = `${translations[currentLanguage].minLabel} ${formatNumericValue(min)}`;
+            avgVal.textContent = `${translations[currentLanguage].avgLabel} ${formatNumericValue(avg)}`;
+            maxVal.textContent = `${translations[currentLanguage].maxLabel} ${formatNumericValue(max)}`;
+
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const ctx = mainChartCanvas.getContext('2d');
+            
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: false, // Keep responsive false for fixed dimensions
+                    maintainAspectRatio: false, // Keep this as false
+                    plugins: {
+                        legend: {
+                            display: (selectedMetric === 'Accélération' || selectedMetric === 'Gyroscope'), // Only display legend for combined charts
+                            rtl: (currentLanguage === 'ar'),
+                            labels: {
+                                font: {
+                                    size: 12
+                                },
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    return `${translations[currentLanguage].chartLabels['Timestamp']}: ${context[0].label}`;
+                                },
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw.toLocaleString(currentLanguage, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                                }
+                            },
+                            rtl: (currentLanguage === 'ar')
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: translations[currentLanguage].chartLabels['Timestamp'],
+                                font: { size: 14, weight: 'bold' }
+                            },
+                            ticks: {
+                                autoSkip: true,
+                                maxTicksLimit: 10,
+                                font: { size: 10 }
+                            }
+                        },
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: chartMetricLabel,
+                                font: { size: 14, weight: 'bold' }
+                            },
+                            ticks: {
+                                font: { size: 10 },
+                                callback: function(value) {
+                                    return value.toLocaleString(currentLanguage);
+                                }
+                            }
+                        }
+                    },
+                    indexAxis: 'x',
+                    rtl: (currentLanguage === 'ar') 
+                }
             });
         }
 
@@ -1140,6 +1477,7 @@
             toTimeLabel.textContent = t.toTimeLabel;
             applyFiltersBtn.textContent = t.applyFiltersBtn;
             resetFiltersBtn.textContent = t.resetFiltersBtn;
+            exportCsvBtn.textContent = t.exportCsvBtn; // Update CSV button text
             
             noDataFoundDiv.textContent = t.noDataFound;
             
@@ -1148,6 +1486,16 @@
             generateInsightBtn.textContent = t.generateInsightBtn;
             insightCardTitle.textContent = t.insightCardTitle;
             insightLoadingText.textContent = t.generatingInsight;
+            copyInsightBtn.textContent = t.copyInsightBtn; // Update copy button text
+
+            // Update pagination button texts
+            prevPageBtn.textContent = t.prevPage;
+            nextPageBtn.textContent = t.nextPage;
+            
+            // Update chart labels and dropdown
+            populateChartMetricSelect(); // Re-populate with translated labels
+            chartMetricSelect.dataset.selected = chartMetricSelect.value; // Store current selection
+            chartMetricLabel.textContent = t.chartMetricLabel; // Update dropdown label
 
             // Re-render relevant sections to apply new language formatting and filters
             const activePageId = document.querySelector('.page-content:not(.hidden)').id;
@@ -1155,12 +1503,20 @@
             if (activePageId === 'latestData') {
                 renderLatestData(sensorData); // Latest data always uses full data to find last entry
             } else if (activePageId === 'fullTable') {
-                renderFullTable(filteredData); // Re-render table with filtered data
+                renderFullTable(filteredData); // Re-render table with filtered data (maintaining page)
             } else if (activePageId === 'charts') {
-                renderCharts(filteredData); // Re-render charts with filtered data
+                // Ensure the selected metric in dropdown is preserved, then render that chart
+                const selectedMetric = chartMetricSelect.value || chartMetrics[0];
+                renderChart(selectedMetric, filteredData);
             } else if (activePageId === 'accelGyroData') {
                 renderAccelGyroData(sensorData); // Accel/Gyro also uses full data to find last entry
             }
+
+            // Update min/avg/max labels
+            minVal.textContent = `${t.minLabel} ${formatNumericValue(parseFloat(minVal.textContent.split(': ')[1]))}`;
+            avgVal.textContent = `${t.avgLabel} ${formatNumericValue(parseFloat(avgVal.textContent.split(': ')[1]))}`;
+            maxVal.textContent = `${t.maxLabel} ${formatNumericValue(parseFloat(maxVal.textContent.split(': ')[1]))}`;
+
 
             updateCurrentDateTimeDisplay();
         }
@@ -1264,11 +1620,79 @@ Provide insights in a clear, easy-to-understand paragraph.`;
             }
         }
 
+        /**
+         * Copies the insight text to the clipboard.
+         */
+        function copyInsight() {
+            const textToCopy = insightContent.textContent;
+            if (textToCopy) {
+                // Use the older document.execCommand('copy') for broader iframe compatibility
+                const textArea = document.createElement('textarea');
+                textArea.value = textToCopy;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    alert(translations[currentLanguage].copiedSuccess); // Use alert for simplicity, could be custom modal
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                    alert(translations[currentLanguage].copyFailed); // Use alert for simplicity
+                }
+                document.body.removeChild(textArea);
+            }
+        }
+
+        /**
+         * Exports the current filtered data from the table to a CSV file.
+         */
+        function exportToCSV() {
+            const dataToExport = getFilteredSensorData(); // Get data based on current filters
+
+            if (dataToExport.length === 0) {
+                alert(translations[currentLanguage].noDataFound);
+                return;
+            }
+
+            const headers = Object.keys(dataToExport[0]);
+            const translatedHeaders = headers.map(header => translations[currentLanguage].chartLabels[header] || header);
+
+            let csv = translatedHeaders.join(',') + '\n'; // CSV header
+
+            dataToExport.forEach(row => {
+                const rowValues = headers.map(header => {
+                    let cellValue = row[header];
+                    if (header === 'Date') {
+                        cellValue = getFormattedDateForDisplay(cellValue, row['Heure']);
+                    } else if (header === 'Heure') {
+                        cellValue = getFormattedTimeForDisplay(row['Date'], cellValue);
+                    } else if (chartMetrics.includes(header) || 
+                                (header.startsWith('Accélération') && chartMetrics.includes('Accélération')) ||
+                                (header.startsWith('Gyroscope') && chartMetrics.includes('Gyroscope'))
+                            ) {
+                        cellValue = formatNumericValue(cellValue);
+                    }
+                    // Escape commas and double quotes for CSV format
+                    return `"${String(cellValue).replace(/"/g, '""')}"`;
+                });
+                csv += rowValues.join(',') + '\n';
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', 'sensor_data_filtered.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
 
         // Event Listeners
         document.addEventListener('DOMContentLoaded', () => {
             fetchData(); // Fetch all data on page load
             showPage('latestData'); // Show the latest data page by default
+
+            populateChartMetricSelect(); // Populate chart dropdown on load
 
             updateUIForLanguage(currentLanguage); // Initial call to update UI for default language
             toggleAutoRefresh(); // Start auto-refresh by default
@@ -1291,9 +1715,34 @@ Provide insights in a clear, easy-to-understand paragraph.`;
 
             autoRefreshToggleBtn.addEventListener('click', toggleAutoRefresh);
             generateInsightBtn.addEventListener('click', generateInsight);
+            copyInsightBtn.addEventListener('click', copyInsight); // New event listener for copy insight
 
             applyFiltersBtn.addEventListener('click', applyFilters); // Client-side filter application
             resetFiltersBtn.addEventListener('click', resetFilters); // Client-side filter reset
+            exportCsvBtn.addEventListener('click', exportToCSV); // New event listener for CSV export
+
+            // Pagination event listeners
+            prevPageBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderFullTable(getFilteredSensorData());
+                }
+            });
+            nextPageBtn.addEventListener('click', () => {
+                const filteredData = getFilteredSensorData();
+                const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderFullTable(filteredData);
+                }
+            });
+
+            // Chart metric selection event listener
+            chartMetricSelect.addEventListener('change', () => {
+                const selectedMetric = chartMetricSelect.value;
+                chartMetricSelect.dataset.selected = selectedMetric; // Store selection
+                renderChart(selectedMetric, getFilteredSensorData());
+            });
         });
 
     </script>
