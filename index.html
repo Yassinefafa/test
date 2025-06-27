@@ -74,6 +74,10 @@
                 <button id="chartsBtn" class="nav-button px-6 py-2 rounded-full text-lg font-semibold text-white bg-blue-500 hover:bg-blue-400 transition duration-300 transform hover:scale-105 shadow-md" data-target="charts">
                     الرسوم البيانية
                 </button>
+                <!-- Auto Refresh Toggle Button -->
+                <button id="autoRefreshToggleBtn" class="px-6 py-2 rounded-full text-lg font-semibold text-white bg-green-500 hover:bg-green-400 transition duration-300 transform hover:scale-105 shadow-md">
+                    تحديث تلقائي: تشغيل
+                </button>
             </div>
         </nav>
     </header>
@@ -196,6 +200,7 @@
         let sensorData = []; // To store all fetched data
         const chartInstances = {}; // To keep track of Chart.js instances
         let currentLanguage = 'fr'; // Default language is French
+        let autoRefreshIntervalId = null; // Stores the ID of the setInterval for auto-refresh
 
         // DOM Elements
         const loadingIndicator = document.getElementById('loading');
@@ -238,6 +243,9 @@
         const accelGyroTitle = document.getElementById('accelGyroTitle');
         const accelGyroContent = document.getElementById('accelGyroContent');
 
+        // New element for auto-refresh button
+        const autoRefreshToggleBtn = document.getElementById('autoRefreshToggleBtn');
+
 
         // Metrics to display as charts (including Accel & Gyro)
         const chartMetrics = [
@@ -271,6 +279,8 @@
                 invalidDate: 'تاريخ غير صالح',
                 invalidTime: 'وقت غير صالح',
                 invalidValue: 'غير صالح',
+                autoRefreshOn: 'تحديث تلقائي: تشغيل',
+                autoRefreshOff: 'تحديث تلقائي: إيقاف',
                 chartLabels: {
                     'Timestamp': 'الختم الزمني',
                     'Date': 'التاريخ',
@@ -312,6 +322,8 @@
                 invalidDate: 'Invalid Date',
                 invalidTime: 'Invalid Time',
                 invalidValue: 'Invalid',
+                autoRefreshOn: 'Auto Refresh: ON',
+                autoRefreshOff: 'Auto Refresh: OFF',
                 chartLabels: {
                     'Timestamp': 'Timestamp',
                     'Date': 'Date',
@@ -353,6 +365,8 @@
                 invalidDate: 'Date Invalide',
                 invalidTime: 'Heure Invalide',
                 invalidValue: 'Invalide',
+                autoRefreshOn: 'Actualisation automatique: ON',
+                autoRefreshOff: 'Actualisation automatique: OFF',
                 chartLabels: {
                     'Timestamp': 'Horodatage',
                     'Date': 'Date',
@@ -458,9 +472,11 @@
          * @param {string} pageId - The ID of the page section to show.
          */
         function showPage(pageId) {
+            // Hide all content sections
             document.querySelectorAll('.page-content').forEach(section => {
                 section.classList.add('hidden');
             });
+            // Show the requested content section
             document.getElementById(pageId).classList.remove('hidden');
 
             // Destroy existing charts if switching away from charts page
@@ -476,8 +492,10 @@
                 renderCharts(sensorData);
             }
 
-            // If navigating to full table, ensure it's rendered with current filters
-            if (pageId === 'fullTable') {
+            // Re-render the specific section that is now visible to apply any latest data or language changes
+            if (pageId === 'latestData') {
+                renderLatestData(sensorData);
+            } else if (pageId === 'fullTable') {
                 renderFullTable(sensorData);
             } else if (pageId === 'accelGyroData') {
                 renderAccelGyroData(sensorData);
@@ -870,6 +888,9 @@
             resetFiltersBtn.textContent = t.resetFiltersBtn;
             
             noDataFoundDiv.textContent = t.noDataFound; // Update the message if no data
+            
+            // Update auto refresh button text
+            autoRefreshToggleBtn.textContent = autoRefreshIntervalId ? t.autoRefreshOn : t.autoRefreshOff;
 
             // Re-render data to apply new language formatting (numbers, dates, times, headers)
             // This is crucial after language change as it regenerates elements with new strings
@@ -888,6 +909,29 @@
             updateCurrentDateTimeDisplay();
         }
 
+        /**
+         * Toggles the auto-refresh functionality.
+         */
+        function toggleAutoRefresh() {
+            if (autoRefreshIntervalId) {
+                // Stop auto-refresh
+                clearInterval(autoRefreshIntervalId);
+                autoRefreshIntervalId = null;
+                autoRefreshToggleBtn.textContent = translations[currentLanguage].autoRefreshOff;
+                autoRefreshToggleBtn.classList.remove('bg-green-500', 'hover:bg-green-400');
+                autoRefreshToggleBtn.classList.add('bg-red-500', 'hover:bg-red-400');
+            } else {
+                // Start auto-refresh (every 30 seconds)
+                autoRefreshIntervalId = setInterval(() => {
+                    fetchData(); // Fetch new data
+                }, 30000); // 30 seconds
+                autoRefreshToggleBtn.textContent = translations[currentLanguage].autoRefreshOn;
+                autoRefreshToggleBtn.classList.remove('bg-red-500', 'hover:bg-red-400');
+                autoRefreshToggleBtn.classList.add('bg-green-500', 'hover:bg-green-400');
+                fetchData(); // Fetch data immediately when starting
+            }
+        }
+
         // Event Listeners
         document.addEventListener('DOMContentLoaded', () => {
             fetchData(); // Fetch data on page load
@@ -895,6 +939,9 @@
 
             // Initial call to update UI for default language (French)
             updateUIForLanguage(currentLanguage);
+
+            // Start auto-refresh by default
+            toggleAutoRefresh(); 
 
             // Update current date and time every second
             setInterval(updateCurrentDateTimeDisplay, 1000); 
@@ -913,6 +960,9 @@
                     updateUIForLanguage(lang);
                 });
             });
+
+            // Auto-refresh toggle button listener
+            autoRefreshToggleBtn.addEventListener('click', toggleAutoRefresh);
 
         });
 
