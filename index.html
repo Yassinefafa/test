@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sensor Data Dashboard</title> <!-- Updated title for English -->
+    <title>PROJET IOT 2025</title> <!-- Updated title for English -->
     <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
     <!-- Tailwind CSS CDN -->
@@ -120,6 +120,7 @@
         #sidebarOverlay.show {
             opacity: 1; /* Fade in */
         }
+
     </style>
 </head>
 <body class="text-gray-800">
@@ -127,7 +128,7 @@
     <div id="sidebarOverlay" class="hidden md:hidden"></div>
 
     <!-- Overall Wrapper for Sidebar and Main Content -->
-    <div class="flex">
+    <div class="flex" id="mainContentWrapper"> <!-- Always visible -->
         <!-- Sidebar -->
         <nav id="sidebar" class="fixed top-0 left-0 h-full bg-gradient-to-br from-blue-700 to-indigo-800 text-white p-6 shadow-xl space-y-4">
             <div class="flex justify-between items-center mb-6">
@@ -139,7 +140,7 @@
                 </button>
             </div>
             <button id="latestDataBtn" class="nav-button block w-full text-left px-4 py-2 text-lg rounded-md font-semibold text-white bg-blue-600 hover:bg-blue-500 transition duration-300 transform hover:scale-105 shadow-md" data-target="latestData">
-                Latest Data
+                Dashboard
             </button>
             <button id="accelGyroBtn" class="nav-button block w-full text-left px-4 py-2 text-lg rounded-md font-semibold text-white bg-blue-600 hover:bg-blue-500 transition duration-300 transform hover:scale-105 shadow-md" data-target="accelGyroData">
                 Acceleration & Gyro
@@ -160,7 +161,7 @@
         </nav>
 
         <!-- Main Content Wrapper -->
-        <div id="mainContentWrapper" class="flex-1 w-full min-h-screen">
+        <div id="mainContentArea" class="flex-1 w-full min-h-screen">
             <!-- Header and Navigation (now only for title, date/time, language selector, and mobile menu button) -->
             <header class="bg-gradient-to-r from-blue-600 to-indigo-700 shadow-lg py-4 px-4 sm:px-6 md:px-8 flex justify-between items-center flex-wrap gap-4">
                 <div class="flex items-center gap-4">
@@ -170,7 +171,7 @@
                         </svg>
                     </button>
                     <h1 id="dashboardTitle" class="text-white text-2xl sm:text-3xl font-bold rounded-lg px-2 py-1 bg-opacity-20 bg-white">
-                        Data Dashboard
+                        PROJET IOT 2025
                     </h1>
                 </div>
                 <!-- Current Date and Time Display -->
@@ -215,7 +216,7 @@
                     <!-- Latest Data Section -->
                     <section id="latestData" class="page-content">
                         <h2 id="latestDataTitle" class="text-xl sm:text-3xl font-bold text-gray-800 mb-6 border-b-2 pb-3 border-blue-500">
-                            Latest Sensor Data
+                            Dashboard
                         </h2>
                         <div class="flex justify-start mb-6">
                             <button id="generateInsightBtn" class="px-4 py-2 text-sm sm:px-6 sm:py-2 sm:text-lg rounded-full font-semibold text-white bg-purple-600 hover:bg-purple-500 transition duration-300 transform hover:scale-105 shadow-md">
@@ -554,8 +555,8 @@
         // Translation object
         const translations = {
             'ar': {
-                dashboardTitle: 'لوحة تحكم البيانات',
-                latestDataBtn: 'البيانات الأخيرة',
+                dashboardTitle: 'مشروع إنترنت الأشياء 2025',
+                latestDataBtn: 'لوحة التحكم', // Changed from Latest Data
                 accelGyroBtn: 'تسارع وجيروسكوب',
                 fullTableBtn: 'الجدول الكامل',
                 chartsBtn: 'الرسوم البيانية',
@@ -563,7 +564,7 @@
                 loadingText: 'جارٍ تحميل البيانات...',
                 errorTitle: 'خطأ!',
                 errorText: 'تعذر تحميل البيانات. يرجى التأكد من أن مصدر البيانات متاح و Apps Script منشور بشكل صحيح.',
-                latestDataTitle: 'أحدث بيانات المستشعر',
+                latestDataTitle: 'لوحة التحكم', // Changed from Latest Sensor Data
                 accelGyroTitle: 'بيانات التسارع والجيروسكوب',
                 fullTableTitle: 'البيانات الكاملة مع التصفية',
                 fromDateLabel: 'من تاريخ:',
@@ -632,11 +633,11 @@
                 },
                 prevPage: 'السابق',
                 nextPage: 'التالي',
-                pageInfo: (currentPage, totalPages) => `صفحة ${currentPage} من ${totalPages}`
+                pageInfo: (currentPage, totalPages) => `صفحة ${currentPage} من ${totalPages}`,
             },
             'en': {
-                dashboardTitle: 'Data Dashboard',
-                latestDataBtn: 'Latest Data',
+                dashboardTitle: 'PROJET IOT 2025',
+                latestDataBtn: 'Dashboard', // Changed from Latest Data
                 accelGyroBtn: 'Acceleration & Gyro',
                 fullTableBtn: 'Full Table',
                 chartsBtn: 'Charts',
@@ -644,7 +645,7 @@
                 loadingText: 'Loading data...',
                 errorTitle: 'Error!',
                 errorText: 'Failed to load data. Please ensure the data source is available and Apps Script is correctly deployed.',
-                latestDataTitle: 'Latest Sensor Data',
+                latestDataTitle: 'Dashboard', // Changed from Latest Sensor Data
                 accelGyroTitle: 'Acceleration and Gyroscope Data',
                 fullTableTitle: 'Full Data with Filters',
                 fromDateLabel: 'From Date:',
@@ -713,11 +714,11 @@
                 },
                 prevPage: 'Previous',
                 nextPage: 'Next',
-                pageInfo: (currentPage, totalPages) => `Page ${currentPage} of ${totalPages}`
+                pageInfo: (currentPage, totalPages) => `Page ${currentPage} of ${totalPages}`,
             },
             'fr': {
-                dashboardTitle: 'Tableau de Bord des Données',
-                latestDataBtn: 'Dernières Données',
+                dashboardTitle: 'PROJET IOT 2025',
+                latestDataBtn: 'Tableau de Bord', // Changed from Dernières Données
                 accelGyroBtn: 'Accélération & Gyro',
                 fullTableBtn: 'Tableau Complet',
                 chartsBtn: 'Graphiques',
@@ -725,7 +726,7 @@
                 loadingText: 'Chargement des données...',
                 errorTitle: 'Erreur!',
                 errorText: 'Échec du chargement des données. Veuillez vous assurer que la source de données est disponible et que le script Apps Script est correctement déploye.',
-                latestDataTitle: 'Dernières Données des Capteurs',
+                latestDataTitle: 'Tableau de Bord', // Changed from Dernières Données des Capteurs
                 accelGyroTitle: 'Données d\'Accélération et de Gyroscope',
                 fullTableTitle: 'Tableau Complet des Données avec Filtres',
                 fromDateLabel: 'Du Date:',
@@ -794,7 +795,7 @@
                 },
                 prevPage: 'Précédent',
                 nextPage: 'Suivant',
-                pageInfo: (currentPage, totalPages) => `Page ${currentPage} sur ${totalPages}`
+                pageInfo: (currentPage, totalPages) => `Page ${currentPage} sur ${totalPages}`,
             }
         };
 
@@ -969,7 +970,7 @@
                 sensorData = actualData; // Store the FULL fetched data
                 
                 // Re-render based on the currently active page after fetching new data
-                const activePageId = document.querySelector('.page-content:not(.hidden)').id;
+                const activePageId = document.querySelector('.page-content:not(.hidden)')?.id; // Use optional chaining
                 const filteredData = getFilteredSensorData(); // Get filtered data for active page if needed
 
                 if (activePageId === 'latestData') {
@@ -1032,6 +1033,8 @@
             const labels = translations[currentLanguage].chartLabels;
 
             // Calculate overall data health and alerts
+            // The logic for criticalAlertCount, warningAlertCount, and overallHealth remains,
+            // but these counts and the overall health status are no longer displayed in the card.
             let criticalAlertCount = 0;
             let warningAlertCount = 0;
             let overallHealth = 'normal';
@@ -1065,27 +1068,12 @@
             `;
             latestDataContent.appendChild(totalEntriesCard);
 
-            // Create and append Data Health card
+            // Create and append Data Health card - now only shows the title "Overall Data Health"
             const dataHealthCard = document.createElement('div');
-            let healthText = '';
-            let healthColor = '';
-            if (overallHealth === 'critical') {
-                healthText = translations[currentLanguage].healthCritical;
-                healthColor = 'text-red-600';
-            } else if (overallHealth === 'warning') {
-                healthText = translations[currentLanguage].healthWarning;
-                healthColor = 'text-orange-500';
-            } else {
-                healthText = translations[currentLanguage].healthNormal;
-                healthColor = 'text-green-600';
-            }
-
             dataHealthCard.className = 'glassmorphism-card p-6 data-card-interactive';
             dataHealthCard.innerHTML = `
                 <h3 class="text-xl font-semibold text-blue-700 mb-2">Overall Data Health</h3>
-                <p class="text-2xl font-bold ${healthColor} mb-2">${healthText}</p>
-                <p class="text-lg text-gray-800">${translations[currentLanguage].criticalAlerts} <span class="font-bold text-red-600">${criticalAlertCount}</span></p>
-                <p class="text-lg text-gray-800">${translations[currentLanguage].warningAlerts} <span class="font-bold text-orange-500">${warningAlertCount}</span></p>
+                <!-- Removed display of health status and alert counts as per user request -->
             `;
             latestDataContent.appendChild(dataHealthCard);
 
@@ -1098,7 +1086,8 @@
                     !['Accélération', 'Gyroscope'].includes(key) // Also exclude the combined metrics to avoid duplicates
                     ) {
                     let valueToDisplay = latestEntry[key];
-                    let changeIndicator = '';
+                    // These are now empty strings to disable the display of change and alert indicators.
+                    let changeIndicator = ''; 
                     let alertIndicator = '';
 
                     const displayLabel = labels[key] || key;
@@ -1109,33 +1098,6 @@
                             ) {
                         const numericValue = parseFloat(valueToDisplay);
                         valueToDisplay = formatNumericValue(numericValue);
-
-                        // Value Change Indicator
-                        if (previousLatestEntry[key] !== undefined && !isNaN(parseFloat(previousLatestEntry[key]))) {
-                            const prevValue = parseFloat(previousLatestEntry[key]);
-                            const change = numericValue - prevValue;
-                            if (prevValue !== 0) { // Avoid division by zero
-                                const percentageChange = (change / prevValue) * 100;
-                                let arrow = '';
-                                let color = 'text-gray-500';
-                                if (change > 0) {
-                                    arrow = '▲'; // Up arrow
-                                    color = 'text-green-500';
-                                } else if (change < 0) {
-                                    arrow = '▼'; // Down arrow
-                                    color = 'text-red-500';
-                                }
-                                changeIndicator = `<span class="${color} text-sm font-semibold ml-2">${arrow} ${Math.abs(percentageChange).toFixed(1)}%</span>`;
-                            }
-                        }
-
-                        // Threshold Alert Indicator
-                        const status = getValueStatus(key, numericValue);
-                        if (status === 'warning') {
-                            alertIndicator = '<span class="text-orange-500 ml-2 text-xl" title="Warning: Value near limit">⚠️</span>';
-                        } else if (status === 'critical') {
-                            alertIndicator = '<span class="text-red-600 ml-2 text-xl" title="Critical: Value out of limit">❌</span>';
-                        }
                     } else if (key === 'Date') {
                         valueToDisplay = getFormattedDateForDisplay(valueToDisplay, latestEntry['Heure']);
                     } else if (key === 'Heure') {
@@ -1156,8 +1118,8 @@
                     latestDataContent.appendChild(dataCard);
                 }
             }
-            insightCard.classList.add('hidden');
-            insightContent.textContent = '';
+            insightCard.classList.add('hidden'); // Hide insight card initially or after new data render
+            insightContent.textContent = ''; // Clear previous insight
         }
 
         /**
@@ -1211,6 +1173,9 @@
          * @returns {string} HTML string for change and alert indicators.
          */
         function getChangeAndAlert(currentData, prevData, key) {
+            // This function now always returns an empty string to disable the change and alert indicators.
+            return ''; 
+            /* Original logic (commented out):
             let changeIndicator = '';
             let alertIndicator = '';
             const numericValue = parseFloat(currentData[key]);
@@ -1230,7 +1195,7 @@
                         arrow = '▼';
                         color = 'text-red-500';
                     }
-                    changeIndicator = `<span class="${color} text-sm font-semibold mr-1">${arrow} ${Math.abs(percentageChange).toFixed(1)}%</span>`;
+                    changeIndicator = `<span class="${color} text-sm font-semibold mr-1">${Math.abs(percentageChange).toFixed(1)}%</span>`; // Changed to only show percentage
                 }
             }
 
@@ -1242,6 +1207,7 @@
                 alertIndicator = '<span class="text-red-600 ml-1 text-xl" title="Critical: Value out of limit">❌</span>';
             }
             return `${changeIndicator}${alertIndicator}`;
+            */
         }
 
         /**
@@ -1374,7 +1340,7 @@
          * Applies filters by re-rendering the currently active relevant page (table or charts).
          */
         function applyFilters() {
-            const activePageId = document.querySelector('.page-content:not(.hidden)').id;
+            const activePageId = document.querySelector('.page-content:not(.hidden)')?.id; // Use optional chaining
             const filteredData = getFilteredSensorData(); // Get newly filtered data
 
             if (activePageId === 'fullTable') {
@@ -1395,7 +1361,7 @@
             fromTimeInput.value = '';
             toTimeInput.value = '';
             
-            const activePageId = document.querySelector('.page-content:not(.hidden)').id;
+            const activePageId = document.querySelector('.page-content:not(.hidden)')?.id; // Use optional chaining
             // When resetting, we effectively want to show all data, so filter with empty criteria
             const allData = getFilteredSensorData(); // This will return sensorData as inputs are empty
             
@@ -1744,7 +1710,7 @@
                 showThresholdMessage(t.thresholdsSavedSuccess, 'success');
                 // Re-render the relevant sections to apply new thresholds
                 renderLatestData(sensorData);
-                const activePageId = document.querySelector('.page-content:not(.hidden)').id;
+                const activePageId = document.querySelector('.page-content:not(.hidden)')?.id; // Use optional chaining
                 if (activePageId === 'charts') {
                     renderChart(chartMetricSelect.value || chartMetrics[0], getFilteredSensorData());
                 }
@@ -1763,7 +1729,7 @@
             
             // Re-render the relevant sections to apply reset thresholds
             renderLatestData(sensorData);
-            const activePageId = document.querySelector('.page-content:not(.hidden)').id;
+            const activePageId = document.querySelector('.page-content:not(.hidden)')?.id; // Use optional chaining
             if (activePageId === 'charts') {
                 renderChart(chartMetricSelect.value || chartMetrics[0], getFilteredSensorData());
             }
@@ -1799,7 +1765,8 @@
                 // Determine which section is currently visible
                 const activeSection = document.querySelector('.page-content:not(.hidden)');
                 if (!activeSection) {
-                    alert('No content to export to PDF.');
+                    // Using a custom message instead of alert
+                    showThresholdMessage(translations[currentLanguage].exportPdfError + ": " + translations[currentLanguage].noDataFound, 'error');
                     return;
                 }
 
@@ -1867,7 +1834,7 @@
 
             } catch (error) {
                 console.error('Error exporting to PDF:', error);
-                alert(translations[currentLanguage].exportPdfError + `\n${error.message}`);
+                showThresholdMessage(translations[currentLanguage].exportPdfError + ` (${error.message || error})`, 'error');
             }
         }
 
@@ -1970,7 +1937,17 @@
                     button.classList.remove('text-left');
                     button.classList.add('text-right');
                 });
-                document.querySelector('h2').textContent = 'القائمة'; // Update sidebar title
+                document.querySelector('#sidebar h2').textContent = 'القائمة'; // Update sidebar title
+                document.querySelector('#errorMessage span.absolute').style.left = '0';
+                document.querySelector('#errorMessage span.absolute').style.right = 'auto';
+                document.querySelector('#thresholdMessage span.absolute').style.left = '0';
+                document.querySelector('#thresholdMessage span.absolute').style.right = 'auto';
+                document.querySelector('#copyInsightBtn').classList.add('space-x-reverse');
+                // Adjust flex justification for RTL buttons
+                document.querySelectorAll('.flex.justify-start').forEach(el => {
+                    el.classList.add('space-x-reverse');
+                });
+
             } else {
                 html.setAttribute('dir', 'ltr');
                 body.style.textAlign = 'left';
@@ -1979,7 +1956,16 @@
                     button.classList.remove('text-right');
                     button.classList.add('text-left');
                 });
-                document.querySelector('h2').textContent = 'Menu'; // Update sidebar title
+                document.querySelector('#sidebar h2').textContent = 'Menu'; // Update sidebar title
+                document.querySelector('#errorMessage span.absolute').style.left = 'auto';
+                document.querySelector('#errorMessage span.absolute').style.right = '0';
+                document.querySelector('#thresholdMessage span.absolute').style.left = 'auto';
+                document.querySelector('#thresholdMessage span.absolute').style.right = '0';
+                document.querySelector('#copyInsightBtn').classList.remove('space-x-reverse');
+                // Adjust flex justification for LTR buttons
+                document.querySelectorAll('.flex.justify-start').forEach(el => {
+                    el.classList.remove('space-x-reverse');
+                });
             }
             
             // Handle sidebar and main content positioning based on sidebar state and language
@@ -2017,7 +2003,7 @@
 
 
             // Re-render current page to apply language changes to dynamic content
-            const activePageId = document.querySelector('.page-content:not(.hidden)').id;
+            const activePageId = document.querySelector('.page-content:not(.hidden)')?.id; // Use optional chaining
             const filteredData = getFilteredSensorData(); // Get filtered data for active page if needed
 
             if (activePageId === 'latestData') {
@@ -2121,13 +2107,14 @@
 
         function exportToCSV() {
             if (sensorData.length === 0) {
-                alert(translations[currentLanguage].noDataFound);
+                // Using custom message instead of alert
+                showThresholdMessage(translations[currentLanguage].noDataFound, 'error');
                 return;
             }
 
             const filteredData = getFilteredSensorData(); // Use filtered data for CSV export
             if (filteredData.length === 0) {
-                alert(translations[currentLanguage].noDataFound);
+                showThresholdMessage(translations[currentLanguage].noDataFound, 'error');
                 return;
             }
 
@@ -2242,11 +2229,12 @@
             setTimeout(() => sidebarOverlay.classList.add('hidden'), 300); // Hide overlay after transition
         }
 
+
         // Event Listeners
         document.addEventListener('DOMContentLoaded', () => {
             // Initial UI update before anything else, so translations are applied early
             updateUIForLanguage(currentLanguage);
-
+            
             fetchData(); // Fetch all data on page load
             showPage('latestData'); // Show the latest data page by default
 
