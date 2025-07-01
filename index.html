@@ -548,7 +548,7 @@
                     "relevant_data": "Données pertinentes",
                     "suggested_actions": "Actions suggérées",
                     "no_predictive_alerts": "Aucune alerte de maintenance prédictive pour le moment.",
-                    "view_details": "Voir les تفاصيل ✨",
+                    "view_details": "Voir les détails ✨",
                     "anomaly_explanation": "شرح الشذوذ",
                     "generating_explanation": "جاري توليد الشرح...",
                     "no_explanation_generated": "لم يتمكن من توليد شرح لهذا التنبيه.",
@@ -614,16 +614,10 @@
         // --- Sidebar Logic ---
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('main-content');
             const sidebarToggleButton = document.getElementById('sidebar-toggle');
 
-            sidebar.classList.toggle('-translate-x-full');
-            sidebar.classList.toggle('translate-x-0');
-
-            // Adjust left margin of main content on larger screens
-            if (window.innerWidth >= 768) { // md breakpoint in Tailwind
-                mainContent.classList.toggle('md:ml-64');
-            }
+            sidebar.classList.toggle('-translate-x-full'); // Hide to the left
+            sidebar.classList.toggle('translate-x-0');    // Show from the left
 
             // Toggle sidebar button icon
             if (sidebar.classList.contains('translate-x-0')) {
@@ -637,7 +631,8 @@
         document.addEventListener('click', (event) => {
             const sidebar = document.getElementById('sidebar');
             const sidebarToggleButton = document.getElementById('sidebar-toggle');
-            if (window.innerWidth < 768 && !sidebar.contains(event.target) && !sidebarToggleButton.contains(event.target) && sidebar.classList.contains('translate-x-0')) {
+            const sidebarToggleMobileButton = document.getElementById('sidebar-toggle-mobile'); // New mobile button
+            if (window.innerWidth < 768 && !sidebar.contains(event.target) && !sidebarToggleButton.contains(event.target) && !sidebarToggleMobileButton.contains(event.target) && sidebar.classList.contains('translate-x-0')) {
                 toggleSidebar();
             }
         });
@@ -2197,12 +2192,13 @@ Please format your response clearly with sections for '${translations['explanati
         /* Custom styles for sidebar on smaller screens */
         @media (max-width: 767px) {
             #sidebar {
-                transform: translateX(-100%);
+                transform: translateX(-100%); /* Hidden by default on mobile */
             }
             #sidebar.translate-x-0 {
-                transform: translateX(0);
+                transform: translateX(0); /* Shown on mobile */
             }
-            #main-content.md\:ml-64 {
+            /* Main content should not have left margin on mobile, as sidebar overlays */
+            #main-content {
                 margin-left: 0 !important;
             }
         }
@@ -2298,7 +2294,7 @@ Please format your response clearly with sections for '${translations['explanati
     </div>
 
     <!-- Sidebar -->
-    <aside id="sidebar" class="fixed inset-y-0 right-0 w-64 bg-gray-800 p-6 z-40 md:relative md:translate-x-0 transition-transform duration-300 ease-in-out shadow-lg">
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-gray-800 p-6 z-40 md:relative md:translate-x-0 transition-transform duration-300 ease-in-out shadow-lg">
         <div class="flex items-center justify-between mb-8">
             <h1 class="text-2xl font-bold text-blue-400" data-i18n="iot_project_2025">IOT Project 2025</h1>
             <button id="sidebar-toggle" class="md:hidden text-gray-400 hover:text-white focus:outline-none">
@@ -2359,7 +2355,7 @@ Please format your response clearly with sections for '${translations['explanati
 
     <!-- Main Content -->
     <main id="main-content" class="flex-1 p-8 md:ml-64 transition-all duration-300 ease-in-out overflow-y-auto">
-        <button id="sidebar-toggle-mobile" class="md:hidden fixed top-4 right-4 z-50 p-3 rounded-full bg-blue-600 text-white shadow-lg focus:outline-none">
+        <button id="sidebar-toggle-mobile" class="md:hidden fixed top-4 left-4 z-50 p-3 rounded-full bg-blue-600 text-white shadow-lg focus:outline-none">
             <i class="fas fa-bars"></i>
         </button>
 
