@@ -287,7 +287,10 @@
                     "error_generating_explanation": "Error generating explanation",
                     "explanation": "Explanation",
                     "potential_root_causes": "Potential Root Causes",
-                    "suggested_actions_llm": "Suggested Actions"
+                    "suggested_actions_llm": "Suggested Actions",
+                    "refresh_now": "Refresh Now",
+                    "auto_refresh_interval": "Auto Refresh Interval (seconds)",
+                    "invalid_refresh_interval": "Invalid refresh interval. Please enter a number greater than 0."
                 },
                 'ar': {
                     "iot_project_2025": "مشروع إنترنت الأشياء 2025",
@@ -421,7 +424,147 @@
                     "error_generating_explanation": "خطأ في توليد الشرح",
                     "explanation": "الشرح",
                     "potential_root_causes": "الأسباب الجذرية المحتملة",
-                    "suggested_actions_llm": "الإجراءات المقترحة"
+                    "suggested_actions_llm": "الإجراءات المقترحة",
+                    "refresh_now": "تحديث الآن",
+                    "auto_refresh_interval": "فاصل التحديث التلقائي (ثواني)",
+                    "invalid_refresh_interval": "فاصل تحديث غير صالح. الرجاء إدخال رقم أكبر من 0."
+                },
+                'fr': {
+                    "iot_project_2025": "Projet IoT 2025",
+                    "dashboard": "Tableau de bord",
+                    "acceleration_gyro_data": "Données d'accélération & Gyro",
+                    "full_table_with_filters": "Tableau complet avec filtres",
+                    "charts": "Graphiques",
+                    "alert_log": "Historique des alertes",
+                    "alert_threshold_settings": "Paramètres de seuil d'alerte",
+                    "predictive_maintenance": "Maintenance Prédictive",
+                    "sensor_data_overview": "Aperçu des données de capteur",
+                    "latest_sensor_readings": "Dernières lectures de capteur",
+                    "temperature": "Température",
+                    "humidity": "Humidité",
+                    "vibration": "Vibration",
+                    "ntc_temp": "Température NTC",
+                    "current": "Courant",
+                    "battery_voltage": "Tension de la batterie",
+                    "generate_insight": "Générer une perspicacité ✨",
+                    "copy_insight": "Copier la perspicacité",
+                    "auto_refresh": "Actualisation automatique",
+                    "enable_auto_refresh": "Activer l'actualisation automatique",
+                    "disable_auto_refresh": "Désactiver l'actualisation automatique",
+                    "user_id": "ID utilisateur",
+                    "normal": "Normal",
+                    "warning": "Avertissement",
+                    "critical": "Critique",
+                    "view_chart": "Voir le graphique",
+                    "filter_data": "Filtrer les données",
+                    "start_date": "Date de début",
+                    "start_time": "Heure de début",
+                    "end_date": "Date de fin",
+                    "end_time": "Heure de fin",
+                    "sensor_type": "Type de capteur",
+                    "all_sensor_types": "Tous les types de capteurs",
+                    "apply_filters": "Appliquer les filtres",
+                    "reset_filters": "Réinitialiser les filtres",
+                    "quick_filters": "Filtres rapides",
+                    "last_hour": "Dernière heure",
+                    "last_24_hours": "Dernières 24 heures",
+                    "last_7_days": "7 derniers jours",
+                    "last_30_days": "30 derniers jours",
+                    "all_time": "Tout le temps",
+                    "search_table": "Rechercher dans le tableau...",
+                    "timestamp": "Horodatage",
+                    "value": "Valeur",
+                    "unit": "Unité",
+                    "device_id": "ID de l'appareil",
+                    "page": "Page",
+                    "of": "de",
+                    "previous": "Précédent",
+                    "next": "Suivant",
+                    "export_to_csv": "Exporter en CSV",
+                    "export_to_pdf": "Exporter en PDF",
+                    "no_data_to_export": "Aucune donnée à exporter.",
+                    "data_exported_csv": "Données exportées en CSV!",
+                    "exporting_pdf": "Exportation en PDF...",
+                    "data_exported_pdf": "Données exportées en PDF!",
+                    "no_data_available": "Aucune donnée disponible.",
+                    "select_sensors_for_charts": "Sélectionner les capteurs pour les graphiques",
+                    "select_all": "Tout sélectionner",
+                    "reset_selections": "Réinitialiser les sélections",
+                    "apply_changes": "Appliquer les modifications",
+                    "min": "Min",
+                    "max": "Max",
+                    "avg": "Moy",
+                    "n_a": "N/A",
+                    "sensor_data_chart": "Graphique des données de capteur",
+                    "alert_severity": "Sévérité de l'alerte",
+                    "all": "Tout",
+                    "sort_by": "Trier par",
+                    "latest_first": "Plus récent d'abord",
+                    "oldest_first": "Plus ancien d'abord",
+                    "sensor_type_asc": "Type de capteur (Asc)",
+                    "clear_alert_log": "Effacer l'historique des alertes",
+                    "no_alerts_available": "Aucune alerte disponible.",
+                    "threshold_settings": "Paramètres de seuil",
+                    "level": "Niveau",
+                    "min_value": "Valeur min",
+                    "max_value": "Valeur max",
+                    "save_changes": "Enregistrer les modifications",
+                    "reset_to_defaults": "Réinitialiser aux valeurs par défaut",
+                    "language": "Langue",
+                    "arabic": "العربية",
+                    "english": "English",
+                    "french": "Français",
+                    "fetching_historical_data": "Récupération des données historiques...",
+                    "historical_data_fetched": "Données historiques récupérées avec succès!",
+                    "auto_refresh_enabled": "Actualisation automatique activée.",
+                    "auto_refresh_disabled": "Actualisation automatique désactivée.",
+                    "generating_insights": "Génération de perspicacités...",
+                    "generating": "Génération",
+                    "insights_generated_success": "Perspicacités générées avec succès!",
+                    "no_insights_generated": "Aucune perspicacité n'a pu être générée pour les données actuelles.",
+                    "failed_to_generate_insights": "Échec de la génération de perspicacités.",
+                    "error_generating_insights": "Erreur lors de la génération de perspicacités",
+                    "insights_copied": "Perspicacités copiées dans le presse-papiers!",
+                    "failed_to_copy_insights": "Échec de la copie des perspicacités.",
+                    "thresholds_loaded": "Seuils d'alerte chargés.",
+                    "thresholds_saved_success": "Seuils d'alerte enregistrés avec succès!",
+                    "thresholds_reset": "Seuils d'alerte réinitialisés aux valeurs par défaut!",
+                    "alert": "Alerte",
+                    "value_is": "la valeur est",
+                    "status_is": "le statut est",
+                    "confirm_clear_alerts": "Êtes-vous sûr de vouloir effacer toutes les alertes?",
+                    "alerts_cleared": "Alertes effacées avec succès!",
+                    "unknown": "Inconnu",
+                    "insight_prompt_base": "Analysez les données de capteur suivantes et fournissez un résumé concis de l'état actuel، مع تسليط الضوء على أي شذوذ أو اتجاهات مهمة: ",
+                    "language_changed_to": "Langue changée en",
+                    "acceleration_x": "Accélération X",
+                    "acceleration_y": "Accélération Y",
+                    "acceleration_z": "Accélération Z",
+                    "gyro_x": "Gyro X",
+                    "gyro_y": "Gyro Y",
+                    "gyro_z": "Gyro Z",
+                    "latest_full_data_record": "Dernier enregistrement de données complet",
+                    "acceleration_data": "Données d'accélération",
+                    "gyroscope_data": "Données de gyroscope",
+                    "message": "Message",
+                    "affected_equipment": "Équipement affecté",
+                    "predicted_fault": "Défaut prédit",
+                    "estimated_time_to_failure": "Temps estimé avant la panne (ETF)",
+                    "severity_priority": "Sévérité/Priorité",
+                    "relevant_data": "Données pertinentes",
+                    "suggested_actions": "Actions suggérées",
+                    "no_predictive_alerts": "Aucune alerte de maintenance prédictive pour le moment.",
+                    "view_details": "Voir les détails ✨",
+                    "anomaly_explanation": "شرح الشذوذ",
+                    "generating_explanation": "جاري توليد الشرح...",
+                    "no_explanation_generated": "لم يتمكن من توليد شرح لهذا التنبيه.",
+                    "error_generating_explanation": "خطأ في توليد الشرح",
+                    "explanation": "الشرح",
+                    "potential_root_causes": "الأسباب الجذرية المحتملة",
+                    "suggested_actions_llm": "الإجراءات المقترحة",
+                    "refresh_now": "Actualiser maintenant",
+                    "auto_refresh_interval": "Intervalle d'actualisation automatique (secondes)",
+                    "invalid_refresh_interval": "Intervalle d'actualisation invalide. Veuillez entrer un nombre supérieur à 0."
                 }
             };
             return allTranslations[lang] || allTranslations['en']; // Fallback to English
@@ -473,7 +616,7 @@
             renderChart(); // Re-render chart with new language
             renderAlertLogTable(); // Re-render alert log
             renderPredictiveMaintenanceAlerts(); // Update predictive maintenance alerts
-            showNotification(translations['language_changed_to'] + (lang === 'ar' ? ' Arabic' : lang === 'en' ? ' English' : ' French'), "success");
+            showNotification(translations['language_changed_to'] + (lang === 'ar' ? ' العربية' : lang === 'en' ? ' English' : ' Français'), "success");
         }
 
 
@@ -630,11 +773,11 @@
         let currentFullTableData = []; // Store all historical data
 
         async function fetchHistoricalSensorData() {
-            showNotification(translations['fetching_historical_data'], "info");
             const loadingOverlay = document.getElementById('loading-overlay'); // Changed to loadingOverlay
             if (loadingOverlay) { // Check if element exists
                 loadingOverlay.classList.remove('hidden'); // Show loading indicator
             }
+            showNotification(translations['fetching_historical_data'], "info"); // Moved notification here
 
             try {
                 console.log("Attempting to fetch data from:", GOOGLE_SHEETS_API_URL); // Log the URL
@@ -782,23 +925,31 @@
         // --- Auto Refresh ---
         function toggleAutoRefresh(enable) {
             const autoRefreshBtn = document.getElementById('auto-refresh-btn');
+            const refreshIntervalInput = document.getElementById('refresh-interval-input');
+            const interval = parseInt(refreshIntervalInput.value);
+
             if (enable) {
-                if (!autoRefreshInterval) { // Only if not already active
-                    autoRefreshInterval = setInterval(async () => {
-                        console.log("Auto-refreshing historical data...");
-                        await fetchHistoricalSensorData();
-                    }, 15000); // Every 15 seconds
-                    autoRefreshBtn.innerHTML = `<i class="fas fa-pause"></i> ${translations['disable_auto_refresh']}`;
-                    autoRefreshBtn.classList.remove('bg-gray-500', 'hover:bg-gray-600');
-                    autoRefreshBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                    showNotification(translations['auto_refresh_enabled'], "success");
+                if (isNaN(interval) || interval <= 0) {
+                    showNotification(translations['invalid_refresh_interval'], "error");
+                    return;
                 }
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval); // Clear existing interval if any
+                }
+                autoRefreshInterval = setInterval(async () => {
+                    console.log("Auto-refreshing historical data...");
+                    await fetchHistoricalSensorData();
+                }, interval * 1000); // Convert seconds to milliseconds
+                autoRefreshBtn.innerHTML = `<i class="fas fa-pause"></i> ${translations['disable_auto_refresh']}`;
+                autoRefreshBtn.classList.remove('bg-gray-500', 'hover:bg-gray-600');
+                autoRefreshBtn.classList.add('bg-indigo-600', 'hover:bg-indigo-700'); /* Changed to indigo */
+                showNotification(translations['auto_refresh_enabled'], "success");
             } else {
                 if (autoRefreshInterval) {
                     clearInterval(autoRefreshInterval);
                     autoRefreshInterval = null;
                     autoRefreshBtn.innerHTML = `<i class="fas fa-play"></i> ${translations['enable_auto_refresh']}`;
-                    autoRefreshBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                    autoRefreshBtn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700'); /* Changed to indigo */
                     autoRefreshBtn.classList.add('bg-gray-500', 'hover:bg-gray-600');
                     showNotification(translations['auto_refresh_disabled'], "warning");
                 }
@@ -990,23 +1141,23 @@
 
             paginatedData.forEach(row => {
                 const tr = document.createElement('tr');
-                tr.className = 'bg-white border-b hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700';
+                tr.className = 'bg-gray-800 border-b border-gray-700 hover:bg-gray-700'; /* Changed bg-white to bg-gray-800, added border */
                 tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${row["Date"] ? new Date(row["Date"]).toLocaleDateString(currentLanguage) : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">${row["Heure"] ? new Date(row["Heure"]).toLocaleTimeString(currentLanguage) : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">${!isNaN(row["Température (°C)"]) ? row["Température (°C)"].toFixed(2) : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">${!isNaN(row["Humidité (%)"]) ? row["Humidité (%)"].toFixed(2) : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">${!isNaN(row["Accélération X"]) ? row["Accélération X"].toFixed(2) : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">${!isNaN(row["Accélération Y"]) ? row["Accélération Y"].toFixed(2) : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">${!isNaN(row["Accélération Z"]) ? row["Accélération Z"].toFixed(2) : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">${!isNaN(row["Gyroscope X"]) ? row["Gyroscope X"].toFixed(2) : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">${!isNaN(row["Gyroscope Y"]) ? row["Gyroscope Y"].toFixed(2) : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">${!isNaN(row["Gyroscope Z"]) ? row["Gyroscope Z"].toFixed(2) : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">${!isNaN(row["Vibration"]) ? row["Vibration"].toFixed(2) : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">${!isNaN(row["Temp. NTC (°C)"]) ? row["Temp. NTC (°C)"].toFixed(2) : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">${!isNaN(row["Courant (V Bruts)"]) ? row["Courant (V Bruts)"].toFixed(2) : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">${!isNaN(row["Batterie (V)"]) ? row["Batterie (V)"].toFixed(2) : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">${row.deviceId || translations['unknown']}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100">${row["Date"] ? new Date(row["Date"]).toLocaleDateString(currentLanguage) : 'N/A'}</td> <!-- Changed text-gray-900 to text-gray-100 -->
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${row["Heure"] ? new Date(row["Heure"]).toLocaleTimeString(currentLanguage) : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${!isNaN(row["Température (°C)"]) ? row["Température (°C)"].toFixed(2) : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${!isNaN(row["Humidité (%)"]) ? row["Humidité (%)"].toFixed(2) : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${!isNaN(row["Accélération X"]) ? row["Accélération X"].toFixed(2) : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${!isNaN(row["Accélération Y"]) ? row["Accélération Y"].toFixed(2) : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${!isNaN(row["Accélération Z"]) ? row["Accélération Z"].toFixed(2) : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${!isNaN(row["Gyroscope X"]) ? row["Gyroscope X"].toFixed(2) : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${!isNaN(row["Gyroscope Y"]) ? row["Gyroscope Y"].toFixed(2) : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${!isNaN(row["Gyroscope Z"]) ? row["Gyroscope Z"].toFixed(2) : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${!isNaN(row["Vibration"]) ? row["Vibration"].toFixed(2) : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${!isNaN(row["Temp. NTC (°C)"]) ? row["Temp. NTC (°C)"].toFixed(2) : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${!isNaN(row["Courant (V Bruts)"]) ? row["Courant (V Bruts)"].toFixed(2) : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${!isNaN(row["Batterie (V)"]) ? row["Batterie (V)"].toFixed(2) : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${row.deviceId || translations['unknown']}</td>
                 `;
                 tableBody.appendChild(tr);
             });
@@ -1183,7 +1334,7 @@
                 const div = document.createElement('div');
                 div.className = 'flex items-center';
                 div.innerHTML = `
-                    <input id="chart-sensor-${type.replace(/[^a-zA-Z0-9]/g, '')}" type="checkbox" value="${type}" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+                    <input id="chart-sensor-${type.replace(/[^a-zA-Z0-9]/g, '')}" type="checkbox" value="${type}" class="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500"> <!-- Changed text-blue to text-indigo -->
                     <label for="chart-sensor-${type.replace(/[^a-zA-Z0-9]/g, '')}" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">${translations[type] || type}</label>
                 `;
                 chartSensorSelect.appendChild(div);
@@ -1289,7 +1440,7 @@
             sensorChart.data.labels = chartData.labels;
             sensorChart.data.datasets = [];
 
-            const colors = ['#4299E1', '#8B5CF6', '#F6E05E', '#FC8181', '#48BB78', '#ED8936']; // Colors for datasets
+            const colors = ['#6366F1', '#14B8A6', '#F6E05E', '#FC8181', '#48BB78', '#ED8936']; // Updated colors: indigo, teal, yellow, red, green, orange
 
             selectedChartSensors.forEach((sensorHeader, index) => { // Now sensorHeader is like "Température (°C)"
                 const sensorValues = chartData.datasets[sensorHeader];
@@ -1663,13 +1814,13 @@
             tableBody.innerHTML = '';
 
             if (filteredAlerts.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">${translations['no_alerts_available']}</td></tr>`;
+                    tableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">${translations['no_alerts_available']}</td></tr>`;
                 return;
             }
 
             filteredAlerts.forEach(alert => {
                 const tr = document.createElement('tr');
-                tr.className = 'bg-white border-b hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700';
+                tr.className = 'bg-gray-800 border-b border-gray-700 hover:bg-gray-700'; /* Changed bg-white to bg-gray-800, added border */
                 let severityColorClass = '';
                 switch (alert.severity) {
                     case 'warning':
@@ -1683,12 +1834,12 @@
                 }
 
                 tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${new Date(alert.timestamp).toLocaleString(currentLanguage)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100">${new Date(alert.timestamp).toLocaleString(currentLanguage)}</td> <!-- Changed text-gray-900 to text-gray-100 -->
                     <td class="px-6 py-4 whitespace-nowrap text-sm ${severityColorClass} font-semibold">${translations[alert.severity] || alert.severity}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">${translations[alert.sensorType] || alert.sensorType}</td>
-                    <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">${alert.message}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${translations[alert.sensorType] || alert.sensorType}</td>
+                    <td class="px-6 py-4 text-sm text-gray-300">${alert.message}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
-                        <button class="view-details-btn bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded-md text-xs font-semibold transition-colors duration-200"
+                        <button class="view-details-btn bg-indigo-600 hover:bg-indigo-700 text-white py-1 px-3 rounded-md text-xs font-semibold transition-colors duration-200" /* Changed to indigo */
                                 data-alert-id="${alert.id}"
                                 data-sensor-type="${alert.sensorType}"
                                 data-value="${alert.value}"
@@ -1840,8 +1991,8 @@ Please format your response clearly with sections for '${translations['explanati
          * @returns {string} - HTML formatted text.
          */
         function formatLLMResponse(text) {
-            let formattedText = text.replace(/### (.*)/g, '<h4 class="text-lg font-semibold mt-4 mb-2 text-blue-300">$1</h4>');
-            formattedText = formattedText.replace(/## (.*)/g, '<h3 class="text-xl font-bold mt-5 mb-3 text-blue-400">$1</h3>');
+            let formattedText = text.replace(/### (.*)/g, '<h4 class="text-lg font-semibold mt-4 mb-2 text-indigo-300">$1</h4>'); /* Changed to indigo */
+            formattedText = formattedText.replace(/## (.*)/g, '<h3 class="text-xl font-bold mt-5 mb-3 text-indigo-400">$1</h3>'); /* Changed to indigo */
             formattedText = formattedText.replace(/\* (.*)/g, '<li class="mb-1">$1</li>');
             formattedText = formattedText.replace(/^- (.*)/g, '<li class="mb-1">$1</li>');
             formattedText = formattedText.replace(/(\n\n)/g, '<p class="mb-2"></p>'); // Convert double newlines to paragraphs
@@ -1914,7 +2065,7 @@ Please format your response clearly with sections for '${translations['explanati
                         severityColor = 'border-yellow-500';
                         break;
                     default:
-                        severityColor = 'border-blue-500'; // For 'normal' or 'info' predictive alerts
+                        severityColor = 'border-indigo-500'; // Changed to indigo for normal/info
                 }
 
                 card.classList.add(severityColor); // Add border color based on severity
@@ -1958,6 +2109,14 @@ Please format your response clearly with sections for '${translations['explanati
             document.getElementById('generate-insight-btn').addEventListener('click', generateInsight);
             document.getElementById('insight-copy-btn').addEventListener('click', copyInsight);
             document.getElementById('auto-refresh-btn').addEventListener('click', () => toggleAutoRefresh(!autoRefreshInterval));
+            document.getElementById('refresh-now-btn').addEventListener('click', fetchHistoricalSensorData); // Manual refresh button
+            document.getElementById('refresh-interval-input').addEventListener('change', () => {
+                // If auto-refresh is currently enabled, restart it with the new interval
+                if (autoRefreshInterval) {
+                    toggleAutoRefresh(false); // Disable first
+                    toggleAutoRefresh(true);  // Then re-enable with new interval
+                }
+            });
 
             // Full Table
             document.getElementById('filter-apply-btn').addEventListener('click', applyTableFilters);
@@ -2071,10 +2230,10 @@ Please format your response clearly with sections for '${translations['explanati
             font-family: 'Inter', sans-serif;
         }
         .glassmorphism-card {
-            background-color: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            background-color: rgba(255, 255, 255, 0.08); /* Slightly less transparent */
+            backdrop-filter: blur(12px); /* Slightly more blur */
+            border: 1px solid rgba(255, 255, 255, 0.15); /* Slightly more visible border */
+            box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.3); /* Softer, wider shadow */
         }
         /* Custom styles for sidebar on smaller screens */
         @media (max-width: 767px) {
@@ -2164,13 +2323,13 @@ Please format your response clearly with sections for '${translations['explanati
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="loading-overlay hidden">
         <div class="loading-spinner"></div>
-        <p id="loading-message">Loading...</p> <!-- Changed loading message to English -->
+        <p id="loading-message" data-i18n="fetching_historical_data">Loading...</p> <!-- Changed loading message to English -->
     </div>
 
     <!-- Anomaly Explanation Modal -->
     <div id="anomaly-explanation-modal" class="modal-overlay hidden">
         <div class="modal-content">
-            <h3 id="anomaly-explanation-title" class="text-2xl font-bold mb-4 text-blue-400">Anomaly Explanation</h3>
+            <h3 id="anomaly-explanation-title" class="text-2xl font-bold mb-4 text-indigo-400">Anomaly Explanation</h3> <!-- Changed to indigo -->
             <div id="anomaly-explanation-content" class="text-gray-300 text-sm leading-relaxed">
                 <!-- LLM generated explanation will be loaded here -->
             </div>
@@ -2183,7 +2342,7 @@ Please format your response clearly with sections for '${translations['explanati
     <!-- Sidebar -->
     <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-gray-800 p-6 z-40 md:relative md:translate-x-0 transition-transform duration-300 ease-in-out shadow-lg">
         <div class="flex items-center justify-between mb-8">
-            <h1 class="text-2xl font-bold text-blue-400" data-i18n="iot_project_2025">IOT Project 2025</h1>
+            <h1 class="text-2xl font-bold text-indigo-400" data-i18n="iot_project_2025">IOT Project 2025</h1> <!-- Changed to indigo -->
             <button id="sidebar-toggle" class="md:hidden text-gray-400 hover:text-white focus:outline-none">
                 <i class="fas fa-times"></i>
             </button>
@@ -2191,37 +2350,37 @@ Please format your response clearly with sections for '${translations['explanati
         <nav>
             <ul>
                 <li class="mb-4">
-                    <button id="nav-dashboard" class="flex items-center p-3 w-full text-right rounded-lg hover:bg-blue-600 transition-colors duration-200 focus:outline-none text-white bg-blue-700 shadow-md">
+                    <button id="nav-dashboard" class="flex items-center p-3 w-full text-right rounded-lg hover:bg-indigo-600 transition-colors duration-200 focus:outline-none text-white bg-indigo-700 shadow-md"> <!-- Changed to indigo -->
                         <i class="fas fa-chart-line ml-3"></i> <span data-i18n="dashboard">Dashboard</span>
                     </button>
                 </li>
                 <li class="mb-4">
-                    <button id="nav-accel-gyro" class="flex items-center p-3 w-full text-right rounded-lg hover:bg-blue-600 transition-colors duration-200 focus:outline-none text-white">
+                    <button id="nav-accel-gyro" class="flex items-center p-3 w-full text-right rounded-lg hover:bg-indigo-600 transition-colors duration-200 focus:outline-none text-white"> <!-- Changed to indigo -->
                         <i class="fas fa-tachometer-alt ml-3"></i> <span data-i18n="acceleration_gyro_data">Acceleration & Gyro Data</span>
                     </button>
                 </li>
                 <li class="mb-4">
-                    <button id="nav-full-table" class="flex items-center p-3 w-full text-right rounded-lg hover:bg-blue-600 transition-colors duration-200 focus:outline-none text-white">
+                    <button id="nav-full-table" class="flex items-center p-3 w-full text-right rounded-lg hover:bg-indigo-600 transition-colors duration-200 focus:outline-none text-white"> <!-- Changed to indigo -->
                         <i class="fas fa-table ml-3"></i> <span data-i18n="full_table_with_filters">Full Table with Filters</span>
                     </button>
                 </li>
                 <li class="mb-4">
-                    <button id="nav-charts" class="flex items-center p-3 w-full text-right rounded-lg hover:bg-blue-600 transition-colors duration-200 focus:outline-none text-white">
+                    <button id="nav-charts" class="flex items-center p-3 w-full text-right rounded-lg hover:bg-indigo-600 transition-colors duration-200 focus:outline-none text-white"> <!-- Changed to indigo -->
                         <i class="fas fa-chart-area ml-3"></i> <span data-i18n="charts">Charts</span>
                     </button>
                 </li>
                 <li class="mb-4">
-                    <button id="nav-alert-log" class="flex items-center p-3 w-full text-right rounded-lg hover:bg-blue-600 transition-colors duration-200 focus:outline-none text-white">
+                    <button id="nav-alert-log" class="flex items-center p-3 w-full text-right rounded-lg hover:bg-indigo-600 transition-colors duration-200 focus:outline-none text-white"> <!-- Changed to indigo -->
                         <i class="fas fa-bell ml-3"></i> <span data-i18n="alert_log">Alert Log</span>
                     </button>
                 </li>
                 <li class="mb-4">
-                    <button id="nav-alert-settings" class="flex items-center p-3 w-full text-right rounded-lg hover:bg-blue-600 transition-colors duration-200 focus:outline-none text-white">
+                    <button id="nav-alert-settings" class="flex items-center p-3 w-full text-right rounded-lg hover:bg-indigo-600 transition-colors duration-200 focus:outline-none text-white"> <!-- Changed to indigo -->
                         <i class="fas fa-cog ml-3"></i> <span data-i18n="alert_threshold_settings">Alert Threshold Settings</span>
                     </button>
                 </li>
                 <li class="mb-4">
-                    <button id="nav-predictive-maintenance" class="flex items-center p-3 w-full text-right rounded-lg hover:bg-blue-600 transition-colors duration-200 focus:outline-none text-white">
+                    <button id="nav-predictive-maintenance" class="flex items-center p-3 w-full text-right rounded-lg hover:bg-indigo-600 transition-colors duration-200 focus:outline-none text-white"> <!-- Changed to indigo -->
                         <i class="fas fa-tools ml-3"></i> <span data-i18n="predictive_maintenance">Predictive Maintenance</span>
                     </button>
                 </li>
@@ -2229,7 +2388,7 @@ Please format your response clearly with sections for '${translations['explanati
         </nav>
         <div class="mt-8 border-t border-gray-700 pt-4">
             <h3 class="text-gray-400 text-sm mb-2" data-i18n="language">Language</h3>
-            <select id="lang-select" class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white focus:ring-blue-500 focus:border-blue-500">
+            <select id="lang-select" class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white focus:ring-indigo-500 focus:border-indigo-500"> <!-- Changed to indigo -->
                 <option value="ar" data-i18n="arabic">العربية</option>
                 <option value="en" data-i18n="english" selected>English</option> <!-- Set English as selected -->
                 <option value="fr" data-i18n="french">Français</option>
@@ -2242,7 +2401,7 @@ Please format your response clearly with sections for '${translations['explanati
 
     <!-- Main Content -->
     <main id="main-content" class="flex-1 p-8 md:ml-64 transition-all duration-300 ease-in-out overflow-y-auto">
-        <button id="sidebar-toggle-mobile" class="md:hidden fixed top-4 left-4 z-50 p-3 rounded-full bg-blue-600 text-white shadow-lg focus:outline-none">
+        <button id="sidebar-toggle-mobile" class="md:hidden fixed top-4 left-4 z-50 p-3 rounded-full bg-indigo-600 text-white shadow-lg focus:outline-none"> <!-- Changed to indigo -->
             <i class="fas fa-bars"></i>
         </button>
 
@@ -2258,7 +2417,7 @@ Please format your response clearly with sections for '${translations['explanati
                     <div class="bg-gray-800 p-5 rounded-lg shadow-md hover:shadow-xl transition-all duration-300">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-gray-400 text-sm" data-i18n="temperature">Temperature</span>
-                            <i class="fas fa-thermometer-half text-blue-400 text-xl"></i>
+                            <i class="fas fa-thermometer-half text-indigo-400 text-xl"></i> <!-- Changed to indigo -->
                         </div>
                         <p id="temp-value" class="text-3xl font-bold text-white">-- °C</p>
                     </div>
@@ -2266,7 +2425,7 @@ Please format your response clearly with sections for '${translations['explanati
                     <div class="bg-gray-800 p-5 rounded-lg shadow-md hover:shadow-xl transition-all duration-300">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-gray-400 text-sm" data-i18n="humidity">Humidity</span>
-                            <i class="fas fa-tint text-green-400 text-xl"></i>
+                            <i class="fas fa-tint text-teal-400 text-xl"></i> <!-- Changed to teal -->
                         </div>
                         <p id="humidity-value" class="text-3xl font-bold text-white">-- %</p>
                     </div>
@@ -2317,10 +2476,10 @@ Please format your response clearly with sections for '${translations['explanati
             <!-- Insight Generation -->
             <div class="glassmorphism-card p-6 rounded-xl mb-8">
                 <h3 class="text-xl font-semibold mb-6" data-i18n="generate_insight">Generate Insight ✨</h3>
-                <button id="generate-insight-btn" class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                <button id="generate-insight-btn" class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"> <!-- Changed to indigo gradient -->
                     <i class="fas fa-magic ml-2"></i> <span data-i18n="generate_insight">Generate Insight ✨</span>
                 </button>
-                <div class="bg-gray-800 p-4 rounded-lg text-gray-300 relative">
+                <div class="bg-gray-800 p-4 rounded-lg text-gray-300 relative border border-gray-700"> <!-- Added border -->
                     <p id="insight-output" class="text-sm italic" data-i18n="no_insights_generated">Click "Generate Insight" to get an analytical summary of sensor data.</p>
                     <button id="insight-copy-btn" class="absolute top-2 left-2 bg-gray-700 hover:bg-gray-600 text-white text-sm py-1 px-2 rounded-md hidden transform hover:scale-105 transition-all duration-200" data-i18n="copy_insight">
                         <i class="fas fa-copy"></i>
@@ -2328,11 +2487,20 @@ Please format your response clearly with sections for '${translations['explanati
                 </div>
             </div>
 
-            <!-- Auto Refresh & User ID -->
+            <!-- Auto Refresh & Manual Refresh & User ID -->
             <div class="flex flex-wrap items-center justify-between gap-4 glassmorphism-card p-6 rounded-xl">
-                <button id="auto-refresh-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-                    <i class="fas fa-play ml-2"></i> <span data-i18n="enable_auto_refresh">Enable Auto Refresh</span>
-                </button>
+                <div class="flex items-center gap-4">
+                    <button id="auto-refresh-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"> <!-- Changed to indigo -->
+                        <i class="fas fa-play ml-2"></i> <span data-i18n="enable_auto_refresh">Enable Auto Refresh</span>
+                    </button>
+                    <button id="refresh-now-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50" data-i18n="refresh_now">
+                        <i class="fas fa-sync-alt ml-2"></i> Refresh Now
+                    </button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label for="refresh-interval-input" class="text-gray-400 text-sm" data-i18n="auto_refresh_interval">Auto Refresh Interval (seconds):</label>
+                    <input type="number" id="refresh-interval-input" value="15" min="1" class="w-20 p-2 rounded-md bg-gray-700 border border-gray-600 text-white text-center">
+                </div>
                 <p id="user-id-display" class="text-gray-400 text-sm" data-i18n="user_id_placeholder">User ID: Loading...</p>
             </div>
         </section>
@@ -2347,31 +2515,31 @@ Please format your response clearly with sections for '${translations['explanati
                     <div class="bg-gray-800 p-5 rounded-lg shadow-md">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-gray-400 text-sm" data-i18n="acceleration_x">Acceleration X</span>
-                            <i class="fas fa-square-root-alt text-teal-400 text-xl"></i>
+                            <i class="fas fa-square-root-alt text-teal-400 text-xl"></i> <!-- Changed to teal -->
                         </div>
                         <p id="accel-x-value" class="text-3xl font-bold text-white">-- G</p>
                         <p id="accel-x-status" class="text-sm font-semibold text-gray-500" data-i18n="normal">Normal</p>
-                        <button id="view-accel-x-chart-btn" class="mt-4 w-full bg-blue-700 hover:bg-blue-800 text-white py-2 px-4 rounded-md text-sm font-semibold transition-colors duration-200" data-i18n="view_chart">View Chart</button>
+                        <button id="view-accel-x-chart-btn" class="mt-4 w-full bg-indigo-700 hover:bg-indigo-800 text-white py-2 px-4 rounded-md text-sm font-semibold transition-colors duration-200" data-i18n="view_chart">View Chart</button> <!-- Changed to indigo -->
                     </div>
                     <!-- Accel Y Card -->
                     <div class="bg-gray-800 p-5 rounded-lg shadow-md">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-gray-400 text-sm" data-i18n="acceleration_y">Acceleration Y</span>
-                            <i class="fas fa-square-root-alt text-teal-400 text-xl"></i>
+                            <i class="fas fa-square-root-alt text-teal-400 text-xl"></i> <!-- Changed to teal -->
                         </div>
                         <p id="accel-y-value" class="text-3xl font-bold text-white">-- G</p>
                         <p id="accel-y-status" class="text-sm font-semibold text-gray-500" data-i18n="normal">Normal</p>
-                        <button id="view-accel-y-chart-btn" class="mt-4 w-full bg-blue-700 hover:bg-blue-800 text-white py-2 px-4 rounded-md text-sm font-semibold transition-colors duration-200" data-i18n="view_chart">View Chart</button>
+                        <button id="view-accel-y-chart-btn" class="mt-4 w-full bg-indigo-700 hover:bg-indigo-800 text-white py-2 px-4 rounded-md text-sm font-semibold transition-colors duration-200" data-i18n="view_chart">View Chart</button> <!-- Changed to indigo -->
                     </div>
                     <!-- Accel Z Card -->
                     <div class="bg-gray-800 p-5 rounded-lg shadow-md">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-gray-400 text-sm" data-i18n="acceleration_z">Acceleration Z</span>
-                            <i class="fas fa-square-root-alt text-teal-400 text-xl"></i>
+                            <i class="fas fa-square-root-alt text-teal-400 text-xl"></i> <!-- Changed to teal -->
                         </div>
                         <p id="accel-z-value" class="text-3xl font-bold text-white">-- G</p>
                         <p id="accel-z-status" class="text-sm font-semibold text-gray-500" data-i18n="normal">Normal</p>
-                        <button id="view-accel-z-chart-btn" class="mt-4 w-full bg-blue-700 hover:bg-blue-800 text-white py-2 px-4 rounded-md text-sm font-semibold transition-colors duration-200" data-i18n="view_chart">View Chart</button>
+                        <button id="view-accel-z-chart-btn" class="mt-4 w-full bg-indigo-700 hover:bg-indigo-800 text-white py-2 px-4 rounded-md text-sm font-semibold transition-colors duration-200" data-i18n="view_chart">View Chart</button> <!-- Changed to indigo -->
                     </div>
                 </div>
 
@@ -2385,7 +2553,7 @@ Please format your response clearly with sections for '${translations['explanati
                         </div>
                         <p id="gyro-x-value" class="text-3xl font-bold text-white">-- deg/s</p>
                         <p id="gyro-x-status" class="text-sm font-semibold text-gray-500" data-i18n="normal">Normal</p>
-                        <button id="view-gyro-x-chart-btn" class="mt-4 w-full bg-blue-700 hover:bg-blue-800 text-white py-2 px-4 rounded-md text-sm font-semibold transition-colors duration-200" data-i18n="view_chart">View Chart</button>
+                        <button id="view-gyro-x-chart-btn" class="mt-4 w-full bg-indigo-700 hover:bg-indigo-800 text-white py-2 px-4 rounded-md text-sm font-semibold transition-colors duration-200" data-i18n="view_chart">View Chart</button> <!-- Changed to indigo -->
                     </div>
                     <!-- Gyro Y Card -->
                     <div class="bg-gray-800 p-5 rounded-lg shadow-md">
@@ -2395,7 +2563,7 @@ Please format your response clearly with sections for '${translations['explanati
                         </div>
                         <p id="gyro-y-value" class="text-3xl font-bold text-white">-- deg/s</p>
                         <p id="gyro-y-status" class="text-sm font-semibold text-gray-500" data-i18n="normal">Normal</p>
-                        <button id="view-gyro-y-chart-btn" class="mt-4 w-full bg-blue-700 hover:bg-blue-800 text-white py-2 px-4 rounded-md text-sm font-semibold transition-colors duration-200" data-i18n="view_chart">View Chart</button>
+                        <button id="view-gyro-y-chart-btn" class="mt-4 w-full bg-indigo-700 hover:bg-indigo-800 text-white py-2 px-4 rounded-md text-sm font-semibold transition-colors duration-200" data-i18n="view_chart">View Chart</button> <!-- Changed to indigo -->
                     </div>
                     <!-- Gyro Z Card -->
                     <div class="bg-gray-800 p-5 rounded-lg shadow-md">
@@ -2405,7 +2573,7 @@ Please format your response clearly with sections for '${translations['explanati
                         </div>
                         <p id="gyro-z-value" class="text-3xl font-bold text-white">-- deg/s</p>
                         <p id="gyro-z-status" class="text-sm font-semibold text-gray-500" data-i18n="normal">Normal</p>
-                        <button id="view-gyro-z-chart-btn" class="mt-4 w-full bg-blue-700 hover:bg-blue-800 text-white py-2 px-4 rounded-md text-sm font-semibold transition-colors duration-200" data-i18n="view_chart">View Chart</button>
+                        <button id="view-gyro-z-chart-btn" class="mt-4 w-full bg-indigo-700 hover:bg-indigo-800 text-white py-2 px-4 rounded-md text-sm font-semibold transition-colors duration-200" data-i18n="view_chart">View Chart</button> <!-- Changed to indigo -->
                     </div>
                 </div>
             </div>
@@ -2444,7 +2612,7 @@ Please format your response clearly with sections for '${translations['explanati
                         </select>
                     </div>
                     <div class="flex items-end gap-2">
-                        <button id="filter-apply-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all duration-200 w-full" data-i18n="apply_filters">Apply Filters</button>
+                        <button id="filter-apply-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all duration-200 w-full" data-i18n="apply_filters">Apply Filters</button> <!-- Changed to indigo -->
                         <button id="filter-reset-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all duration-200 w-full" data-i18n="reset_filters">Reset</button>
                     </div>
                     <div>
@@ -2493,9 +2661,9 @@ Please format your response clearly with sections for '${translations['explanati
 
                 <!-- Pagination Controls -->
                 <div class="flex justify-between items-center mt-6">
-                    <button id="prev-page-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="previous">Previous</button>
+                    <button id="prev-page-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="previous">Previous</button> <!-- Changed to indigo -->
                     <span id="page-info" class="text-gray-300" data-i18n="page_info_placeholder">Page 1 of 1</span>
-                    <button id="next-page-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="next">Next</button>
+                    <button id="next-page-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="next">Next</button> <!-- Changed to indigo -->
                 </div>
 
                 <!-- Export Buttons -->
@@ -2515,9 +2683,9 @@ Please format your response clearly with sections for '${translations['explanati
                     <!-- Checkboxes for sensor selection will be populated by JavaScript -->
                 </div>
                 <div class="flex flex-wrap gap-4 mb-8">
-                    <button id="select-all-charts-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200" data-i18n="select_all">Select All</button>
+                    <button id="select-all-charts-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200" data-i18n="select_all">Select All</button> <!-- Changed to indigo -->
                     <button id="reset-chart-selections-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200" data-i18n="reset_selections">Reset Selections</button>
-                    <button id="apply-chart-changes-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200" data-i18n="apply_changes">Apply Changes</button>
+                    <button id="apply-chart-changes-btn" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200" data-i18n="apply_changes">Apply Changes</button> <!-- Changed to teal -->
                 </div>
 
                 <!-- Chart Canvas -->
@@ -2846,7 +3014,7 @@ Please format your response clearly with sections for '${translations['explanati
                 </div>
 
                 <div class="flex justify-end gap-4 mt-6">
-                    <button id="save-thresholds-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200" data-i18n="save_changes">Save Changes</button>
+                    <button id="save-thresholds-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200" data-i18n="save_changes">Save Changes</button> <!-- Changed to indigo -->
                     <button id="reset-thresholds-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200" data-i18n="reset_to_defaults">Reset to Defaults</button>
                 </div>
             </div>
