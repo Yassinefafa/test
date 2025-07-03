@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"> <!-- Changed to English as default language -->
+<html lang="en" class="dark"> <!-- Default to dark mode, class will be toggled -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,6 +31,7 @@
         let autoRefreshInterval; // For automatic refresh mechanism
         let currentLanguage = 'en'; // Default language set to English
         let translations = {}; // To store translation files
+        let currentTheme = 'dark'; // Default theme
 
         // URL for Google Sheets Scripts API
         const GOOGLE_SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbxO7soutfxNmG1Vy6KvuZ4ZS96qWg9nJouY-vjvKt3_i-kQh4wa3hBbU0-vuqgU8jF02g/exec";
@@ -307,7 +308,13 @@
                     "suggested_actions_llm": "Suggested Actions",
                     "refresh_now": "Refresh Now",
                     "auto_refresh_interval": "Auto Refresh Interval (seconds)",
-                    "invalid_refresh_interval": "Invalid refresh interval. Please enter a number greater than 0."
+                    "invalid_refresh_interval": "Invalid refresh interval. Please enter a number greater than 0.",
+                    "light_mode": "Light Mode",
+                    "dark_mode": "Dark Mode",
+                    "chart_start_date": "Chart Start Date",
+                    "chart_start_time": "Chart Start Time",
+                    "chart_end_date": "Chart End Date",
+                    "chart_end_time": "Chart End Time"
                 },
                 'ar': {
                     "iot_project_2025": "مشروع إنترنت الأشياء 2025",
@@ -444,7 +451,13 @@
                     "suggested_actions_llm": "الإجراءات المقترحة",
                     "refresh_now": "تحديث الآن",
                     "auto_refresh_interval": "فاصل التحديث التلقائي (ثواني)",
-                    "invalid_refresh_interval": "فاصل تحديث غير صالح. الرجاء إدخال رقم أكبر من 0."
+                    "invalid_refresh_interval": "فاصل تحديث غير صالح. الرجاء إدخال رقم أكبر من 0.",
+                    "light_mode": "الوضع الفاتح",
+                    "dark_mode": "الوضع الداكن",
+                    "chart_start_date": "تاريخ بدء الرسم البياني",
+                    "chart_start_time": "وقت بدء الرسم البياني",
+                    "chart_end_date": "تاريخ انتهاء الرسم البياني",
+                    "chart_end_time": "وقت انتهاء الرسم البياني"
                 },
                 'fr': {
                     "iot_project_2025": "Projet IoT 2025",
@@ -526,7 +539,7 @@
                     "min_value": "Valeur min",
                     "max_value": "Valeur max",
                     "save_changes": "Enregistrer les modifications",
-                    "reset_to_defaults": "Réinitialiser aux valeurs par default",
+                    "reset_to_defaults": "Réinitialiser aux valeurs par défaut",
                     "language": "Langue",
                     "arabic": "العربية",
                     "english": "English",
@@ -552,7 +565,7 @@
                     "confirm_clear_alerts": "Êtes-vous sûr de vouloir effacer toutes les alertes?",
                     "alerts_cleared": "Alertes effacées avec succès!",
                     "unknown": "Inconnu",
-                    "insight_prompt_base": "Analysez les données de capteur suivantes et fournissez un résumé concis de l'état الحالي، مع تسليط الضوء على أي شذوذ أو اتجاهات مهمة: ",
+                    "insight_prompt_base": "Analysez les données de capteur suivantes et fournissez un résumé concis de l'état actuel، مع تسليط الضوء على أي شذوذ أو اتجاهات مهمة: ",
                     "language_changed_to": "Langue changée en",
                     "acceleration_x": "Accélération X",
                     "acceleration_y": "Accélération Y",
@@ -581,7 +594,13 @@
                     "suggested_actions_llm": "الإجراءات المقترحة",
                     "refresh_now": "Actualiser maintenant",
                     "auto_refresh_interval": "Intervalle d'actualisation automatique (secondes)",
-                    "invalid_refresh_interval": "Intervalle d'actualisation invalide. Veuillez entrer un nombre supérieur à 0."
+                    "invalid_refresh_interval": "Intervalle d'actualisation invalide. Veuillez entrer un nombre supérieur à 0.",
+                    "light_mode": "Mode clair",
+                    "dark_mode": "Mode sombre",
+                    "chart_start_date": "Date de début du graphique",
+                    "chart_start_time": "Heure de début du graphique",
+                    "chart_end_date": "Date de fin du graphique",
+                    "chart_end_time": "Heure de fin du graphique"
                 }
             };
             return allTranslations[lang] || allTranslations['en']; // Fallback to English
@@ -691,7 +710,7 @@
         let latestSensorData = {}; // Store latest sensor data
 
         /**
-         * Update main dashboard cards with latest data.
+         * Update main dashboard cards with latest data and apply status colors.
          */
         function updateDashboardCards() {
             const sensorIds = {
@@ -705,17 +724,18 @@
 
             for (const sheetColumn in sensorIds) {
                 const dataKey = sensorIds[sheetColumn].key;
+                const valueElement = document.getElementById(sensorIds[sheetColumn].id);
+                const cardElement = valueElement.closest('.bg-gray-800'); // Get the parent card element
+
                 if (latestSensorData[dataKey]) {
-                    const valueElement = document.getElementById(sensorIds[sheetColumn].id);
-                    if (valueElement) {
-                        valueElement.textContent = `${latestSensorData[dataKey].value.toFixed(2)} ${sensorIds[sheetColumn].unit}`;
-                    }
+                    const value = latestSensorData[dataKey].value;
+                    valueElement.textContent = `${value.toFixed(2)} ${sensorIds[sheetColumn].unit}`;
+                    const status = getSensorStatus(dataKey, value);
+                    valueElement.className = `text-3xl font-bold ${getStatusColorClass(status)}`; // Apply color based on status
                 } else {
                     // Set to default if data is not available
-                    const valueElement = document.getElementById(sensorIds[sheetColumn].id);
-                    if (valueElement) {
-                        valueElement.textContent = `-- ${sensorIds[sheetColumn].unit}`;
-                    }
+                    valueElement.textContent = `-- ${sensorIds[sheetColumn].unit}`;
+                    valueElement.className = `text-3xl font-bold ${getStatusColorClass('normal')}`; // Default to normal color
                 }
             }
         }
@@ -742,7 +762,7 @@
                         valueElement.textContent = `${latestSensorData[dataKey].value.toFixed(2)} ${accelGyroMapping[sheetColumn].unit}`;
                         const status = getSensorStatus(dataKey, latestSensorData[dataKey].value);
                         statusElement.textContent = translations[status] || status; // Translate status
-                        statusElement.className = `font-semibold ${getStatusColorClass(status)}`;
+                        statusElement.className = `text-sm font-semibold ${getStatusColorClass(status)}`;
                     }
                 } else {
                     // Set to default if data is not available
@@ -751,7 +771,7 @@
                     if (valueElement) {
                         valueElement.textContent = `-- ${accelGyroMapping[sheetColumn].unit}`;
                         statusElement.textContent = translations['normal']; // Default status
-                        statusElement.className = `font-semibold ${getStatusColorClass('normal')}`;
+                        statusElement.className = `text-sm font-semibold ${getStatusColorClass('normal')}`;
                     }
                 }
             }
@@ -1294,8 +1314,6 @@
                 const imgHeight = (canvas.height * imgWidth) / canvas.width;
                 let heightLeft = imgHeight;
 
-                let position = 0;
-
                 pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
                 heightLeft -= pageHeight;
 
@@ -1389,14 +1407,14 @@
                         title: {
                             display: true,
                             text: translations['sensor_data_chart'],
-                            color: 'white'
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() // Dynamic color
                         },
                         tooltip: {
                             rtl: currentLanguage === 'ar', // RTL support for tooltips
                         },
                         legend: {
                             labels: {
-                                color: 'white'
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() // Dynamic color
                             }
                         }
                     },
@@ -1414,26 +1432,26 @@
                             title: {
                                 display: true,
                                 text: translations['timestamp'],
-                                color: 'white'
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() // Dynamic color
                             },
                             ticks: {
-                                color: 'white'
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() // Dynamic color
                             },
                             grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--grid-color').trim() // Dynamic color
                             }
                         },
                         y: {
                             title: {
                                 display: true,
                                 text: translations['value'], // Default to "Value"
-                                color: 'white'
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() // Dynamic color
                             },
                             ticks: {
-                                color: 'white'
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() // Dynamic color
                             },
                             grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--grid-color').trim() // Dynamic color
                             }
                         }
                     }
@@ -1452,7 +1470,7 @@
                 return;
             }
 
-            const chartData = filterChartData(); // Get filtered data for chart
+            const chartData = filterChartDataForChart(); // Use new filter function for charts
 
             sensorChart.data.labels = chartData.labels;
             sensorChart.data.datasets = [];
@@ -1493,16 +1511,31 @@
         }
 
         /**
-         * Collects data for the chart.
+         * Collects data for the chart based on chart-specific filters.
          * @returns {Object} - Object containing labels and datasets.
          */
-        function filterChartData() {
-            const dataForChart = { labels: [], datasets: {}, rawValues: [] };
+        function filterChartDataForChart() {
+            let dataForChart = { labels: [], datasets: {}, rawValues: [] };
+            let tempFilteredData = [...currentFullTableData];
+
+            const startDateInput = document.getElementById('chart-start-date').value;
+            const startTimeInput = document.getElementById('chart-start-time').value;
+            const endDateInput = document.getElementById('chart-end-date').value;
+            const endTimeInput = document.getElementById('chart-end-time').value;
+
+            // Apply chart-specific date and time filters
+            if (startDateInput && startTimeInput) {
+                const startDateTime = new Date(`${startDateInput}T${startTimeInput}`);
+                tempFilteredData = tempFilteredData.filter(d => d.timestamp >= startDateTime);
+            }
+            if (endDateInput && endTimeInput) {
+                const endDateTime = new Date(`${endDateInput}T${endTimeInput}`);
+                tempFilteredData = tempFilteredData.filter(d => d.timestamp <= endDateTime);
+            }
+
             const sensorDataMap = {}; // To collect data for each sensor type
 
-            // Use currently filtered data from the full table
-            filteredTableData.forEach(entry => {
-                // For each selected sensor, push its value from the current row
+            tempFilteredData.forEach(entry => {
                 selectedChartSensors.forEach(sensorHeader => {
                     const value = entry[sensorHeader];
                     if (value !== undefined && value !== null && !isNaN(value)) {
@@ -1510,7 +1543,7 @@
                             sensorDataMap[sensorHeader] = [];
                         }
                         sensorDataMap[sensorHeader].push({
-                            x: entry.timestamp, // Use the combined timestamp
+                            x: entry.timestamp,
                             y: value
                         });
                         dataForChart.rawValues.push(value);
@@ -2100,9 +2133,54 @@ Please format your response clearly with sections for '${translations['explanati
             });
         }
 
+        // --- Theme Toggle ---
+        function toggleTheme() {
+            const htmlElement = document.documentElement;
+            if (htmlElement.classList.contains('dark')) {
+                htmlElement.classList.remove('dark');
+                htmlElement.classList.add('light');
+                currentTheme = 'light';
+                localStorage.setItem('theme', 'light');
+            } else {
+                htmlElement.classList.remove('light');
+                htmlElement.classList.add('dark');
+                currentTheme = 'dark';
+                localStorage.setItem('theme', 'dark');
+            }
+            // Update chart colors based on new theme
+            updateChartColorsForTheme();
+        }
+
+        function updateChartColorsForTheme() {
+            const rootStyles = getComputedStyle(document.documentElement);
+            if (sensorChart) {
+                sensorChart.options.plugins.title.color = rootStyles.getPropertyValue('--text-color').trim();
+                sensorChart.options.plugins.legend.labels.color = rootStyles.getPropertyValue('--text-color').trim();
+                sensorChart.options.scales.x.title.color = rootStyles.getPropertyValue('--text-color').trim();
+                sensorChart.options.scales.x.ticks.color = rootStyles.getPropertyValue('--text-color').trim();
+                sensorChart.options.scales.x.grid.color = rootStyles.getPropertyValue('--grid-color').trim();
+                sensorChart.options.scales.y.title.color = rootStyles.getPropertyValue('--text-color').trim();
+                sensorChart.options.scales.y.ticks.color = rootStyles.getPropertyValue('--text-color').trim();
+                sensorChart.options.scales.y.grid.color = rootStyles.getPropertyValue('--grid-color').trim();
+                sensorChart.update();
+            }
+        }
+
 
         // --- Initialize Application on Window Load ---
         window.onload = async () => {
+            // Load theme preference
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.documentElement.classList.remove('dark', 'light'); // Clear default
+                document.documentElement.classList.add(savedTheme);
+                currentTheme = savedTheme;
+            } else {
+                // If no saved theme, default to dark and save it
+                localStorage.setItem('theme', 'dark');
+                currentTheme = 'dark';
+            }
+
             // Fetch default translations first
             translations = getTranslations(currentLanguage); // Use the updated function
             applyTranslations(); // Apply initial translations
@@ -2160,39 +2238,69 @@ Please format your response clearly with sections for '${translations['explanati
             document.getElementById('export-pdf-btn').addEventListener('click', exportToPDF);
 
             // Charts
-            document.getElementById('apply-chart-changes-btn').addEventListener('click', applyChartSelections);
+            document.getElementById('apply-chart-changes-btn').addEventListener('click', renderChart); // Changed to renderChart directly
             document.getElementById('select-all-charts-btn').addEventListener('click', selectAllChartSensors);
             document.getElementById('reset-chart-selections-btn').addEventListener('click', resetChartSelections);
+            document.getElementById('chart-start-date').addEventListener('change', renderChart);
+            document.getElementById('chart-start-time').addEventListener('change', renderChart);
+            document.getElementById('chart-end-date').addEventListener('change', renderChart);
+            document.getElementById('chart-end-time').addEventListener('change', renderChart);
+
 
             // Add event handlers for "View Chart" buttons
             document.getElementById('view-accel-x-chart-btn').addEventListener('click', () => {
                 showSection('charts-section');
                 selectedChartSensors = ['Accélération X']; // Use the actual column header
+                // Reset chart date/time filters when clicking "View Chart"
+                document.getElementById('chart-start-date').value = '';
+                document.getElementById('chart-start-time').value = '';
+                document.getElementById('chart-end-date').value = '';
+                document.getElementById('chart-end-time').value = '';
                 renderChart();
             });
             document.getElementById('view-accel-y-chart-btn').addEventListener('click', () => {
                 showSection('charts-section');
                 selectedChartSensors = ['Accélération Y']; // Use the actual column header
+                document.getElementById('chart-start-date').value = '';
+                document.getElementById('chart-start-time').value = '';
+                document.getElementById('chart-end-date').value = '';
+                document.getElementById('chart-end-time').value = '';
                 renderChart();
             });
             document.getElementById('view-accel-z-chart-btn').addEventListener('click', () => {
                 showSection('charts-section');
                 selectedChartSensors = ['Accélération Z']; // Use the actual column header
+                document.getElementById('chart-start-date').value = '';
+                document.getElementById('chart-start-time').value = '';
+                document.getElementById('chart-end-date').value = '';
+                document.getElementById('chart-end-time').value = '';
                 renderChart();
             });
             document.getElementById('view-gyro-x-chart-btn').addEventListener('click', () => {
                 showSection('charts-section');
                 selectedChartSensors = ['Gyroscope X']; // Use the actual column header
+                document.getElementById('chart-start-date').value = '';
+                document.getElementById('chart-start-time').value = '';
+                document.getElementById('chart-end-date').value = '';
+                document.getElementById('chart-end-time').value = '';
                 renderChart();
             });
             document.getElementById('view-gyro-y-chart-btn').addEventListener('click', () => {
                 showSection('charts-section');
                 selectedChartSensors = ['Gyroscope Y']; // Use the actual column header
+                document.getElementById('chart-start-date').value = '';
+                document.getElementById('chart-start-time').value = '';
+                document.getElementById('chart-end-date').value = '';
+                document.getElementById('chart-end-time').value = '';
                 renderChart();
             });
             document.getElementById('view-gyro-z-chart-btn').addEventListener('click', () => {
                 showSection('charts-section');
                 selectedChartSensors = ['Gyroscope Z']; // Use the actual column header
+                document.getElementById('chart-start-date').value = '';
+                document.getElementById('chart-start-time').value = '';
+                document.getElementById('chart-end-date').value = '';
+                document.getElementById('chart-end-time').value = '';
                 renderChart();
             });
 
@@ -2219,6 +2327,9 @@ Please format your response clearly with sections for '${translations['explanati
             // Language switcher
             document.getElementById('lang-select').addEventListener('change', (e) => changeLanguage(e.target.value));
 
+            // Theme Toggle
+            document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
+
             // Close sidebar if clicked outside sidebar on mobile
             document.addEventListener('click', (event) => {
                 const sidebar = document.getElementById('sidebar');
@@ -2237,20 +2348,55 @@ Please format your response clearly with sections for '${translations['explanati
 
             // Initial UI setup
             initChart(); // Initialize Chart.js here once
+            updateChartColorsForTheme(); // Set initial chart colors based on theme
             showSection('dashboard-section'); // Display default dashboard
             populateAlertLogFilters(); // Populate alert log filters
             renderPredictiveMaintenanceAlerts(); // Display predictive maintenance alerts
         };
     </script>
     <style>
+        /* Define CSS variables for themes */
+        :root {
+            --bg-color: #1a202c; /* gray-900 */
+            --text-color: #ffffff;
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --card-border: rgba(255, 255, 255, 0.15);
+            --card-shadow: rgba(0, 0, 0, 0.3);
+            --sidebar-bg: #2d3748; /* gray-800 */
+            --input-bg: #4a5568; /* gray-700 */
+            --input-border: #4a5568; /* gray-600 */
+            --table-bg-odd: #2d3748; /* gray-800 */
+            --table-bg-even: #1a202c; /* gray-900 */
+            --table-border: #4a5568; /* gray-700 */
+            --grid-color: rgba(255, 255, 255, 0.1);
+        }
+
+        html.light {
+            --bg-color: #f7fafc; /* gray-100 */
+            --text-color: #2d3748; /* gray-800 */
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --card-border: rgba(0, 0, 0, 0.1);
+            --card-shadow: rgba(0, 0, 0, 0.1);
+            --sidebar-bg: #ffffff;
+            --input-bg: #edf2f7; /* gray-200 */
+            --input-border: #cbd5e0; /* gray-300 */
+            --table-bg-odd: #ffffff;
+            --table-bg-even: #f7fafc; /* gray-100 */
+            --table-border: #e2e8f0; /* gray-200 */
+            --grid-color: rgba(0, 0, 0, 0.1);
+        }
+
         body {
             font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         .glassmorphism-card {
-            background-color: rgba(255, 255, 255, 0.08); /* Slightly less transparent */
-            backdrop-filter: blur(12px); /* Slightly more blur */
-            border: 1px solid rgba(255, 255, 255, 0.15); /* Slightly more visible border */
-            box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.3); /* Softer, wider shadow */
+            background-color: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            box-shadow: 0 6px 20px 0 var(--card-shadow);
         }
         /* Custom styles for sidebar on smaller screens */
         @media (max-width: 767px) {
@@ -2320,7 +2466,7 @@ Please format your response clearly with sections for '${translations['explanati
             z-index: 1000;
         }
         .modal-content {
-            background-color: #1f2937; /* gray-800 */
+            background-color: var(--sidebar-bg); /* Use sidebar background for modal */
             padding: 2rem;
             border-radius: 0.75rem; /* rounded-xl */
             box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
@@ -2329,10 +2475,25 @@ Please format your response clearly with sections for '${translations['explanati
             max-height: 90vh;
             overflow-y: auto;
             position: relative;
+            color: var(--text-color);
         }
+
+        /* Adjust table colors based on theme */
+        .bg-gray-800 { background-color: var(--table-bg-odd); }
+        .bg-gray-900 { background-color: var(--table-bg-even); }
+        .border-gray-700 { border-color: var(--table-border); }
+        .divide-gray-700 > * + * { border-color: var(--table-border); }
+        .hover\:bg-gray-700:hover { background-color: var(--table-border); } /* A bit hacky, but works for hover */
+        .text-gray-100 { color: var(--text-color); }
+        .text-gray-300 { color: var(--text-color); } /* Adjust for light theme visibility */
+        .text-gray-400 { color: var(--text-color); } /* Adjust for light theme visibility */
+        .text-gray-500 { color: var(--text-color); } /* Adjust for light theme visibility */
+        .bg-gray-700 { background-color: var(--input-bg); }
+        .border-gray-600 { border-color: var(--input-border); }
+        .hover\:bg-gray-600:hover { background-color: var(--input-border); }
     </style>
 </head>
-<body class="bg-gray-900 text-white flex min-h-screen">
+<body class="flex min-h-screen">
 
     <!-- Notification Container -->
     <div id="notification-container" class="space-y-2"></div>
@@ -2357,7 +2518,7 @@ Please format your response clearly with sections for '${translations['explanati
     </div>
 
     <!-- Sidebar -->
-    <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-gray-800 p-6 z-40 md:relative md:translate-x-0 transition-transform duration-300 ease-in-out shadow-lg">
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 p-6 z-40 md:relative md:translate-x-0 transition-transform duration-300 ease-in-out shadow-lg" style="background-color: var(--sidebar-bg);">
         <div class="flex items-center justify-between mb-8">
             <h1 class="text-2xl font-bold text-indigo-400" data-i18n="iot_project_2025">IOT Project 2025</h1> <!-- Changed to indigo -->
             <button id="sidebar-toggle" class="md:hidden text-gray-400 hover:text-white focus:outline-none">
@@ -2410,6 +2571,15 @@ Please format your response clearly with sections for '${translations['explanati
                 <option value="en" data-i18n="english" selected>English</option> <!-- Set English as selected -->
                 <option value="fr" data-i18n="french">Français</option>
             </select>
+        </div>
+        <div class="mt-4 border-t border-gray-700 pt-4">
+            <h3 class="text-gray-400 text-sm mb-2">Theme</h3>
+            <button id="theme-toggle-btn" class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white flex items-center justify-center space-x-2 hover:bg-gray-600 transition-colors duration-200">
+                <i class="fas fa-sun text-yellow-400 dark:hidden"></i>
+                <i class="fas fa-moon text-indigo-400 hidden dark:inline-block"></i>
+                <span class="dark:hidden" data-i18n="light_mode">Light Mode</span>
+                <span class="hidden dark:inline-block" data-i18n="dark_mode">Dark Mode</span>
+            </button>
         </div>
         <div class="mt-4 text-sm text-gray-400">
             <p id="user-id-display" data-i18n="user_id_placeholder">User ID: Loading...</p>
@@ -2698,6 +2868,25 @@ Please format your response clearly with sections for '${translations['explanati
                 <h3 class="text-xl font-semibold mb-6" data-i18n="select_sensors_for_charts">Select Sensors for Charts</h3>
                 <div id="chart-sensor-select" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
                     <!-- Checkboxes for sensor selection will be populated by JavaScript -->
+                </div>
+                <!-- New Date/Time Filters for Charts -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <div>
+                        <label for="chart-start-date" class="block text-gray-300 text-sm font-medium mb-1" data-i18n="chart_start_date">Chart Start Date</label>
+                        <input type="date" id="chart-start-date" class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white">
+                    </div>
+                    <div>
+                        <label for="chart-start-time" class="block text-gray-300 text-sm font-medium mb-1" data-i18n="chart_start_time">Chart Start Time</label>
+                        <input type="time" id="chart-start-time" class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white">
+                    </div>
+                    <div>
+                        <label for="chart-end-date" class="block text-gray-300 text-sm font-medium mb-1" data-i18n="chart_end_date">Chart End Date</label>
+                        <input type="date" id="chart-end-date" class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white">
+                    </div>
+                    <div>
+                        <label for="chart-end-time" class="block text-gray-300 text-sm font-medium mb-1" data-i18n="chart_end_time">Chart End Time</label>
+                        <input type="time" id="chart-end-time" class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white">
+                    </div>
                 </div>
                 <div class="flex flex-wrap gap-4 mb-8">
                     <button id="select-all-charts-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200" data-i18n="select_all">Select All</button> <!-- Changed to indigo -->
