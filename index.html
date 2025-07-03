@@ -43,13 +43,30 @@
         // Initialize Firebase
         const initializeFirebase = async () => {
             try {
-                // Check if variables are globally defined
+                // Check if variables are globally defined and handle parsing
                 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+                let firebaseConfig = {};
+
+                console.log("Raw __app_id:", typeof __app_id, __app_id);
+                console.log("Raw __firebase_config:", typeof __firebase_config, __firebase_config);
+
+                if (typeof __firebase_config === 'string' && __firebase_config.trim() !== '') {
+                    try {
+                        firebaseConfig = JSON.parse(__firebase_config);
+                    } catch (parseError) {
+                        console.error("Error parsing __firebase_config:", parseError);
+                        showNotification(`Firebase Configuration Error: Invalid JSON format. ${parseError.message}`, "critical");
+                        return;
+                    }
+                } else {
+                    console.error("Error: Firebase configuration string is empty or not provided.");
+                    showNotification("Firebase configuration error: Configuration data missing.", "critical");
+                    return;
+                }
 
                 if (Object.keys(firebaseConfig).length === 0) {
-                    console.error("Error: Firebase configuration not provided.");
-                    showNotification("Firebase configuration error", "critical");
+                    console.error("Error: Parsed Firebase configuration is empty.");
+                    showNotification("Firebase configuration error: Parsed configuration is empty.", "critical");
                     return;
                 }
 
@@ -509,7 +526,7 @@
                     "min_value": "Valeur min",
                     "max_value": "Valeur max",
                     "save_changes": "Enregistrer les modifications",
-                    "reset_to_defaults": "Réinitialiser aux valeurs par défaut",
+                    "reset_to_defaults": "Réinitialiser aux valeurs par default",
                     "language": "Langue",
                     "arabic": "العربية",
                     "english": "English",
@@ -535,7 +552,7 @@
                     "confirm_clear_alerts": "Êtes-vous sûr de vouloir effacer toutes les alertes?",
                     "alerts_cleared": "Alertes effacées avec succès!",
                     "unknown": "Inconnu",
-                    "insight_prompt_base": "Analysez les données de capteur suivantes et fournissez un résumé concis de l'état actuel، مع تسليط الضوء على أي شذوذ أو اتجاهات مهمة: ",
+                    "insight_prompt_base": "Analysez les données de capteur suivantes et fournissez un résumé concis de l'état الحالي، مع تسليط الضوء على أي شذوذ أو اتجاهات مهمة: ",
                     "language_changed_to": "Langue changée en",
                     "acceleration_x": "Accélération X",
                     "acceleration_y": "Accélération Y",
