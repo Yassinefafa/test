@@ -226,6 +226,7 @@
                     "next": "Next",
                     "export_to_csv": "Export to CSV",
                     "export_to_pdf": "Export to PDF",
+                    "print_report": "Print Report",
                     "no_data_to_export": "No data to export.",
                     "data_exported_csv": "Data exported to CSV!",
                     "exporting_pdf": "Exporting to PDF...",
@@ -369,6 +370,7 @@
                     "next": "التالي",
                     "export_to_csv": "تصدير إلى CSV",
                     "export_to_pdf": "تصدير إلى PDF",
+                    "print_report": "طباعة التقرير",
                     "no_data_to_export": "لا توجد بيانات لتصديرها.",
                     "data_exported_csv": "تم تصدير البيانات إلى CSV!",
                     "exporting_pdf": "جاري التصدير إلى PDF...",
@@ -512,6 +514,7 @@
                     "next": "Suivant",
                     "export_to_csv": "Exporter en CSV",
                     "export_to_pdf": "Exporter en PDF",
+                    "print_report": "Imprimer le rapport",
                     "no_data_to_export": "Aucune donnée à exporter.",
                     "data_exported_csv": "Données exportées en CSV!",
                     "exporting_pdf": "Exportation en PDF...",
@@ -770,7 +773,7 @@
                     const statusElement = document.getElementById(accelGyroMapping[sheetColumn].statusId);
                     if (valueElement) {
                         valueElement.textContent = `-- ${accelGyroMapping[sheetColumn].unit}`;
-                        statusElement.textContent = translations['normal']; // Default status
+                        statusElement.textContent = translations['normal']; // Default to normal status
                         statusElement.className = `text-sm font-semibold ${getStatusColorClass('normal')}`;
                     }
                 }
@@ -1070,7 +1073,8 @@
         }
 
         // --- Full Table with Filtering and Pagination Logic ---
-        const rowsPerPage = 10;
+        const rowsPerPageDefault = 10; // Store default rows per page
+        let rowsPerPage = rowsPerPageDefault;
         let currentPage = 1;
         let filteredTableData = [];
 
@@ -1209,6 +1213,16 @@
             document.getElementById('page-info').textContent = `${translations['page']} ${currentPage} ${translations['of']} ${totalPages}`;
             document.getElementById('prev-page-btn').disabled = currentPage === 1;
             document.getElementById('next-page-btn').disabled = currentPage === totalPages || totalPages === 0;
+
+            // Hide pagination controls if all data is displayed (e.g., for printing)
+            const paginationContainer = document.getElementById('pagination-controls');
+            if (paginationContainer) {
+                if (rowsPerPage === filteredTableData.length && filteredTableData.length > 0) {
+                    paginationContainer.classList.add('hidden');
+                } else {
+                    paginationContainer.classList.remove('hidden');
+                }
+            }
         }
 
         function nextPage() {
@@ -1292,8 +1306,7 @@
             }
 
             const input = document.getElementById('full-table-container'); // The element to export
-            // Ensure all data is visible before capturing the image if the table is hidden by pagination
-            // This will require either showing all data temporarily or building the table manually
+            // Temporarily display all rows for PDF export
             const originalRowsPerPage = rowsPerPage;
             const originalCurrentPage = currentPage;
             rowsPerPage = filteredTableData.length; // Display all rows temporarily
@@ -1313,6 +1326,8 @@
                 const pageHeight = 297; // A4 height in mm
                 const imgHeight = (canvas.height * imgWidth) / canvas.width;
                 let heightLeft = imgHeight;
+
+                let position = 0; // Initialize position
 
                 pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
                 heightLeft -= pageHeight;
@@ -1339,6 +1354,39 @@
                 }
             }
         }
+
+        /**
+         * Prints the filtered table content.
+         */
+        async function printReport() {
+            if (filteredTableData.length === 0) {
+                showNotification(translations['no_data_to_export'], "warning");
+                return;
+            }
+
+            showNotification(translations['print_report'], "info");
+
+            // Temporarily display all rows for printing
+            const originalRowsPerPage = rowsPerPage;
+            const originalCurrentPage = currentPage;
+            rowsPerPage = filteredTableData.length; // Display all rows temporarily
+            currentPage = 1;
+            displayCurrentPageTable(); // Redraw table with all rows
+
+            // Hide elements not needed for printing
+            document.body.classList.add('print-mode');
+
+            // Wait for the DOM to update before printing
+            setTimeout(() => {
+                window.print();
+                // Restore original pagination settings and show hidden elements after print dialog closes
+                rowsPerPage = originalRowsPerPage;
+                currentPage = originalCurrentPage;
+                displayCurrentPageTable();
+                document.body.classList.remove('print-mode');
+            }, 500); // Small delay to ensure DOM update
+        }
+
 
         /**
          * Populates the sensor dropdown list in table filters and charts.
@@ -2236,6 +2284,7 @@ Please format your response clearly with sections for '${translations['explanati
             document.getElementById('next-page-btn').addEventListener('click', nextPage);
             document.getElementById('export-csv-btn').addEventListener('click', exportToCSV);
             document.getElementById('export-pdf-btn').addEventListener('click', exportToPDF);
+            document.getElementById('print-report-btn').addEventListener('click', printReport); // New print button listener
 
             // Charts
             document.getElementById('apply-chart-changes-btn').addEventListener('click', renderChart); // Changed to renderChart directly
@@ -2361,7 +2410,7 @@ Please format your response clearly with sections for '${translations['explanati
             --text-color: #ffffff;
             --card-bg: rgba(255, 255, 255, 0.08);
             --card-border: rgba(255, 255, 255, 0.15);
-            --card-shadow: rgba(0, 0, 0, 0.3);
+            --card-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.3);
             --sidebar-bg: #2d3748; /* gray-800 */
             --input-bg: #4a5568; /* gray-700 */
             --input-border: #4a5568; /* gray-600 */
@@ -2376,7 +2425,7 @@ Please format your response clearly with sections for '${translations['explanati
             --text-color: #2d3748; /* gray-800 */
             --card-bg: rgba(255, 255, 255, 0.9);
             --card-border: rgba(0, 0, 0, 0.1);
-            --card-shadow: rgba(0, 0, 0, 0.1);
+            --card-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.1);
             --sidebar-bg: #ffffff;
             --input-bg: #edf2f7; /* gray-200 */
             --input-border: #cbd5e0; /* gray-300 */
@@ -2483,7 +2532,7 @@ Please format your response clearly with sections for '${translations['explanati
         .bg-gray-900 { background-color: var(--table-bg-even); }
         .border-gray-700 { border-color: var(--table-border); }
         .divide-gray-700 > * + * { border-color: var(--table-border); }
-        .hover\:bg-gray-700:hover { background-color: var(--table-border); } /* A bit hacky, but works for hover */
+        .hover\:bg-gray-700:hover { background-color: var(--input-border); } /* A bit hacky, but works for hover */
         .text-gray-100 { color: var(--text-color); }
         .text-gray-300 { color: var(--text-color); } /* Adjust for light theme visibility */
         .text-gray-400 { color: var(--text-color); } /* Adjust for light theme visibility */
@@ -2491,6 +2540,49 @@ Please format your response clearly with sections for '${translations['explanati
         .bg-gray-700 { background-color: var(--input-bg); }
         .border-gray-600 { border-color: var(--input-border); }
         .hover\:bg-gray-600:hover { background-color: var(--input-border); }
+
+        /* Print Mode Styles */
+        @media print {
+            body > *:not(#full-table-section) {
+                display: none !important; /* Hide all content except the full-table-section */
+            }
+            #full-table-section {
+                display: block !important; /* Ensure the table section is visible */
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+            }
+            #full-table-section .glassmorphism-card {
+                background-color: white !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            #full-table-section .filter-controls,
+            #full-table-section .pagination-controls,
+            #full-table-section .export-buttons {
+                display: none !important; /* Hide filters, pagination, and export buttons for print */
+            }
+            table {
+                width: 100% !important;
+                border-collapse: collapse;
+            }
+            th, td {
+                border: 1px solid #ccc !important;
+                padding: 8px !important;
+                text-align: left !important;
+                color: black !important; /* Ensure text is black on white background */
+                background-color: white !important;
+            }
+            thead {
+                background-color: #eee !important;
+            }
+            /* Ensure text is readable in print mode */
+            .text-gray-100, .text-gray-300, .text-gray-400, .text-gray-500 {
+                color: black !important;
+            }
+        }
     </style>
 </head>
 <body class="flex min-h-screen">
@@ -2771,7 +2863,7 @@ Please format your response clearly with sections for '${translations['explanati
             <h2 class="text-3xl font-bold mb-8" data-i18n="full_table_with_filters">Full Table with Filters</h2>
 
             <!-- Filter Controls -->
-            <div class="glassmorphism-card p-6 rounded-xl mb-8">
+            <div class="glassmorphism-card p-6 rounded-xl mb-8 filter-controls"> <!-- Added class for print hiding -->
                 <h3 class="text-xl font-semibold mb-6" data-i18n="filter_data">Filter Data</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                     <div>
@@ -2847,16 +2939,17 @@ Please format your response clearly with sections for '${translations['explanati
                 </table>
 
                 <!-- Pagination Controls -->
-                <div class="flex justify-between items-center mt-6">
+                <div id="pagination-controls" class="flex justify-between items-center mt-6">
                     <button id="prev-page-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="previous">Previous</button> <!-- Changed to indigo -->
                     <span id="page-info" class="text-gray-300" data-i18n="page_info_placeholder">Page 1 of 1</span>
                     <button id="next-page-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="next">Next</button> <!-- Changed to indigo -->
                 </div>
 
                 <!-- Export Buttons -->
-                <div class="flex justify-end gap-4 mt-6">
+                <div class="flex justify-end gap-4 mt-6 export-buttons"> <!-- Added class for print hiding -->
                     <button id="export-csv-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200" data-i18n="export_to_csv">Export to CSV</button>
                     <button id="export-pdf-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200" data-i18n="export_to_pdf">Export to PDF</button>
+                    <button id="print-report-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200" data-i18n="print_report">Print Report</button>
                 </div>
             </div>
         </section>
